@@ -59,3 +59,6 @@
 - [ ] CLI: wire full compile pipeline (parse -> AST -> semantic -> codegen -> output file) with stable diagnostics and exit codes (high) #cli #compiler #feature
       @created 2026-02-06 23:09
 
+- [ ] Tooling: add CI workflow to run build + compiler tests + example progress suite on every push #infra #ci #quality
+      @created 2026-02-06 23:09
+
