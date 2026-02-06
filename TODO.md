@@ -47,3 +47,6 @@
 - [ ] Codegen: implement command execution, pipe operator lowering, async/await flow, and error handling constructs (high) #codegen #bash #shell #feature
       @created 2026-02-06 23:08
 
+- [ ] Runtime: define and implement standard library contract used by generated Bash (Process, cmd/exec helpers, collection helpers) (high) #runtime #stdlib #feature
+      @created 2026-02-06 23:08
+
