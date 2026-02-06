@@ -50,3 +50,6 @@
 - [ ] Runtime: define and implement standard library contract used by generated Bash (Process, cmd/exec helpers, collection helpers) (high) #runtime #stdlib #feature
       @created 2026-02-06 23:08
 
+- [ ] Testing: add end-to-end golden tests that compile each examples/*.bsh file and assert diagnostics/codegen snapshots (high) #testing #e2e #examples #quality
+      @created 2026-02-06 23:09
+
