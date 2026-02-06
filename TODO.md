@@ -26,9 +26,6 @@
 - [ ] semanticanalyzer: scope validation for struct methods
       @created 2026-02-06 01:48
 
-- [ ] astbuilder: add more expr types
-      @created 2026-02-06 01:48
-
 - [ ] Parser: implement full AST coverage for all grammar expression/statement variants (method call, member/index access, pipe, await, command forms, literals) (high) #parser #ast #feature
       @created 2026-02-06 23:08
 
@@ -64,4 +61,11 @@
 
 - [ ] Docs: align language spec with implemented behavior and mark unsupported example features explicitly #docs #spec #project
       @created 2026-02-06 23:09
+
+
+## Completed
+
+- [x] astbuilder: add more expr types
+      @created 2026-02-06 01:48
+      @completed 2026-02-06 23:20
 
