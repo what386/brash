@@ -13,7 +13,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Antlr4 Include="Grammar/*.g4">
+    <Antlr4 Include="Brash.g4">
       <Package>Brash.Compiler.Frontend</Package>
       <Namespace>Brash.Compiler.Frontend.Parser</Namespace>
       <Listener>true</Listener>
