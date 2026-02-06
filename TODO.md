@@ -11,3 +11,6 @@
 - [ ] bashgenerator: command running
       @created 2026-02-06 01:47
 
+- [ ] bashgenerator: pipe operator
+      @created 2026-02-06 01:47
+
