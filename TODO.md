@@ -23,3 +23,6 @@
 - [ ] semanticanalyzer: nullable type checking
       @created 2026-02-06 01:48
 
+- [ ] semanticanalyzer: scope validation for struct methods
+      @created 2026-02-06 01:48
+
