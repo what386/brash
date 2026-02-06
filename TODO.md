@@ -14,3 +14,6 @@
 - [ ] bashgenerator: pipe operator
       @created 2026-02-06 01:47
 
+- [ ] bashgenerator: string interp
+      @created 2026-02-06 01:47
+
