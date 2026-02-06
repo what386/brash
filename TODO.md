@@ -62,3 +62,6 @@
 - [ ] Tooling: add CI workflow to run build + compiler tests + example progress suite on every push #infra #ci #quality
       @created 2026-02-06 23:09
 
+- [ ] Docs: align language spec with implemented behavior and mark unsupported example features explicitly #docs #spec #project
+      @created 2026-02-06 23:09
+
