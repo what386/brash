@@ -92,5 +92,4 @@ public class ElifClause : AstNode
 public class EnumVariant : AstNode
 {
     public string Name { get; set; } = string.Empty;
-    public List<TypeNode> AssociatedTypes { get; set; } = new();
 }

@@ -137,6 +137,23 @@ public class SymbolResolver
 
     private TypeNode ResolveMemberAccess(MemberAccessExpression member)
     {
+        if (member.Object is IdentifierExpression typeIdent)
+        {
+            var typeSymbol = symbolTable.LookupType(typeIdent.Name);
+            if (typeSymbol?.IsEnum == true)
+            {
+                if (!typeSymbol.EnumVariants.Contains(member.MemberName))
+                {
+                    diagnostics.AddError(
+                        $"Enum '{typeIdent.Name}' has no variant '{member.MemberName}'",
+                        member.Line, member.Column);
+                    return new UnknownType();
+                }
+
+                return new NamedType { Name = typeIdent.Name };
+            }
+        }
+
         var objectType = ResolveExpressionType(member.Object);
 
         if (objectType is NamedType namedType)

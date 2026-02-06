@@ -196,6 +196,28 @@ public class AstBuilder : BrashBaseVisitor<AstNode>
         return recordDecl;
     }
 
+    public override AstNode VisitEnumDeclaration(BrashParser.EnumDeclarationContext context)
+    {
+        var enumDecl = new EnumDeclaration
+        {
+            Line = context.Start.Line,
+            Column = context.Start.Column,
+            Name = context.IDENTIFIER().GetText()
+        };
+
+        foreach (var variant in context.enumBody().enumVariant())
+        {
+            enumDecl.Variants.Add(new EnumVariant
+            {
+                Line = variant.Start.Line,
+                Column = variant.Start.Column,
+                Name = variant.IDENTIFIER().GetText()
+            });
+        }
+
+        return enumDecl;
+    }
+
     public override AstNode VisitIfStatement(BrashParser.IfStatementContext context)
     {
         var ifStmt = new IfStatement

@@ -47,19 +47,13 @@ public class EnumDeclaration : Statement
     public List<EnumVariant> Variants { get; set; } = new();
 }
 
-public class EnumVariant
-{
-    public string Name { get; set; } = string.Empty;
-    public List<TypeNode> AssociatedTypes { get; set; } = new();
-}
-
 public class ImplBlock : Statement
 {
     public string TypeName { get; set; } = string.Empty;
     public List<MethodDeclaration> Methods { get; set; } = new();
 }
 
-public class MethodDeclaration
+public class MethodDeclaration : AstNode
 {
     public string Name { get; set; } = string.Empty;
     public List<Parameter> Parameters { get; set; } = new();

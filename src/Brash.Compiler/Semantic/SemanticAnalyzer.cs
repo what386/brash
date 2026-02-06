@@ -67,6 +67,10 @@ public class SemanticAnalyzer
                 case FunctionDeclaration funcDecl:
                     CollectFunctionDeclaration(funcDecl);
                     break;
+
+                case EnumDeclaration enumDecl:
+                    CollectEnumDeclaration(enumDecl);
+                    break;
             }
         }
     }
@@ -98,6 +102,27 @@ public class SemanticAnalyzer
             diagnostics.AddError(
                 $"Function '{funcDecl.Name}' is already defined",
                 funcDecl.Line, funcDecl.Column);
+        }
+    }
+
+    private void CollectEnumDeclaration(EnumDeclaration enumDecl)
+    {
+        var seen = new HashSet<string>();
+        foreach (var variant in enumDecl.Variants)
+        {
+            if (!seen.Add(variant.Name))
+            {
+                diagnostics.AddError(
+                    $"Enum '{enumDecl.Name}' contains duplicate variant '{variant.Name}'",
+                    variant.Line, variant.Column);
+            }
+        }
+
+        if (!symbolTable.DeclareType(enumDecl.Name, enumDecl))
+        {
+            diagnostics.AddError(
+                $"Type '{enumDecl.Name}' is already defined",
+                enumDecl.Line, enumDecl.Column);
         }
     }
 
@@ -206,6 +231,7 @@ public class SemanticAnalyzer
 
             case StructDeclaration:
             case RecordDeclaration:
+            case EnumDeclaration:
             case ImplBlock:
                 // Already handled in earlier phases
                 break;

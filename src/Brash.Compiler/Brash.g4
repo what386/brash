@@ -96,7 +96,7 @@ enumBody
     ;
 
 enumVariant
-    : IDENTIFIER ('(' type (',' type)* ')')?
+    : IDENTIFIER
     ;
 
 structBody
