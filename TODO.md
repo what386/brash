@@ -32,3 +32,6 @@
 - [ ] Parser: implement full AST coverage for all grammar expression/statement variants (method call, member/index access, pipe, await, command forms, literals) (high) #parser #ast #feature
       @created 2026-02-06 23:08
 
+- [ ] Semantic: complete type inference and nullability flow analysis across variables, calls, collections, and control-flow branches (high) #semantic #types #feature
+      @created 2026-02-06 23:08
+
