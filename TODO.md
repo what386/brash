@@ -26,3 +26,6 @@
 - [ ] semanticanalyzer: scope validation for struct methods
       @created 2026-02-06 01:48
 
+- [ ] astbuilder: add more expr types
+      @created 2026-02-06 01:48
+
