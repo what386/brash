@@ -1,10 +1,6 @@
 target/
 
-src/Brash.Compiler/obj
-src/Brash.Compiler/bin
-
-src/Brash.Runtime/obj
-src/Brash.Runtime/bin
-
-src/Brash.Cli/obj
-src/Brash.Cli/bin
+src/*/obj
+src/*/bin
+tests/*/obj
+tests/*/bin
