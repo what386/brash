@@ -44,3 +44,6 @@
 - [ ] Codegen: generate Bash for structs/records/enums, method dispatch, and field/member access semantics (high) #codegen #bash #feature
       @created 2026-02-06 23:08
 
+- [ ] Codegen: implement command execution, pipe operator lowering, async/await flow, and error handling constructs (high) #codegen #bash #shell #feature
+      @created 2026-02-06 23:08
+
