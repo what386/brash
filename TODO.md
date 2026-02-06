@@ -20,3 +20,6 @@
 - [ ] semanticanalyzer: full type inference
       @created 2026-02-06 01:48
 
+- [ ] semanticanalyzer: nullable type checking
+      @created 2026-02-06 01:48
+
