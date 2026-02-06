@@ -53,3 +53,6 @@
 - [ ] Testing: add end-to-end golden tests that compile each examples/*.bsh file and assert diagnostics/codegen snapshots (high) #testing #e2e #examples #quality
       @created 2026-02-06 23:09
 
+- [ ] Testing: add runtime integration tests that execute generated Bash for representative examples and validate outputs/exit codes #testing #integration #runtime #quality
+      @created 2026-02-06 23:09
+
