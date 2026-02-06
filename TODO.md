@@ -29,3 +29,6 @@
 - [ ] astbuilder: add more expr types
       @created 2026-02-06 01:48
 
+- [ ] Parser: implement full AST coverage for all grammar expression/statement variants (method call, member/index access, pipe, await, command forms, literals) (high) #parser #ast #feature
+      @created 2026-02-06 23:08
+
