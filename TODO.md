@@ -41,3 +41,6 @@
 - [ ] Modules: implement import resolution and multi-file symbol linking for module, named, and default imports (high) #modules #frontend #feature
       @created 2026-02-06 23:08
 
+- [ ] Codegen: generate Bash for structs/records/enums, method dispatch, and field/member access semantics (high) #codegen #bash #feature
+      @created 2026-02-06 23:08
+
