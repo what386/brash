@@ -1,0 +1,100 @@
+// ============================================
+// File: examples/04_collections.bsh
+// Arrays and maps
+// ============================================
+
+
+// ---------------
+// Arrays
+// ---------------
+
+let numbers: int[] = [1, 2, 3, 4, 5]
+let names = ["Alice", "Bob", "Charlie"]   // inferred as string[]
+mut mixed: string[] = []                  // empty array
+
+
+// ---------------
+// Nullable Arrays
+// ---------------
+
+let optional_list: int[]? = null
+optional_list = [1, 2, 3]
+
+
+// ---------------
+// Array Operations
+// ---------------
+
+mixed.push("first")
+mixed.push("second")
+let item = mixed.pop()
+let length = mixed.length()
+
+
+// ---------------
+// Array Access and Mutation
+// ---------------
+
+let first_num = numbers[0]
+mut mutable_nums = [1, 2, 3]
+mutable_nums[1] = 99
+
+
+// ---------------
+// Maps
+// ---------------
+
+let config: map<string, string> = {
+    "host": "localhost",
+    "port": "8080",
+    "protocol": "https"
+}
+
+
+// ---------------
+// Nullable Maps
+// ---------------
+
+let cache: map<string, int>? = null
+cache = {"key1": 100}
+
+
+// ---------------
+// Map Access and Mutation
+// ---------------
+
+let host = config["host"]
+config["timeout"] = "30"
+
+
+// ---------------
+// Maps with Nullable Values
+// ---------------
+
+let user_ages: map<string, int?> = {
+    "alice": 30,
+    "bob": null,
+    "charlie": 25
+}
+
+let age = user_ages["bob"] ?? 0
+
+
+// ---------------
+// Map Iteration
+// ---------------
+
+for key in config.keys()
+    print($"{key}: {config[key]}")
+end
+
+
+// ---------------
+// Nested Collections
+// ---------------
+
+let users: map<string, int[]> = {
+    "alice": [1, 2, 3],
+    "bob": [4, 5, 6]
+}
+

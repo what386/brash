@@ -1,0 +1,86 @@
+// ============================================
+// File: examples/02_functions.bsh
+// Function definitions
+// ============================================
+
+
+// ---------------
+// Basic Functions
+// ---------------
+
+fn greet(name: string): string
+    return "Hello, " + name
+end
+
+
+// ---------------
+// Optional Parameters
+// ---------------
+
+fn greet_custom(name: string, greeting: string = "Hello"): string
+    return greeting + ", " + name
+end
+
+greet_custom("Bill") // Hello, Bill
+greet_custom("Jane", "Goodbye") // Goodbye, Jane
+
+
+// ---------------
+// Nullable Parameters and Returns
+// ---------------
+
+fn find_user(id: int): string?
+    if id == 1
+        return "Alice"
+    end
+    return null  // user not found
+end
+
+let user = find_user(5)
+let username = user ?? "Guest"
+
+
+// ---------------
+// Multiple Return Values
+// ---------------
+
+fn parse_name(fullname: string): (string, string)
+    let parts = ful1lname.split(" ")
+    return (parts[0], parts[1])
+end
+
+let (first, last) = parse_name("John Doe")
+print($"First: {first}, Last: {last}")
+
+
+// ---------------
+// Tuples with Nullable Elements
+// ---------------
+
+fn try_parse_name(fullname: string?): (string?, string?)
+    if fullname == null
+        return (null, null)
+    end
+    let parts = fullname.split(" ")
+    return (parts[0], parts[1])
+end
+
+
+// ---------------
+// Void Functions
+// ---------------
+
+fn log_message(msg: string): void
+    print($"[LOG] {msg}")
+end
+
+
+// ---------------
+// Function Composition
+// ---------------
+
+fn welcome_user(name: string): void
+    let message = greet(name)
+    log_message(message)
+end
+

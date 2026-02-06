@@ -1,0 +1,80 @@
+// ============================================
+// File: examples/10_preprocessor-directives.bsh
+// Preprocessor directives (text-based substitution)
+// ============================================
+
+
+// ---------------
+// Define Constants (#define)
+// ---------------
+
+// #define works like a textual substitution
+#define PI 3.14159
+#define GREETING "Hello, world!"
+
+// Usage in code
+print(PI)             // -> replaced with 3.14159
+print(GREETING)       // -> replaced with "Hello, world!"
+
+
+// ---------------
+// Conditional Compilation (#if / #ifdef / #ifndef)
+// ---------------
+
+// #if allows boolean expressions (numeric or constant-based)
+#define DEBUG 1
+
+#if DEBUG
+    print("Debug mode is ON")
+#endif
+
+#if 0
+    print("This will not run")
+#endif
+
+// #ifdef / #ifndef checks if a macro is defined
+#ifdef DEBUG
+    print("DEBUG is defined")
+#endif
+
+#ifndef RELEASE
+    print("RELEASE is not defined")
+#endif
+
+
+// ---------------
+// Undefining Macros (#undef)
+// ---------------
+
+#define TEMP 123
+print(TEMP)   // -> 123
+
+#undef TEMP
+// print(TEMP) -> would fail / error if used, because macro no longer exists
+
+
+// ---------------
+// Nested and Sequential Directives
+// ---------------
+
+#define OS "linux"
+#ifdef OS
+    #define PATH_SEPARATOR "/"
+#else
+    #define PATH_SEPARATOR "\\"
+#endif
+
+print(OS)               // -> "linux"
+print(PATH_SEPARATOR)   // -> "/"
+
+
+// ---------------
+// Notes on Behavior
+// ---------------
+
+// - Preprocessor runs before any transpilation to Bash
+// - All directives are **text replacements**, not runtime constructs
+// - #define / #if / #ifdef / #ifndef / #undef only affect subsequent lines
+// - They do not respect language scope or types
+// - Useful for debugging, conditional imports, or simplifying repetitive commands
+

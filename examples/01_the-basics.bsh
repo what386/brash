@@ -1,0 +1,81 @@
+// ============================================
+// File: examples/01_the-basics.bsh
+// Basic syntax and types
+// ============================================
+
+
+// ---------------
+// Variables
+// ---------------
+
+let x = 5                    // immutable
+mut y = 10                   // mutable
+const PI = 3.14159           // constant
+
+y = 15                       // ok
+// x = 10                    // error: cannot reassign immutable
+
+
+// ---------------
+// Type Annotations
+// ---------------
+
+let name: string = "Alice"
+let age: int = 30
+let balance: float = 100.50
+let is_admin: bool = true
+let grade: char = 'A'
+
+
+// ---------------
+// Nullable Types
+// ---------------
+
+let middle_name: string? = null
+let optional_age: int? = null
+
+middle_name = "Jane"         // can assign value
+optional_age = 25
+
+
+// ---------------
+// Type Inference
+// ---------------
+
+let city = "New York"      // inferred as string
+let count = 42               // inferred as int
+
+
+// ---------------
+// Null Coalescing
+// ---------------
+
+let display_name = middle_name ?? "No middle name"
+let age_display = optional_age ?? 0
+
+
+// ---------------
+// String Literals
+// ---------------
+
+let simple = "Hello"
+let with_quotes = "She said \"hello\""
+let single_char = 'x'
+
+let multiline = [[
+    This is a really
+    long block that even
+    ignores newlines and "quotes"
+    and 'single quotes' too!
+]]
+
+let inline_block = [[Keep it on the ""same"" '''line!''' "" ignores "quotes]]
+
+
+// ---------------
+// String Interpolation
+// ---------------
+
+let user = "Bob"
+let greeting = $"Hello, {user}!"
+let math = $"5 + 3 = {5 + 3}"

@@ -1,0 +1,104 @@
+// ============================================
+// File: examples/03_control-flow.bsh
+// Control structures
+// ============================================
+
+
+// ---------------
+// Conditional Branching
+// ---------------
+
+let score = 85
+
+if score >= 90
+    print("Grade: A")
+elif score >= 80
+    print("Grade: B")
+elif score >= 70
+    print("Grade: C")
+else
+    print("Grade: F")
+end
+
+
+// ---------------
+// Null Checks
+// ---------------
+
+let name: string? = "Alice"
+
+if name != null
+    print($"Hello, {name}")
+end
+
+
+// ---------------
+// For Loops (Collections)
+// ---------------
+
+let fruits = ["apple", "banana", "orange"]
+for fruit in fruits
+    print($"I like {fruit}")
+end
+
+
+// ---------------
+// For Loops (Ranges)
+// ---------------
+
+// Basic loop
+for i in 0..5
+    print($"Count: {i}")
+end
+
+// Custom step
+for i in 0..10 step 2  // 0, 2, 4, 6, 8, 10
+    print(i)
+end
+
+// Can also be negative
+for i in 5..0 step -1          // 5, 4, 3, 2, 1, 0
+    print(i)
+end
+
+// Explicit increment loop (optional, same as default for clarity)
+for+ i in 0..5
+    print(i)
+end
+
+
+// ---------------
+// While Loops
+// ---------------
+
+mut counter = 0
+while counter < 5
+    print($"Counter: {counter}")
+    counter = counter + 1
+end
+
+
+// ---------------
+// Loop Control (Break / Continue)
+// ---------------
+
+for i in 0..10
+    if i == 3
+        continue
+    end
+    if i == 7
+        break
+    end
+    print(i)
+end
+
+
+// ---------------
+// Notes
+// ---------------
+
+// - `step` allows custom increment/decrement
+// - `for+` / `for-` explicitly sets direction
+// - If `step` is omitted, default is +1 for `for+`, -1 for `for-`
+// - Ranges can auto-detect direction if desired, but explicit syntax improves readability
+

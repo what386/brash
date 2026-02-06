@@ -1,0 +1,85 @@
+// ============================================
+// File: examples/06_shell-integration.bsh
+// Running shell commands and process control
+// ============================================
+
+// ---------------
+// Process struct
+// ---------------
+
+struct Process
+    // PID of the running process
+    pid: int
+
+    // Optional temp paths to capture stdout/stderr
+    stdout: string?
+    stderr: string?
+
+    // Exit code (filled after completion)
+    exit_code: int?
+end
+
+// ---------------
+// Running Commands
+// ---------------
+
+// sugar for cmd(...).exec()
+exec("echo", "Hello, World!")
+exec("git", "status")
+
+// sugar for cmd(...).exec_async()
+// more info in file 11
+async("sleep", "100")
+
+
+// ---------------
+// Capturing Command Output
+// ---------------
+
+// cmd() returns lazy Process object; call .exec() to execute
+let listing = cmd("ls -la")
+listing.exec()
+print(listing.stdout)
+print($"Exit code: {listing.code}")
+
+
+// ---------------
+// Exit Codes
+// ---------------
+
+let result = cmd("test", "-f", "myfile.txt").exec()
+if result.code == 0
+    print("File exists")
+else
+    print("File not found")
+end
+
+
+// ---------------
+// Standard Error (stderr)
+// ---------------
+
+let error_result = cmd("ls", "/nonexistent").exec()
+if error_result.code != 0
+    print($"Error: {error_result.stderr}")
+end
+
+
+// ---------------
+// Process Management
+// ---------------
+
+// Lazy cmd object, not executed yet
+let long_running = cmd("sleep", "10")
+
+// Execute command
+let started_cmd = long_running.exec()
+print($"Process PID: {started_cmd.pid}")
+print($"Running? {started_cmd.is_running()}")
+
+// Kill a running command using static cmd utility
+exec("kill", "started_cmd.pid")
+
+// get environment variable
+let home = exec("echo", "$HOME").stdout.trim()
+print($"Home directory: {home}")

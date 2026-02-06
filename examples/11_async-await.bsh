@@ -1,0 +1,67 @@
+// ============================================
+// File: examples/11_async-await.bsh
+// Async / Await for shell commands and functions
+// ============================================
+
+
+// ---------------
+// Basic Async Execution
+// ---------------
+
+// async runs a command in the background and returns a Process handle
+let sleep_proc = cmd("sleep 5").exec_async()
+
+// Process handle fields:
+// - pid: process ID
+// - is_running(): bool
+// - stdout / stderr / code: captured when awaited
+
+print($"Launched sleep process with PID: {sleep_proc.pid}")
+print($"Running? {sleep_proc.is_running()}")
+
+
+ // ---------------
+// Awaiting a Process
+// ---------------
+
+// await blocks until the process finishes, then returns output
+let result = await sleep_proc
+print($"Exit code: {result.code}")
+print($"Stdout: {result.stdout}")
+
+
+ // ---------------
+// Async Functions
+// ---------------
+
+// Functions can be marked async and awaited
+async fn long_task(name: string): string
+    // ....
+    return $"Task {name} done"
+end
+
+// Launch async function
+let task_proc = long_task("Demo Task")
+
+// Do other work here while task runs...
+print("Doing other stuff while task runs...")
+
+// Await completion
+let task_result = await task_proc
+print(task_result)   // -> "Task Demo Task done"
+
+
+ // ---------------
+// Multiple Async Tasks
+// ---------------
+
+let proc1 = async("sleep", "2")
+let proc2 = async("sleep", "4")
+let proc3 = async("sleep", "1")
+
+// Await all
+let res1 = await proc1
+let res2 = await proc2
+let res3 = await proc3
+
+print($"All processes done: {res1.code}, {res2.code}, {res3.code}")

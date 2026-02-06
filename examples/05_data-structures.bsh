@@ -1,0 +1,136 @@
+// ============================================
+// File: examples/05_data-structures.bsh
+// Data structure definitions, impl blocks, and usage
+// ============================================
+
+// --------------------------------------------
+// Structs and Records (data only)
+// --------------------------------------------
+
+// mutable
+struct Person
+    name: string
+    age: int
+    email: string?  // nullable field
+    balance: float
+end
+
+// immutable
+record Config
+    host: string
+    port: int
+    ssl_enabled: bool
+end
+
+// --------------------------------------------
+// Implementations (behavior)
+// --------------------------------------------
+
+impl Person
+    fn is_adult(): bool
+        return self.age >= 18
+    end
+
+    fn deposit(amount: float)
+        self.balance = self.balance + amount
+    end
+
+    fn display_name(): string
+        return self.name ?? "Unknown"
+    end
+end
+
+impl Config
+    fn base_url(): string
+        if self.ssl_enabled
+            return $"https://{self.host}:{self.port}"
+        end
+        return $"http://{self.host}:{self.port}"
+    end
+end
+
+// --------------------------------------------
+// Creating instances
+// --------------------------------------------
+
+let person = Person {
+    name: "Alice",
+    age: 30,
+    email: null,
+    balance: 1500.75
+}
+
+let config = Config {
+    host: "localhost",
+    port: 8080,
+    ssl_enabled: false
+}
+
+// --------------------------------------------
+// Accessing fields
+// --------------------------------------------
+
+print(person.name)
+
+// mutable copy
+mut mutable_person = person
+mutable_person.balance = 2000.00
+
+// --------------------------------------------
+// Calling methods
+// --------------------------------------------
+
+print(person.is_adult())        // true
+mutable_person.deposit(250.00)
+print(mutable_person.balance)  // 2250.00
+
+print(config.base_url())        // http://localhost:8080
+
+// --------------------------------------------
+// Using nullable fields
+// --------------------------------------------
+
+let email_display = person.email ?? "No email provided"
+print(email_display)
+
+// --------------------------------------------
+// Nested structs
+// --------------------------------------------
+
+struct Address
+    street: string
+    city: string
+    zip: string
+    apartment: string?  // optional
+end
+
+struct Employee
+    person: Person
+    address: Address?   // nullable struct
+    employee_id: int
+end
+
+impl Employee
+    fn city(): string
+        return self.address?.city ?? "unknown city"
+    end
+end
+
+let emp = Employee {
+    person: Person {
+        name: "Bob",
+        age: 25,
+        email: "bob@company.com",
+        balance: 0.0
+    },
+    address: Address {
+        street: "123 Main St",
+        city: "Burlington",
+        zip: "05401",
+        apartment: null
+    },
+    employee_id: 12345
+}
+
+print($"{emp.person.name} lives in {emp.city()}")
+
