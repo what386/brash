@@ -79,3 +79,15 @@ let inline_block = [[Keep it on the ""same"" '''line!''' "" ignores "quotes]]
 let user = "Bob"
 let greeting = $"Hello, {user}!"
 let math = $"5 + 3 = {5 + 3}"
+
+
+// ---------------
+// Enums
+// ---------------
+
+enum BuildMode
+    Debug,
+    Release
+end
+
+let mode: BuildMode = BuildMode.Debug

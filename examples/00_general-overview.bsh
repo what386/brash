@@ -170,6 +170,13 @@ record Config
     ssl_enabled: bool
 end
 
+// Enum (simple variants)
+enum AccountType
+    Checking,
+    Savings,
+    Investment
+end
+
 // Implementation blocks
 impl Person
     fn is_adult(): bool
@@ -188,6 +195,8 @@ let person = Person {
     email: null,
     balance: 1500.75
 }
+
+let account_type: AccountType = AccountType.Savings
 
 // Accessing fields and methods
 print(person.name)
