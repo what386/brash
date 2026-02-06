@@ -17,3 +17,6 @@
 - [ ] bashgenerator: string interp
       @created 2026-02-06 01:47
 
+- [ ] semanticanalyzer: full type inference
+      @created 2026-02-06 01:48
+
