@@ -35,3 +35,6 @@
 - [ ] Semantic: complete type inference and nullability flow analysis across variables, calls, collections, and control-flow branches (high) #semantic #types #feature
       @created 2026-02-06 23:08
 
+- [ ] Semantic: enforce mutability, scope, and self/impl method rules (including record immutability and loop/function context checks) (high) #semantic #scope #feature
+      @created 2026-02-06 23:08
+
