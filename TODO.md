@@ -38,3 +38,6 @@
 - [ ] Semantic: enforce mutability, scope, and self/impl method rules (including record immutability and loop/function context checks) (high) #semantic #scope #feature
       @created 2026-02-06 23:08
 
+- [ ] Modules: implement import resolution and multi-file symbol linking for module, named, and default imports (high) #modules #frontend #feature
+      @created 2026-02-06 23:08
+
