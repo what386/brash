@@ -3,68 +3,148 @@ namespace Brash.Compiler.Semantic;
 using Brash.Compiler.Ast;
 using Brash.Compiler.Diagnostics;
 
+/// <summary>
+/// Main semantic analyzer - orchestrates symbol resolution and type checking
+/// </summary>
 public class SemanticAnalyzer
 {
     private readonly DiagnosticBag diagnostics;
     private readonly SymbolTable symbolTable;
+    private readonly TypeChecker typeChecker;
+    private readonly SymbolResolver symbolResolver;
+
     private TypeNode? currentFunctionReturnType;
+    private string? currentTypeName; // For 'self' in methods
     private bool inLoop;
 
     public SemanticAnalyzer(DiagnosticBag diagnostics)
     {
         this.diagnostics = diagnostics;
         this.symbolTable = new SymbolTable();
+        this.typeChecker = new TypeChecker(diagnostics, symbolTable);
+        this.symbolResolver = new SymbolResolver(diagnostics, symbolTable, typeChecker);
     }
+
+    public SymbolTable SymbolTable => symbolTable;
+
+    // ============================================
+    // Main Analysis Entry Point
+    // ============================================
 
     public void Analyze(ProgramNode program)
     {
-        // First pass: collect all struct/record/function declarations
-        foreach (var stmt in program.Statements)
-        {
-            if (stmt is StructDeclaration structDecl)
-            {
-                DeclareType(structDecl.Name, structDecl);
-            }
-            else if (stmt is RecordDeclaration recordDecl)
-            {
-                DeclareType(recordDecl.Name, recordDecl);
-            }
-            else if (stmt is FunctionDeclaration funcDecl)
-            {
-                DeclareFunction(funcDecl);
-            }
-        }
+        // Phase 1: Collect all type and function declarations
+        CollectDeclarations(program);
 
-        // Second pass: analyze statements
+        // Phase 2: Analyze implementations
+        AnalyzeImplementations(program);
+
+        // Phase 3: Analyze statements
         foreach (var stmt in program.Statements)
         {
             AnalyzeStatement(stmt);
         }
     }
 
-    private void DeclareType(string name, Statement declaration)
+    // ============================================
+    // Phase 1: Declaration Collection
+    // ============================================
+
+    private void CollectDeclarations(ProgramNode program)
     {
-        if (symbolTable.TypeExists(name))
+        foreach (var stmt in program.Statements)
         {
-            diagnostics.AddError($"Type '{name}' is already defined",
-                declaration.Line, declaration.Column);
+            switch (stmt)
+            {
+                case StructDeclaration structDecl:
+                    CollectStructDeclaration(structDecl);
+                    break;
+
+                case RecordDeclaration recordDecl:
+                    CollectRecordDeclaration(recordDecl);
+                    break;
+
+                case FunctionDeclaration funcDecl:
+                    CollectFunctionDeclaration(funcDecl);
+                    break;
+            }
+        }
+    }
+
+    private void CollectStructDeclaration(StructDeclaration structDecl)
+    {
+        if (!symbolTable.DeclareType(structDecl.Name, structDecl))
+        {
+            diagnostics.AddError(
+                $"Type '{structDecl.Name}' is already defined",
+                structDecl.Line, structDecl.Column);
+        }
+    }
+
+    private void CollectRecordDeclaration(RecordDeclaration recordDecl)
+    {
+        if (!symbolTable.DeclareType(recordDecl.Name, recordDecl))
+        {
+            diagnostics.AddError(
+                $"Type '{recordDecl.Name}' is already defined",
+                recordDecl.Line, recordDecl.Column);
+        }
+    }
+
+    private void CollectFunctionDeclaration(FunctionDeclaration funcDecl)
+    {
+        if (!symbolTable.DeclareFunction(funcDecl.Name, funcDecl))
+        {
+            diagnostics.AddError(
+                $"Function '{funcDecl.Name}' is already defined",
+                funcDecl.Line, funcDecl.Column);
+        }
+    }
+
+    // ============================================
+    // Phase 2: Implementation Analysis
+    // ============================================
+
+    private void AnalyzeImplementations(ProgramNode program)
+    {
+        foreach (var stmt in program.Statements)
+        {
+            if (stmt is ImplBlock implBlock)
+            {
+                AnalyzeImplBlock(implBlock);
+            }
+        }
+    }
+
+    private void AnalyzeImplBlock(ImplBlock implBlock)
+    {
+        // Check that the type exists
+        if (!symbolTable.TypeExists(implBlock.TypeName))
+        {
+            diagnostics.AddError(
+                $"Cannot implement methods for undefined type '{implBlock.TypeName}'",
+                implBlock.Line, implBlock.Column);
             return;
         }
 
-        symbolTable.DeclareType(name, declaration);
-    }
-
-    private void DeclareFunction(FunctionDeclaration func)
-    {
-        if (symbolTable.FunctionExists(func.Name))
+        // Collect methods
+        foreach (var method in implBlock.Methods)
         {
-            diagnostics.AddError($"Function '{func.Name}' is already defined",
-                func.Line, func.Column);
-            return;
-        }
+            if (!symbolTable.DeclareMethod(implBlock.TypeName, method))
+            {
+                diagnostics.AddError(
+                    $"Method '{method.Name}' is already defined for type '{implBlock.TypeName}'",
+                    implBlock.Line, implBlock.Column);
+            }
 
-        symbolTable.DeclareFunction(func.Name, func);
+            // Analyze method body
+            AnalyzeMethodDeclaration(method, implBlock.TypeName);
+        }
     }
+
+    // ============================================
+    // Phase 3: Statement Analysis
+    // ============================================
 
     private void AnalyzeStatement(Statement stmt)
     {
@@ -94,6 +174,14 @@ public class SemanticAnalyzer
                 AnalyzeWhileLoop(whileLoop);
                 break;
 
+            case TryStatement tryStmt:
+                AnalyzeTryStatement(tryStmt);
+                break;
+
+            case ThrowStatement throwStmt:
+                AnalyzeThrowStatement(throwStmt);
+                break;
+
             case ReturnStatement returnStmt:
                 AnalyzeReturnStatement(returnStmt);
                 break;
@@ -102,97 +190,109 @@ public class SemanticAnalyzer
             case ContinueStatement:
                 if (!inLoop)
                 {
-                    diagnostics.AddError($"{stmt.GetType().Name} outside of loop",
+                    diagnostics.AddError(
+                        $"{stmt.GetType().Name} outside of loop",
                         stmt.Line, stmt.Column);
                 }
                 break;
 
+            case ImportStatement importStmt:
+                AnalyzeImportStatement(importStmt);
+                break;
+
             case ExpressionStatement exprStmt:
-                AnalyzeExpression(exprStmt.Expression);
+                symbolResolver.ResolveExpressionType(exprStmt.Expression);
+                break;
+
+            case StructDeclaration:
+            case RecordDeclaration:
+            case ImplBlock:
+                // Already handled in earlier phases
                 break;
         }
     }
 
     private void AnalyzeVariableDeclaration(VariableDeclaration varDecl)
     {
-        // Check if variable already exists in current scope
-        if (symbolTable.VariableExistsInCurrentScope(varDecl.Name))
-        {
-            diagnostics.AddError($"Variable '{varDecl.Name}' is already declared in this scope",
-                varDecl.Line, varDecl.Column);
-            return;
-        }
+        // Resolve the value type
+        var valueType = symbolResolver.ResolveExpressionType(varDecl.Value);
 
-        // Analyze the initializer expression
-        var valueType = AnalyzeExpression(varDecl.Value);
-
-        // If type is specified, check compatibility
+        // Determine final type
+        TypeNode finalType;
         if (varDecl.Type != null)
         {
-            if (!TypesCompatible(varDecl.Type, valueType))
-            {
-                diagnostics.AddError(
-                    $"Cannot assign value of type '{valueType}' to variable of type '{varDecl.Type}'",
-                    varDecl.Line, varDecl.Column);
-            }
+            // Type is explicitly specified
+            finalType = varDecl.Type;
+
+            // Validate compatibility
+            typeChecker.ValidateAssignment(varDecl.Type, valueType, varDecl.Line, varDecl.Column);
+        }
+        else
+        {
+            // Infer type from value
+            finalType = valueType;
         }
 
         // Declare the variable
-        symbolTable.DeclareVariable(varDecl.Name, varDecl.Type ?? valueType, varDecl.Kind == VariableDeclaration.VarKind.Mut);
+        bool isMutable = varDecl.Kind == VariableDeclaration.VarKind.Mut;
+        if (!symbolTable.DeclareVariable(varDecl.Name, finalType, isMutable))
+        {
+            diagnostics.AddError(
+                $"Variable '{varDecl.Name}' is already declared in this scope",
+                varDecl.Line, varDecl.Column);
+        }
     }
 
     private void AnalyzeAssignment(Assignment assignment)
     {
-        // Check if target is valid
+        var targetType = symbolResolver.ResolveExpressionType(assignment.Target);
+        var valueType = symbolResolver.ResolveExpressionType(assignment.Value);
+
+        // Check if target is an identifier (variable)
         if (assignment.Target is IdentifierExpression ident)
         {
             var symbol = symbolTable.LookupVariable(ident.Name);
             if (symbol == null)
             {
-                diagnostics.AddError($"Variable '{ident.Name}' is not declared",
+                diagnostics.AddError(
+                    $"Undefined variable '{ident.Name}'",
                     assignment.Line, assignment.Column);
                 return;
             }
 
             if (!symbol.IsMutable)
             {
-                diagnostics.AddError($"Cannot assign to immutable variable '{ident.Name}'",
+                diagnostics.AddError(
+                    $"Cannot assign to immutable variable '{ident.Name}'",
                     assignment.Line, assignment.Column);
                 return;
             }
+        }
 
-            var valueType = AnalyzeExpression(assignment.Value);
-            if (!TypesCompatible(symbol.Type, valueType))
-            {
-                diagnostics.AddError(
-                    $"Cannot assign value of type '{valueType}' to variable of type '{symbol.Type}'",
-                    assignment.Line, assignment.Column);
-            }
-        }
-        else
-        {
-            // Member access or index access
-            AnalyzeExpression(assignment.Target);
-            AnalyzeExpression(assignment.Value);
-        }
+        typeChecker.ValidateAssignment(targetType, valueType, assignment.Line, assignment.Column);
     }
 
-    private void AnalyzeFunctionDeclaration(FunctionDeclaration func)
+    private void AnalyzeFunctionDeclaration(FunctionDeclaration funcDecl)
     {
         symbolTable.EnterScope();
 
         // Declare parameters
-        foreach (var param in func.Parameters)
+        foreach (var param in funcDecl.Parameters)
         {
-            symbolTable.DeclareVariable(param.Name, param.Type, false);
+            if (!symbolTable.DeclareVariable(param.Name, param.Type, false))
+            {
+                diagnostics.AddError(
+                    $"Parameter '{param.Name}' is already declared",
+                    funcDecl.Line, funcDecl.Column);
+            }
         }
 
-        // Store current function return type for return statement checking
+        // Set return type context
         var previousReturnType = currentFunctionReturnType;
-        currentFunctionReturnType = func.ReturnType;
+        currentFunctionReturnType = funcDecl.ReturnType ?? new PrimitiveType { PrimitiveKind = PrimitiveType.Kind.Void };
 
         // Analyze body
-        foreach (var stmt in func.Body)
+        foreach (var stmt in funcDecl.Body)
         {
             AnalyzeStatement(stmt);
         }
@@ -201,31 +301,65 @@ public class SemanticAnalyzer
         symbolTable.ExitScope();
     }
 
+    private void AnalyzeMethodDeclaration(MethodDeclaration method, string typeName)
+    {
+        symbolTable.EnterScope();
+
+        // Set type context for 'self'
+        var previousTypeName = currentTypeName;
+        currentTypeName = typeName;
+
+        // Declare parameters
+        foreach (var param in method.Parameters)
+        {
+            if (!symbolTable.DeclareVariable(param.Name, param.Type, false))
+            {
+                diagnostics.AddError(
+                    $"Parameter '{param.Name}' is already declared",
+                    method.Line, method.Column);
+            }
+        }
+
+        // Set return type context
+        var previousReturnType = currentFunctionReturnType;
+        currentFunctionReturnType = method.ReturnType ?? new PrimitiveType { PrimitiveKind = PrimitiveType.Kind.Void };
+
+        // Analyze body
+        foreach (var stmt in method.Body)
+        {
+            AnalyzeStatement(stmt);
+        }
+
+        currentFunctionReturnType = previousReturnType;
+        currentTypeName = previousTypeName;
+        symbolTable.ExitScope();
+    }
+
     private void AnalyzeIfStatement(IfStatement ifStmt)
     {
         // Analyze condition
-        var conditionType = AnalyzeExpression(ifStmt.Condition);
-        if (conditionType is not PrimitiveType { PrimitiveKind: PrimitiveType.Kind.Bool })
-        {
-            diagnostics.AddWarning($"Condition should be boolean, got '{conditionType}'",
-                ifStmt.Line, ifStmt.Column);
-        }
+        var conditionType = symbolResolver.ResolveExpressionType(ifStmt.Condition);
+        typeChecker.ValidateCondition(conditionType, ifStmt.Line, ifStmt.Column);
 
-        // Analyze blocks
+        // Analyze then block
         symbolTable.EnterScope();
         foreach (var stmt in ifStmt.ThenBlock)
             AnalyzeStatement(stmt);
         symbolTable.ExitScope();
 
+        // Analyze elif clauses
         foreach (var elif in ifStmt.ElifClauses)
         {
-            AnalyzeExpression(elif.Condition);
+            var elifCondType = symbolResolver.ResolveExpressionType(elif.Condition);
+            typeChecker.ValidateCondition(elifCondType, ifStmt.Line, ifStmt.Column);
+
             symbolTable.EnterScope();
             foreach (var stmt in elif.Block)
                 AnalyzeStatement(stmt);
             symbolTable.ExitScope();
         }
 
+        // Analyze else block
         if (ifStmt.ElseBlock != null)
         {
             symbolTable.EnterScope();
@@ -240,13 +374,30 @@ public class SemanticAnalyzer
         symbolTable.EnterScope();
 
         // Declare loop variable
-        symbolTable.DeclareVariable(forLoop.Variable,
-            new PrimitiveType { PrimitiveKind = PrimitiveType.Kind.Int }, false);
+        var loopVarType = new PrimitiveType { PrimitiveKind = PrimitiveType.Kind.Int };
+        if (!symbolTable.DeclareVariable(forLoop.Variable, loopVarType, false))
+        {
+            diagnostics.AddError(
+                $"Loop variable '{forLoop.Variable}' conflicts with existing declaration",
+                forLoop.Line, forLoop.Column);
+        }
 
-        AnalyzeExpression(forLoop.Range);
+        // Analyze range
+        symbolResolver.ResolveExpressionType(forLoop.Range);
+
+        // Analyze step if present
         if (forLoop.Step != null)
-            AnalyzeExpression(forLoop.Step);
+        {
+            var stepType = symbolResolver.ResolveExpressionType(forLoop.Step);
+            if (!typeChecker.IsNumericType(stepType))
+            {
+                diagnostics.AddError(
+                    $"For loop step must be numeric, got '{stepType}'",
+                    forLoop.Line, forLoop.Column);
+            }
+        }
 
+        // Analyze body
         var wasInLoop = inLoop;
         inLoop = true;
 
@@ -259,7 +410,9 @@ public class SemanticAnalyzer
 
     private void AnalyzeWhileLoop(WhileLoop whileLoop)
     {
-        AnalyzeExpression(whileLoop.Condition);
+        // Analyze condition
+        var conditionType = symbolResolver.ResolveExpressionType(whileLoop.Condition);
+        typeChecker.ValidateCondition(conditionType, whileLoop.Line, whileLoop.Column);
 
         symbolTable.EnterScope();
 
@@ -273,132 +426,76 @@ public class SemanticAnalyzer
         symbolTable.ExitScope();
     }
 
+    private void AnalyzeTryStatement(TryStatement tryStmt)
+    {
+        // Analyze try block
+        symbolTable.EnterScope();
+        foreach (var stmt in tryStmt.TryBlock)
+            AnalyzeStatement(stmt);
+        symbolTable.ExitScope();
+
+        // Analyze catch block
+        symbolTable.EnterScope();
+
+        // Declare error variable (always of type Error)
+        var errorType = new NamedType { Name = "Error" };
+        if (!symbolTable.DeclareVariable(tryStmt.ErrorVariable, errorType, false))
+        {
+            diagnostics.AddError(
+                $"Error variable '{tryStmt.ErrorVariable}' conflicts with existing declaration",
+                tryStmt.Line, tryStmt.Column);
+        }
+
+        foreach (var stmt in tryStmt.CatchBlock)
+            AnalyzeStatement(stmt);
+
+        symbolTable.ExitScope();
+    }
+
+    private void AnalyzeThrowStatement(ThrowStatement throwStmt)
+    {
+        symbolResolver.ResolveExpressionType(throwStmt.Value);
+    }
+
     private void AnalyzeReturnStatement(ReturnStatement returnStmt)
     {
         if (currentFunctionReturnType == null)
         {
-            diagnostics.AddError("Return statement outside of function",
+            diagnostics.AddError(
+                "Return statement outside of function",
                 returnStmt.Line, returnStmt.Column);
             return;
         }
 
         if (returnStmt.Value == null)
         {
-            if (currentFunctionReturnType is not PrimitiveType { PrimitiveKind: PrimitiveType.Kind.Void })
+            // No return value
+            var voidType = new PrimitiveType { PrimitiveKind = PrimitiveType.Kind.Void };
+            if (!typeChecker.AreTypesCompatible(currentFunctionReturnType, voidType))
             {
-                diagnostics.AddError($"Function must return a value of type '{currentFunctionReturnType}'",
+                diagnostics.AddError(
+                    $"Function must return a value of type '{currentFunctionReturnType}'",
                     returnStmt.Line, returnStmt.Column);
             }
         }
         else
         {
-            var returnType = AnalyzeExpression(returnStmt.Value);
-            if (!TypesCompatible(currentFunctionReturnType, returnType))
-            {
-                diagnostics.AddError(
-                    $"Cannot return value of type '{returnType}' from function expecting '{currentFunctionReturnType}'",
-                    returnStmt.Line, returnStmt.Column);
-            }
+            // Has return value
+            var returnType = symbolResolver.ResolveExpressionType(returnStmt.Value);
+            typeChecker.ValidateReturnType(currentFunctionReturnType, returnType,
+                returnStmt.Line, returnStmt.Column);
         }
     }
 
-    private TypeNode AnalyzeExpression(Expression expr)
+    private void AnalyzeImportStatement(ImportStatement importStmt)
     {
-        return expr switch
+        // For now, just validate syntax
+        // In a full implementation, we'd resolve the imported module and add its symbols
+        if (importStmt.FromModule != null && importStmt.ImportedItems.Count == 0)
         {
-            LiteralExpression lit => lit.Type,
-            IdentifierExpression ident => AnalyzeIdentifier(ident),
-            BinaryExpression bin => AnalyzeBinaryExpression(bin),
-            FunctionCallExpression call => AnalyzeFunctionCall(call),
-            NullLiteral => new NullableType { BaseType = new PrimitiveType { PrimitiveKind = PrimitiveType.Kind.Void } },
-            _ => new PrimitiveType { PrimitiveKind = PrimitiveType.Kind.Void }
-        };
-    }
-
-    private TypeNode AnalyzeIdentifier(IdentifierExpression ident)
-    {
-        var symbol = symbolTable.LookupVariable(ident.Name);
-        if (symbol == null)
-        {
-            diagnostics.AddError($"Undefined variable '{ident.Name}'",
-                ident.Line, ident.Column);
-            return new PrimitiveType { PrimitiveKind = PrimitiveType.Kind.Void };
+            diagnostics.AddWarning(
+                $"Import from '{importStmt.FromModule}' has no imported items",
+                importStmt.Line, importStmt.Column);
         }
-
-        return symbol.Type;
-    }
-
-    private TypeNode AnalyzeBinaryExpression(BinaryExpression bin)
-    {
-        var leftType = AnalyzeExpression(bin.Left);
-        var rightType = AnalyzeExpression(bin.Right);
-
-        // Simple type checking for arithmetic operators
-        if (bin.Operator is "+" or "-" or "*" or "/" or "%")
-        {
-            if (leftType is PrimitiveType leftPrim && rightType is PrimitiveType rightPrim)
-            {
-                if (leftPrim.PrimitiveKind == PrimitiveType.Kind.Int && rightPrim.PrimitiveKind == PrimitiveType.Kind.Int)
-                    return new PrimitiveType { PrimitiveKind = PrimitiveType.Kind.Int };
-
-                if ((leftPrim.PrimitiveKind == PrimitiveType.Kind.Float || rightPrim.PrimitiveKind == PrimitiveType.Kind.Float))
-                    return new PrimitiveType { PrimitiveKind = PrimitiveType.Kind.Float };
-            }
-        }
-
-        // Comparison operators return bool
-        if (bin.Operator is "==" or "!=" or "<" or ">" or "<=" or ">=")
-        {
-            return new PrimitiveType { PrimitiveKind = PrimitiveType.Kind.Bool };
-        }
-
-        // Logical operators
-        if (bin.Operator is "&&" or "||")
-        {
-            return new PrimitiveType { PrimitiveKind = PrimitiveType.Kind.Bool };
-        }
-
-        return leftType;
-    }
-
-    private TypeNode AnalyzeFunctionCall(FunctionCallExpression call)
-    {
-        var func = symbolTable.LookupFunction(call.FunctionName);
-        if (func == null)
-        {
-            diagnostics.AddError($"Undefined function '{call.FunctionName}'",
-                call.Line, call.Column);
-            return new PrimitiveType { PrimitiveKind = PrimitiveType.Kind.Void };
-        }
-
-        // Check argument count
-        if (call.Arguments.Count != func.Parameters.Count)
-        {
-            diagnostics.AddError(
-                $"Function '{call.FunctionName}' expects {func.Parameters.Count} arguments, got {call.Arguments.Count}",
-                call.Line, call.Column);
-        }
-
-        // Analyze arguments
-        foreach (var arg in call.Arguments)
-        {
-            AnalyzeExpression(arg);
-        }
-
-        return func.ReturnType ?? new PrimitiveType { PrimitiveKind = PrimitiveType.Kind.Void };
-    }
-
-    private bool TypesCompatible(TypeNode expected, TypeNode actual)
-    {
-        // Simplified type compatibility check
-        // TODO: Implement full type compatibility (nullability, subtyping, etc.)
-
-        if (expected.GetType() != actual.GetType())
-            return false;
-
-        if (expected is PrimitiveType expPrim && actual is PrimitiveType actPrim)
-            return expPrim.PrimitiveKind == actPrim.PrimitiveKind;
-
-        return expected.ToString() == actual.ToString();
     }
 }

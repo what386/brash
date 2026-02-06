@@ -14,11 +14,6 @@
 
   <ItemGroup>
     <Antlr4 Include="Brash.g4">
-      <Package>Brash.Compiler.Frontend</Package>
-      <Namespace>Brash.Compiler.Frontend.Parser</Namespace>
-      <Listener>true</Listener>
-      <Visitor>true</Visitor>
-      <GAntlrOutputPath>Frontend/Generated</GAntlrOutputPath>
     </Antlr4>
   </ItemGroup>
 

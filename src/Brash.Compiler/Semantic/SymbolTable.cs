@@ -2,18 +2,56 @@ namespace Brash.Compiler.Semantic;
 
 using Brash.Compiler.Ast;
 
+// ============================================
+// Symbol Types
+// ============================================
+
 public class VariableSymbol
 {
     public string Name { get; set; } = string.Empty;
     public TypeNode Type { get; set; } = null!;
     public bool IsMutable { get; set; }
+    public int ScopeLevel { get; set; }
 }
+
+public class FunctionSymbol
+{
+    public string Name { get; set; } = string.Empty;
+    public List<TypeNode> ParameterTypes { get; set; } = new();
+    public List<string> ParameterNames { get; set; } = new();
+    public TypeNode ReturnType { get; set; } = null!;
+    public FunctionDeclaration Declaration { get; set; } = null!;
+}
+
+public class TypeSymbol
+{
+    public string Name { get; set; } = string.Empty;
+    public Statement Declaration { get; set; } = null!; // StructDeclaration or RecordDeclaration
+    public Dictionary<string, TypeNode> Fields { get; set; } = new();
+    public bool IsImmutable { get; set; } // true for records
+}
+
+public class MethodSymbol
+{
+    public string Name { get; set; } = string.Empty;
+    public string TypeName { get; set; } = string.Empty; // The type this method belongs to
+    public List<TypeNode> ParameterTypes { get; set; } = new();
+    public List<string> ParameterNames { get; set; } = new();
+    public TypeNode ReturnType { get; set; } = null!;
+    public MethodDeclaration Declaration { get; set; } = null!;
+}
+
+// ============================================
+// Symbol Table
+// ============================================
 
 public class SymbolTable
 {
     private readonly Stack<Dictionary<string, VariableSymbol>> scopes = new();
-    private readonly Dictionary<string, FunctionDeclaration> functions = new();
-    private readonly Dictionary<string, Statement> types = new();
+    private readonly Dictionary<string, FunctionSymbol> functions = new();
+    private readonly Dictionary<string, TypeSymbol> types = new();
+    private readonly Dictionary<string, List<MethodSymbol>> methods = new(); // Key: TypeName
+    private int currentScopeLevel = 0;
 
     public SymbolTable()
     {
@@ -28,27 +66,40 @@ public class SymbolTable
     public void EnterScope()
     {
         scopes.Push(new Dictionary<string, VariableSymbol>());
+        currentScopeLevel++;
     }
 
     public void ExitScope()
     {
         if (scopes.Count > 1)
+        {
             scopes.Pop();
+            currentScopeLevel--;
+        }
     }
+
+    public int CurrentScopeLevel => currentScopeLevel;
 
     // ============================================
     // Variables
     // ============================================
 
-    public void DeclareVariable(string name, TypeNode type, bool isMutable)
+    public bool DeclareVariable(string name, TypeNode type, bool isMutable)
     {
         var currentScope = scopes.Peek();
+
+        if (currentScope.ContainsKey(name))
+            return false; // Already declared in current scope
+
         currentScope[name] = new VariableSymbol
         {
             Name = name,
             Type = type,
-            IsMutable = isMutable
+            IsMutable = isMutable,
+            ScopeLevel = currentScopeLevel
         };
+
+        return true;
     }
 
     public VariableSymbol? LookupVariable(string name)
@@ -67,16 +118,36 @@ public class SymbolTable
         return scopes.Peek().ContainsKey(name);
     }
 
+    public bool VariableExists(string name)
+    {
+        return LookupVariable(name) != null;
+    }
+
     // ============================================
     // Functions
     // ============================================
 
-    public void DeclareFunction(string name, FunctionDeclaration func)
+    public bool DeclareFunction(string name, FunctionDeclaration func)
     {
-        functions[name] = func;
+        if (functions.ContainsKey(name))
+            return false;
+
+        var paramTypes = func.Parameters.Select(p => p.Type).ToList();
+        var paramNames = func.Parameters.Select(p => p.Name).ToList();
+
+        functions[name] = new FunctionSymbol
+        {
+            Name = name,
+            ParameterTypes = paramTypes,
+            ParameterNames = paramNames,
+            ReturnType = func.ReturnType ?? new PrimitiveType { PrimitiveKind = PrimitiveType.Kind.Void },
+            Declaration = func
+        };
+
+        return true;
     }
 
-    public FunctionDeclaration? LookupFunction(string name)
+    public FunctionSymbol? LookupFunction(string name)
     {
         return functions.GetValueOrDefault(name);
     }
@@ -86,16 +157,48 @@ public class SymbolTable
         return functions.ContainsKey(name);
     }
 
+    public IEnumerable<FunctionSymbol> GetAllFunctions()
+    {
+        return functions.Values;
+    }
+
     // ============================================
     // Types (Structs/Records)
     // ============================================
 
-    public void DeclareType(string name, Statement typeDecl)
+    public bool DeclareType(string name, Statement declaration)
     {
-        types[name] = typeDecl;
+        if (types.ContainsKey(name))
+            return false;
+
+        var fields = new Dictionary<string, TypeNode>();
+        bool isImmutable = false;
+
+        if (declaration is StructDeclaration structDecl)
+        {
+            foreach (var field in structDecl.Fields)
+                fields[field.Name] = field.Type;
+            isImmutable = false;
+        }
+        else if (declaration is RecordDeclaration recordDecl)
+        {
+            foreach (var field in recordDecl.Fields)
+                fields[field.Name] = field.Type;
+            isImmutable = true;
+        }
+
+        types[name] = new TypeSymbol
+        {
+            Name = name,
+            Declaration = declaration,
+            Fields = fields,
+            IsImmutable = isImmutable
+        };
+
+        return true;
     }
 
-    public Statement? LookupType(string name)
+    public TypeSymbol? LookupType(string name)
     {
         return types.GetValueOrDefault(name);
     }
@@ -103,5 +206,71 @@ public class SymbolTable
     public bool TypeExists(string name)
     {
         return types.ContainsKey(name);
+    }
+
+    public IEnumerable<TypeSymbol> GetAllTypes()
+    {
+        return types.Values;
+    }
+
+    // ============================================
+    // Methods
+    // ============================================
+
+    public bool DeclareMethod(string typeName, MethodDeclaration method)
+    {
+        if (!methods.ContainsKey(typeName))
+            methods[typeName] = new List<MethodSymbol>();
+
+        // Check if method already exists for this type
+        if (methods[typeName].Any(m => m.Name == method.Name))
+            return false;
+
+        var paramTypes = method.Parameters.Select(p => p.Type).ToList();
+        var paramNames = method.Parameters.Select(p => p.Name).ToList();
+
+        methods[typeName].Add(new MethodSymbol
+        {
+            Name = method.Name,
+            TypeName = typeName,
+            ParameterTypes = paramTypes,
+            ParameterNames = paramNames,
+            ReturnType = method.ReturnType ?? new PrimitiveType { PrimitiveKind = PrimitiveType.Kind.Void },
+            Declaration = method
+        });
+
+        return true;
+    }
+
+    public MethodSymbol? LookupMethod(string typeName, string methodName)
+    {
+        if (!methods.TryGetValue(typeName, out var typeMethods))
+            return null;
+
+        return typeMethods.FirstOrDefault(m => m.Name == methodName);
+    }
+
+    public List<MethodSymbol> GetMethodsForType(string typeName)
+    {
+        return methods.GetValueOrDefault(typeName) ?? new List<MethodSymbol>();
+    }
+
+    public bool MethodExists(string typeName, string methodName)
+    {
+        return LookupMethod(typeName, methodName) != null;
+    }
+
+    // ============================================
+    // Utility
+    // ============================================
+
+    public void Clear()
+    {
+        scopes.Clear();
+        functions.Clear();
+        types.Clear();
+        methods.Clear();
+        currentScopeLevel = 0;
+        EnterScope(); // Re-enter global scope
     }
 }

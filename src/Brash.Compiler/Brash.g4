@@ -28,6 +28,7 @@ statement
     | functionDeclaration
     | structDeclaration
     | recordDeclaration
+    | enumDeclaration
     | implBlock
     | ifStatement
     | forLoop
@@ -84,6 +85,18 @@ structDeclaration
 
 recordDeclaration
     : 'record' IDENTIFIER structBody
+    ;
+
+enumDeclaration
+    : 'enum' IDENTIFIER enumBody
+    ;
+
+enumBody
+    : enumVariant (',' enumVariant)* ','? 'end'
+    ;
+
+enumVariant
+    : IDENTIFIER ('(' type (',' type)* ')')?
     ;
 
 structBody
@@ -278,6 +291,7 @@ stringLiteral
 // ============================================
 
 // Keywords
+ENUM        : 'enum';
 LET         : 'let';
 MUT         : 'mut';
 CONST       : 'const';

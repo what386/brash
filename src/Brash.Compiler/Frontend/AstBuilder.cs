@@ -337,18 +337,6 @@ public class AstBuilder : BrashBaseVisitor<AstNode>
         return new NullLiteral();
     }
 
-    public override AstNode VisitBinaryExpr(BrashParser.BinaryExprContext context)
-    {
-        return new BinaryExpression
-        {
-            Line = context.Start.Line,
-            Column = context.Start.Column,
-            Left = Visit(context.expression(0)) as Expression ?? new NullLiteral(),
-            Operator = context.GetChild(1).GetText(),
-            Right = Visit(context.expression(1)) as Expression ?? new NullLiteral()
-        };
-    }
-
     public override AstNode VisitFunctionCallExpr(BrashParser.FunctionCallExprContext context)
     {
         var call = new FunctionCallExpression
