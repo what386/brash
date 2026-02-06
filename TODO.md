@@ -56,3 +56,6 @@
 - [ ] Testing: add runtime integration tests that execute generated Bash for representative examples and validate outputs/exit codes #testing #integration #runtime #quality
       @created 2026-02-06 23:09
 
+- [ ] CLI: wire full compile pipeline (parse -> AST -> semantic -> codegen -> output file) with stable diagnostics and exit codes (high) #cli #compiler #feature
+      @created 2026-02-06 23:09
+
