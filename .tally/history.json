@@ -8,5 +8,20 @@
       "completed_at": "2026-02-06T23:20:15.810646560Z"
     },
     "version": null
+  },
+  {
+    "change": {
+      "description": "Language: switch mut to modifier syntax ( + mutable parameters) and enforce parameter mutability with a dedicated MutabilityChecker",
+      "priority": "High",
+      "tags": [
+        "language",
+        "semantic",
+        "parser",
+        "feature"
+      ],
+      "commit": null,
+      "completed_at": "2026-02-06T23:27:11.406574160Z"
+    },
+    "version": null
   }
 ]
