@@ -1,0 +1,33 @@
+{
+  "$schema": "https://tree-sitter.github.io/tree-sitter/assets/schemas/config.schema.json",
+  "grammars": [
+    {
+      "name": "brash",
+      "camelcase": "Brash",
+      "title": "Brash",
+      "scope": "source.bsh",
+      "file-types": [
+        "bsh"
+      ],
+      "injection-regex": "^brash$",
+      "class-name": "TreeSitterBrash"
+    }
+  ],
+  "metadata": {
+    "version": "0.1.0",
+    "license": "MIT",
+    "description": "a small typed language that transpiles to Bash.",
+    "authors": [
+      {
+        "name": "what386",
+        "url": "https://github.com/what386"
+      }
+    ],
+    "links": {
+      "repository": "https://github.com/what386/brash"
+    }
+  },
+  "bindings": {
+    "c": true
+  }
+}
