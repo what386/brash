@@ -116,6 +116,49 @@ public class ModuleImportTests
         Assert.Contains(diagnostics.GetErrors(), d => d.Message.Contains("Only const declarations can be public"));
     }
 
+    [Fact]
+    public void ModuleLoader_ResolvesStdNamespaceModule()
+    {
+        using var fixture = new ModuleFixture();
+        using var stdLibScope = new StdLibPathScope(FindStdLibRoot());
+
+        fixture.Write(
+            "main.bsh",
+            """
+            import { join } from "std/paths"
+            let out = join("/tmp", "file.txt")
+            exec("printf", "%s\n", out)
+            """);
+
+        var diagnostics = new DiagnosticBag();
+        var ok = ModuleLoader.TryLoadProgram(fixture.Path("main.bsh"), diagnostics, out var program);
+
+        Assert.True(ok, string.Join(Environment.NewLine, diagnostics.GetErrors()));
+        Assert.NotNull(program);
+        Assert.Contains(program!.Statements, s => s is FunctionDeclaration { Name: "join", IsPublic: true });
+    }
+
+    [Fact]
+    public void ModuleLoader_ResolvesStdRootModule()
+    {
+        using var fixture = new ModuleFixture();
+        using var stdLibScope = new StdLibPathScope(FindStdLibRoot());
+
+        fixture.Write(
+            "main.bsh",
+            """
+            import { STD_VERSION } from "std"
+            exec("printf", "%s\n", STD_VERSION)
+            """);
+
+        var diagnostics = new DiagnosticBag();
+        var ok = ModuleLoader.TryLoadProgram(fixture.Path("main.bsh"), diagnostics, out var program);
+
+        Assert.True(ok, string.Join(Environment.NewLine, diagnostics.GetErrors()));
+        Assert.NotNull(program);
+        Assert.Contains(program!.Statements, s => s is VariableDeclaration { Name: "STD_VERSION", IsPublic: true });
+    }
+
     private static DiagnosticBag Analyze(string source)
     {
         var parserDiagnostics = new DiagnosticBag();
@@ -173,6 +216,40 @@ public class ModuleImportTests
         {
             if (Directory.Exists(root))
                 Directory.Delete(root, recursive: true);
+        }
+    }
+
+    private static string FindStdLibRoot()
+    {
+        foreach (var start in new[] { Directory.GetCurrentDirectory(), AppContext.BaseDirectory })
+        {
+            var current = new DirectoryInfo(Path.GetFullPath(start));
+            while (current != null)
+            {
+                var candidate = System.IO.Path.Combine(current.FullName, "src", "stdlib");
+                if (Directory.Exists(candidate))
+                    return candidate;
+
+                current = current.Parent;
+            }
+        }
+
+        throw new InvalidOperationException("Unable to locate src/stdlib for stdlib import tests.");
+    }
+
+    private sealed class StdLibPathScope : IDisposable
+    {
+        private readonly string? previous;
+
+        public StdLibPathScope(string path)
+        {
+            previous = Environment.GetEnvironmentVariable("BRASH_STDLIB_PATH");
+            Environment.SetEnvironmentVariable("BRASH_STDLIB_PATH", path);
+        }
+
+        public void Dispose()
+        {
+            Environment.SetEnvironmentVariable("BRASH_STDLIB_PATH", previous);
         }
     }
 }
