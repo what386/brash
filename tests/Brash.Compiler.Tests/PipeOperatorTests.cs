@@ -18,7 +18,7 @@ public class PipeOperatorTests
             let result = 1 | cmd("cat")
             """);
 
-        Assert.Contains(diagnostics.GetErrors(), d => d.Message.Contains("Pipe operator left operand must be"));
+        Assert.Contains(diagnostics.GetErrors(), d => d.Message.Contains("Pipe operator right operand must be a callable stage"));
     }
 
     [Fact]
@@ -49,6 +49,42 @@ public class PipeOperatorTests
         Assert.Contains("|", bash);
         Assert.Contains("tr", bash);
         Assert.Contains("result=$(", bash);
+    }
+
+    [Fact]
+    public void SemanticAnalyzer_AllowsValuePipeWhenFunctionPreservesType()
+    {
+        var diagnostics = Analyze(
+            """
+            fn add_two(x: int): int
+                return x + 2
+            end
+
+            fn double(x: int): int
+                return x * 2
+            end
+
+            let mut a = 5
+            a = a | add_two() | double()
+            """);
+
+        Assert.False(diagnostics.HasErrors, string.Join(Environment.NewLine, diagnostics.GetErrors()));
+    }
+
+    [Fact]
+    public void SemanticAnalyzer_RejectsValuePipeWhenStageChangesType()
+    {
+        var diagnostics = Analyze(
+            """
+            fn to_text(x: int): string
+                return "x"
+            end
+
+            let mut a = 5
+            a = a | to_text()
+            """);
+
+        Assert.Contains(diagnostics.GetErrors(), d => d.Message.Contains("must preserve type"));
     }
 
     [Fact]

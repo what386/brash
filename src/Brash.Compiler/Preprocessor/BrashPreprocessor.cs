@@ -16,6 +16,7 @@ public sealed class BrashPreprocessor
     {
         directiveHandlers = new IPreprocessorDirectiveHandler[]
         {
+            new ShebangDirectiveHandler(),
             new DefineDirectiveHandler(),
             new UndefDirectiveHandler(),
             new IfDefDirectiveHandler(),

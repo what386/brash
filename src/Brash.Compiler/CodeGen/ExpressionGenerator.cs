@@ -146,10 +146,10 @@ public partial class BashGenerator
     {
         var left = GenerateCommandValue(expr.Left);
         var right = GenerateCommandValue(expr.Right);
-        if (left == null || right == null)
-            return HandleUnsupportedExpression(expr, "pipe expression");
+        if (left != null && right != null)
+            return $"$(brash_pipe_cmd \"{left}\" \"{right}\")";
 
-        return $"$(brash_pipe_cmd \"{left}\" \"{right}\")";
+        return GenerateValuePipeExpression(expr);
     }
 
     private string GenerateCommandExpression(CommandExpression expr)
@@ -365,5 +365,23 @@ public partial class BashGenerator
 
         path = string.Empty;
         return false;
+    }
+
+    private string GenerateValuePipeExpression(PipeExpression expr)
+    {
+        var input = GenerateExpression(expr.Left);
+        return expr.Right switch
+        {
+            FunctionCallExpression call => GenerateFunctionPipeInvocation(input, call),
+            _ => HandleUnsupportedExpression(expr, "value pipe right stage")
+        };
+    }
+
+    private string GenerateFunctionPipeInvocation(string pipedInput, FunctionCallExpression call)
+    {
+        // Pipe semantics: pass the left value as the implicit first argument.
+        var args = new List<string> { pipedInput };
+        args.AddRange(call.Arguments.Select(GenerateExpression));
+        return $"$({call.FunctionName} {string.Join(" ", args)})";
     }
 }

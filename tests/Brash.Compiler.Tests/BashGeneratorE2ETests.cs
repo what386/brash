@@ -127,6 +127,30 @@ public class BashGeneratorE2ETests
     }
 
     [Fact]
+    public void E2E_ValuePipe_ChainsFunctions()
+    {
+        const string source =
+            """
+            fn add_two(x: int): int
+                return x + 2
+            end
+
+            fn double(x: int): int
+                return x * 2
+            end
+
+            let mut a = 5
+            a = a | add_two() | double()
+            exec("printf", "%s\n", a)
+            """;
+
+        var result = CompileAndRun(source);
+
+        Assert.Equal(0, result.ExitCode);
+        Assert.Equal("14", result.StdOut.Trim());
+    }
+
+    [Fact]
     public void E2E_CmdSingleStringArgumentWorksAsRawCommandText()
     {
         const string source =

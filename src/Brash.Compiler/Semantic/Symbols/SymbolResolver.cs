@@ -27,7 +27,7 @@ public class SymbolResolver
         this.symbolTable = symbolTable;
         this.typeChecker = typeChecker;
         this.nullabilityChecker = nullabilityChecker;
-        this.pipeChecker = new PipeChecker(diagnostics);
+        this.pipeChecker = new PipeChecker(diagnostics, typeChecker);
     }
 
     // ============================================
@@ -364,10 +364,91 @@ public class SymbolResolver
     private TypeNode ResolvePipeExpression(PipeExpression pipe)
     {
         var leftType = ResolveExpressionType(pipe.Left);
-        var rightType = ResolveExpressionType(pipe.Right);
-        pipeChecker.ValidatePipeTypes(leftType, rightType, pipe.Line, pipe.Column);
 
-        return new NamedType { Name = "Command" };
+        // Command pipelines preserve existing behavior.
+        if (pipeChecker.IsCommandType(leftType))
+        {
+            var rightType = ResolveExpressionType(pipe.Right);
+            pipeChecker.ValidateCommandPipe(leftType, rightType, pipe.Line, pipe.Column);
+            return new NamedType { Name = "Command" };
+        }
+
+        // Value pipelines: right side must be a callable stage that accepts the
+        // left value as implicit first argument and returns the same type.
+        return pipe.Right switch
+        {
+            FunctionCallExpression fnCall => ResolveValuePipeFunctionStage(leftType, fnCall, pipe.Line, pipe.Column),
+            MethodCallExpression methodCall => ResolveValuePipeMethodStage(leftType, methodCall, pipe.Line, pipe.Column),
+            _ => ReportInvalidValuePipeStage(leftType, pipe)
+        };
+    }
+
+    private TypeNode ResolveValuePipeFunctionStage(
+        TypeNode inputType,
+        FunctionCallExpression call,
+        int line,
+        int column)
+    {
+        var function = symbolTable.LookupFunction(call.FunctionName);
+        if (function == null)
+        {
+            diagnostics.AddError($"Undefined function '{call.FunctionName}'", call.Line, call.Column);
+            return new UnknownType();
+        }
+
+        var argumentTypes = new List<TypeNode> { inputType };
+        argumentTypes.AddRange(call.Arguments.Select(ResolveExpressionType));
+        typeChecker.ValidateFunctionCall(function, argumentTypes, call.Line, call.Column);
+
+        pipeChecker.ValidateValuePipeTypeInvariant(inputType, function.ReturnType, line, column);
+        return function.ReturnType;
+    }
+
+    private TypeNode ResolveValuePipeMethodStage(
+        TypeNode inputType,
+        MethodCallExpression call,
+        int line,
+        int column)
+    {
+        var objectType = ResolveExpressionType(call.Object);
+        objectType = nullabilityChecker.RequireNonNullable(
+            objectType,
+            call.Line,
+            call.Column,
+            $"method call '{call.MethodName}'");
+
+        var typeName = objectType switch
+        {
+            NamedType named => named.Name,
+            _ => objectType.ToString()
+        };
+
+        var method = symbolTable.LookupMethod(typeName, call.MethodName);
+        if (method == null)
+        {
+            diagnostics.AddError(
+                $"Type '{typeName}' has no method '{call.MethodName}'",
+                call.Line,
+                call.Column);
+            return new UnknownType();
+        }
+
+        var argumentTypes = new List<TypeNode> { inputType };
+        argumentTypes.AddRange(call.Arguments.Select(ResolveExpressionType));
+        typeChecker.ValidateMethodCall(method, argumentTypes, call.Line, call.Column);
+
+        pipeChecker.ValidateValuePipeTypeInvariant(inputType, method.ReturnType, line, column);
+        return method.ReturnType;
+    }
+
+    private TypeNode ReportInvalidValuePipeStage(TypeNode leftType, PipeExpression pipe)
+    {
+        diagnostics.AddError(
+            $"Pipe operator right operand must be a callable stage when piping '{leftType}' values",
+            pipe.Line,
+            pipe.Column);
+        ResolveExpressionType(pipe.Right);
+        return new UnknownType();
     }
 
     private TypeNode ResolveNullCoalesce(NullCoalesceExpression nullCoalesce)

@@ -109,6 +109,39 @@ public class PreprocessorTests
         Assert.Contains(diagnostics.GetErrors(), d => d.Message.Contains("missing '#endif'"));
     }
 
+    [Fact]
+    public void Preprocessor_AllowsShebangOnFirstLine()
+    {
+        const string source =
+            """
+            #!/bin/env brash run
+            let x = 1
+            """;
+
+        var diagnostics = new DiagnosticBag();
+        var preprocessed = new BrashPreprocessor().Process(source, diagnostics);
+        Assert.False(diagnostics.HasErrors, string.Join(Environment.NewLine, diagnostics.GetErrors()));
+
+        var program = ParseProgram(preprocessed);
+        var varDecl = Assert.IsType<VariableDeclaration>(Assert.Single(program.Statements));
+        Assert.Equal("x", varDecl.Name);
+    }
+
+    [Fact]
+    public void Preprocessor_RejectsShebangOutsideFirstLine()
+    {
+        const string source =
+            """
+            let x = 1
+            #!/bin/env brash run
+            """;
+
+        var diagnostics = new DiagnosticBag();
+        _ = new BrashPreprocessor().Process(source, diagnostics);
+
+        Assert.Contains(diagnostics.GetErrors(), d => d.Message.Contains("shebang directive must appear on the first line"));
+    }
+
     private static ProgramNode ParseProgram(string source)
     {
         var diagnostics = new DiagnosticBag();
@@ -126,4 +159,3 @@ public class PreprocessorTests
         return Assert.IsType<ProgramNode>(new AstBuilder().VisitProgram(tree));
     }
 }
-
