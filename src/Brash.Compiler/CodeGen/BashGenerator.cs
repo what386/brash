@@ -10,6 +10,7 @@ public partial class BashGenerator
     private readonly StringBuilder output = new();
     private readonly List<string> warnings = new();
     private int indentLevel = 0;
+    private int tempVariableCounter = 0;
     private const string IndentString = "    ";
     private string currentContext = "<unknown>";
 
@@ -20,6 +21,7 @@ public partial class BashGenerator
         output.Clear();
         warnings.Clear();
         indentLevel = 0;
+        tempVariableCounter = 0;
 
         // Bash shebang
         EmitLine("#!/usr/bin/env bash");
@@ -102,6 +104,13 @@ public partial class BashGenerator
         EmitLine("    bash -lc \"$__cmd\" &");
         EmitLine("    printf '%s' \"$!\"");
         EmitLine("}");
+        EmitLine();
+
+        EmitLine("brash_throw() {");
+        EmitLine("    local __msg=\"$1\"");
+        EmitLine("    printf '%s\\n' \"$__msg\" >&2");
+        EmitLine("    return 1 2>/dev/null || exit 1");
+        EmitLine("}");
     }
 
     private void Emit(string code)
@@ -141,5 +150,12 @@ public partial class BashGenerator
     {
         ReportUnsupported($"expression '{expr.GetType().Name}' in {currentContext}");
         return "\"\"";
+    }
+
+    private string NextTempVariable(string prefix)
+    {
+        var name = $"{prefix}_{tempVariableCounter}";
+        tempVariableCounter++;
+        return name;
     }
 }

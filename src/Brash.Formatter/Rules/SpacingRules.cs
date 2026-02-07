@@ -59,6 +59,25 @@ internal static class SpacingRules
                 continue;
             }
 
+            if (ch == '{')
+            {
+                EnsureSpaceBeforeBrace(sb);
+                sb.Append('{');
+                if (i + 1 < line.Length && line[i + 1] != '}')
+                    sb.Append(' ');
+                SkipFollowingSpaces(line, ref i);
+                continue;
+            }
+
+            if (ch == '}')
+            {
+                TrimTrailingSpaces(sb);
+                if (sb.Length > 0 && sb[^1] != '{' && sb[^1] != ' ')
+                    sb.Append(' ');
+                sb.Append('}');
+                continue;
+            }
+
             if (TryReadOperator(line, i, out var op, out var consume))
             {
                 TrimTrailingSpaces(sb);
@@ -117,5 +136,18 @@ internal static class SpacingRules
     {
         while (index + 1 < line.Length && char.IsWhiteSpace(line[index + 1]))
             index++;
+    }
+
+    private static void EnsureSpaceBeforeBrace(StringBuilder sb)
+    {
+        if (sb.Length == 0)
+            return;
+
+        var prev = sb[^1];
+        if (prev == ' ')
+            return;
+
+        if (char.IsLetterOrDigit(prev) || prev == '_' || prev == ')' || prev == ']')
+            sb.Append(' ');
     }
 }

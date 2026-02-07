@@ -64,14 +64,12 @@ public partial class BashGenerator
                 GenerateImplBlock(implBlock);
                 break;
 
-            case TryStatement:
-                EmitComment("Try/catch is not yet emitted to Bash.");
-                ReportUnsupported("try/catch statement");
+            case TryStatement tryStmt:
+                GenerateTryStatement(tryStmt);
                 break;
 
-            case ThrowStatement:
-                EmitComment("Throw is not yet emitted to Bash.");
-                ReportUnsupported("throw statement");
+            case ThrowStatement throwStmt:
+                GenerateThrowStatement(throwStmt);
                 break;
 
             case ImportStatement importStmt:
@@ -273,6 +271,50 @@ public partial class BashGenerator
         {
             Emit("return 0");
         }
+    }
+
+    private void GenerateTryStatement(TryStatement tryStmt)
+    {
+        var errFileVar = NextTempVariable("__brash_err_file");
+
+        Emit($"{errFileVar}=$(mktemp)");
+        EmitLine();
+
+        Emit("if {");
+        indentLevel++;
+        foreach (var statement in tryStmt.TryBlock)
+        {
+            EmitLine();
+            GenerateStatement(statement);
+        }
+        EmitLine();
+        indentLevel--;
+        Emit($"}} 2>\"${{{errFileVar}}}\"; then");
+        indentLevel++;
+        EmitLine();
+        Emit(":");
+        indentLevel--;
+        EmitLine();
+        Emit("else");
+        indentLevel++;
+        EmitLine();
+        Emit($"{tryStmt.ErrorVariable}=$(cat \"${{{errFileVar}}}\")");
+        foreach (var statement in tryStmt.CatchBlock)
+        {
+            EmitLine();
+            GenerateStatement(statement);
+        }
+        indentLevel--;
+        EmitLine();
+        Emit("fi");
+        EmitLine();
+        Emit($"rm -f \"${{{errFileVar}}}\"");
+    }
+
+    private void GenerateThrowStatement(ThrowStatement throwStmt)
+    {
+        var value = GenerateExpression(throwStmt.Value);
+        Emit($"brash_throw {value}");
     }
 
     private string? GenerateAssignmentTarget(Expression target)

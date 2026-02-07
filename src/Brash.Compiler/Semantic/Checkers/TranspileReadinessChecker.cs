@@ -22,13 +22,11 @@ public class TranspileReadinessChecker
         switch (statement)
         {
             case TryStatement tryStmt:
-                ReportUnsupported("try/catch", tryStmt.Line, tryStmt.Column);
                 ValidateStatements(tryStmt.TryBlock);
                 ValidateStatements(tryStmt.CatchBlock);
                 break;
 
             case ThrowStatement throwStmt:
-                ReportUnsupported("throw", throwStmt.Line, throwStmt.Column);
                 ValidateExpression(throwStmt.Value);
                 break;
 
