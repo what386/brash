@@ -1,11 +1,11 @@
 #!/bin/env brash run
 // Shebang directive:
 // - Must be the first line in the file.
-// - Ignored by Brash parsing, but lets the LINUX run this file via `brash run`.
-// - Example: `chmod +x 10_preprocessor-directives.bsh && ./10_preprocessor-directives.bsh`
+// - Ignored by Brash parsing, but lets the OS run this file via `brash run`.
+// - Example: `chmod +x 12_preprocessor-directives.bsh && ./12_preprocessor-directives.bsh`
 
 // ============================================
-// File: examples/10_preprocessor-directives.bsh
+// File: examples/12_preprocessor-directives.bsh
 // Preprocessor directives (text-based substitution)
 // ============================================
 

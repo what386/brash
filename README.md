@@ -86,6 +86,24 @@ let output = exec(pipeline)
 exec("printf", "%s\n", output)
 ```
 
+## Example learning path
+
+Recommended order in `examples/`:
+
+1. `00_general-overview.bsh`
+2. `01_the-basics.bsh`
+3. `02_functions.bsh`
+4. `03_control-flow.bsh`
+5. `04_collections.bsh`
+6. `05_data-structures.bsh`
+7. `06_any-type.bsh`
+8. `07_shell-integration.bsh`
+9. `08_pipe-operator.bsh`
+10. `09_error-handling.bsh`
+11. `10_import-system.bsh` (syntax-focused; codegen still in progress)
+12. `11_async-await.bsh` (currently rejected by semantic checks)
+13. `12_preprocessor-directives.bsh`
+
 ## Explicitly unsupported (fail-fast)
 
 These are currently rejected during semantic/transpile-readiness checks:
