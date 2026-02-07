@@ -203,7 +203,11 @@ internal sealed class LexerDiagnosticErrorListener : IAntlrErrorListener<int>
         string msg,
         RecognitionException e)
     {
-        diagnostics.AddError($"Lexer error: {msg}", line, charPositionInLine, "E000");
+        diagnostics.AddError(
+            SyntaxErrorFormatter.FormatLexerError(msg),
+            line,
+            charPositionInLine,
+            "E000");
     }
 }
 

@@ -60,7 +60,7 @@ public class TranspileReadinessChecker
                 break;
 
             case ForLoop forLoop:
-                ValidateExpression(forLoop.Range);
+                ValidateForLoopRange(forLoop.Range);
                 if (forLoop.Step != null)
                     ValidateExpression(forLoop.Step);
                 ValidateStatements(forLoop.Body);
@@ -177,6 +177,19 @@ public class TranspileReadinessChecker
                     ValidateExpression(value);
                 break;
         }
+    }
+
+    private void ValidateForLoopRange(Expression expression)
+    {
+        if (expression is RangeExpression range)
+        {
+            // Range syntax is supported specifically for for-loop iteration.
+            ValidateExpression(range.Start);
+            ValidateExpression(range.End);
+            return;
+        }
+
+        ValidateExpression(expression);
     }
 
     private void ReportUnsupported(string feature, int line, int column)

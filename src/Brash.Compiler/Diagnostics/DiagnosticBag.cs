@@ -170,6 +170,10 @@ public class DiagnosticErrorListener : BaseErrorListener
         string msg,
         RecognitionException e)
     {
-        diagnostics.AddError($"Syntax error: {msg}", line, charPositionInLine, "E001");
+        diagnostics.AddError(
+            SyntaxErrorFormatter.FormatParserError(offendingSymbol, msg),
+            line,
+            charPositionInLine,
+            "E001");
     }
 }
