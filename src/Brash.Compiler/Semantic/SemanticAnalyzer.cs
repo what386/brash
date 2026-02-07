@@ -16,7 +16,6 @@ public class SemanticAnalyzer
     private readonly NullabilityChecker nullabilityChecker;
     private readonly SymbolResolver symbolResolver;
     private readonly MutabilityChecker mutabilityChecker;
-    private readonly TranspileReadinessChecker transpileReadinessChecker;
 
     private TypeNode? currentFunctionReturnType;
     private string? currentTypeName; // For 'self' in methods
@@ -30,7 +29,6 @@ public class SemanticAnalyzer
         this.nullabilityChecker = new NullabilityChecker(diagnostics, typeChecker);
         this.symbolResolver = new SymbolResolver(diagnostics, symbolTable, typeChecker, nullabilityChecker);
         this.mutabilityChecker = new MutabilityChecker(diagnostics, symbolTable);
-        this.transpileReadinessChecker = new TranspileReadinessChecker(diagnostics);
     }
 
     public SymbolTable SymbolTable => symbolTable;
@@ -225,8 +223,6 @@ public class SemanticAnalyzer
 
     private void AnalyzeStatement(Statement stmt)
     {
-        transpileReadinessChecker.ValidateStatement(stmt);
-
         switch (stmt)
         {
             case VariableDeclaration varDecl:

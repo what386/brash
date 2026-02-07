@@ -170,18 +170,18 @@ public class PipeOperatorTests
             end
             """);
 
-        Assert.DoesNotContain(diagnostics.GetErrors(), d => d.Message.Contains("Range expressions are supported in 'for ... in start..end' loops"));
+        Assert.False(diagnostics.HasErrors, string.Join(Environment.NewLine, diagnostics.GetErrors()));
     }
 
     [Fact]
-    public void SemanticAnalyzer_StillRejectsRangeAsStandaloneValue()
+    public void SemanticAnalyzer_AllowsRangeAsStandaloneValue()
     {
         var diagnostics = Analyze(
             """
             let values = 0..5
             """);
 
-        Assert.Contains(diagnostics.GetErrors(), d => d.Message.Contains("Range expressions are supported in 'for ... in start..end' loops"));
+        Assert.False(diagnostics.HasErrors, string.Join(Environment.NewLine, diagnostics.GetErrors()));
     }
 
     [Fact]
