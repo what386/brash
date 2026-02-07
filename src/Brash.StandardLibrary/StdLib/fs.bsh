@@ -39,5 +39,3 @@ end
 pub fn remove_dir(file_path: string): void
     exec("rm", "-rf", file_path)
 end
-
-

@@ -7,11 +7,11 @@ pub struct Path
 end
 
 pub fn path(value: string): Path
-    return Path { value: value }
+    return Path.new(value)
 end
 
 pub fn cwd(): Path
-    return Path { value: exec("pwd") }
+    return Path.cwd()
 end
 
 pub fn join(left: string, right: string): string
@@ -26,25 +26,25 @@ pub fn join(left: string, right: string): string
     return exec("bash", "-lc", "printf '%s/%s' \"${1%/}\" \"${2#/}\"", "_", left, right)
 end
 
-pub fn basename(path: string): string
-    return exec("basename", path)
+pub fn basename(path_value: string): string
+    return exec("basename", path_value)
 end
 
-pub fn dirname(path: string): string
-    return exec("dirname", path)
+pub fn dirname(path_value: string): string
+    return exec("dirname", path_value)
 end
 
-pub fn extension(path: string): string
-    return exec("bash", "-lc", "name=$(basename \"$1\"); case \"$name\" in *.*) printf '%s' \"${name##*.}\" ;; *) printf '' ;; esac", "_", path)
+pub fn extension(path_value: string): string
+    return exec("bash", "-lc", "name=$(basename \"$1\"); case \"$name\" in *.*) printf '%s' \"${name##*.}\" ;; *) printf '' ;; esac", "_", path_value)
 end
 
-pub fn stem(path: string): string
-    return exec("bash", "-lc", "name=$(basename \"$1\"); case \"$name\" in *.*) printf '%s' \"${name%.*}\" ;; *) printf '%s' \"$name\" ;; esac", "_", path)
+pub fn stem(path_value: string): string
+    return exec("bash", "-lc", "name=$(basename \"$1\"); case \"$name\" in *.*) printf '%s' \"${name%.*}\" ;; *) printf '%s' \"$name\" ;; esac", "_", path_value)
 end
 
-pub fn with_extension(path: string, ext: string): string
-    let dir = dirname(path)
-    let file_stem = stem(path)
+pub fn with_extension(path_value: string, ext: string): string
+    let dir = dirname(path_value)
+    let file_stem = stem(path_value)
 
     if ext == ""
         return join(dir, file_stem)
@@ -54,12 +54,20 @@ pub fn with_extension(path: string, ext: string): string
 end
 
 impl Path
+    static fn new(value: string): Path
+        return Path { value: value }
+    end
+
+    static fn cwd(): Path
+        return Path { value: exec("pwd") }
+    end
+
     fn to_string(): string
         return self.value
     end
 
     fn join(right: string): Path
-        return path(join(self.value, right))
+        return Path.new(join(self.value, right))
     end
 
     fn basename(): string
@@ -67,7 +75,7 @@ impl Path
     end
 
     fn dirname(): Path
-        return path(dirname(self.value))
+        return Path.new(dirname(self.value))
     end
 
     fn extension(): string
@@ -79,7 +87,7 @@ impl Path
     end
 
     fn with_extension(ext: string): Path
-        return path(with_extension(self.value, ext))
+        return Path.new(with_extension(self.value, ext))
     end
 
     fn exists(): bool

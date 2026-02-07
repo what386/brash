@@ -101,8 +101,8 @@ Notes:
   - `import Name from "path.bsh"`
   - `import "path.bsh"` for all public exports
   - import paths are resolved from the entry file directory
-  - standard library modules use the `std/` namespace (for example `import "std/paths"` or `import { join } from "std/paths"`)
-  - `std/paths` includes a `Path` struct (`path("...")`) with methods like `.exists()`, `.is_dir()`, and `.is_file()`
+  - standard library modules use the `std/` namespace (for example `import "std/fs"` or `import { join } from "std/paths"`)
+  - `std/paths` includes a `Path` struct (`path("...")` or `Path.new("...")`) with methods like `.exists()`, `.is_dir()`, and `.is_file()`
 
 Example:
 

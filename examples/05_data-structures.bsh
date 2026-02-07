@@ -47,6 +47,14 @@ impl Person
 end
 
 impl Config
+    static fn local_default(): Config
+        return Config {
+            host: "localhost",
+            port: 8080,
+            ssl_enabled: false
+        }
+    end
+
     fn base_url(): string
         if self.ssl_enabled
             return $"https://{self.host}:{self.port}"
@@ -72,6 +80,8 @@ let config = Config {
     ssl_enabled: false
 }
 
+let generated_config = Config.local_default()
+
 // --------------------------------------------
 // Accessing fields
 // --------------------------------------------
@@ -91,6 +101,7 @@ mutable_person.deposit(250.00)
 print(mutable_person.balance)  // 2250.00
 
 print(config.base_url())        // http://localhost:8080
+print(generated_config.base_url())  // http://localhost:8080
 
 // --------------------------------------------
 // Using nullable fields
