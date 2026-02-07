@@ -5,27 +5,6 @@
 
 ## Tasks
 
-- [ ] bashgenerator: support structs
-      @created 2026-02-06 01:47
-
-- [ ] bashgenerator: command running
-      @created 2026-02-06 01:47
-
-- [ ] bashgenerator: pipe operator
-      @created 2026-02-06 01:47
-
-- [ ] bashgenerator: string interp
-      @created 2026-02-06 01:47
-
-- [ ] semanticanalyzer: full type inference
-      @created 2026-02-06 01:48
-
-- [ ] semanticanalyzer: nullable type checking
-      @created 2026-02-06 01:48
-
-- [ ] semanticanalyzer: scope validation for struct methods
-      @created 2026-02-06 01:48
-
 - [ ] Parser: implement full AST coverage for all grammar expression/statement variants (method call, member/index access, pipe, await, command forms, literals) (high) #parser #ast #feature
       @created 2026-02-06 23:08
 
@@ -47,7 +26,7 @@
 - [ ] Runtime: define and implement standard library contract used by generated Bash (Process, cmd/exec helpers, collection helpers) (high) #runtime #stdlib #feature
       @created 2026-02-06 23:08
 
-- [ ] Testing: add end-to-end golden tests that compile each examples/*.bsh file and assert diagnostics/codegen snapshots (high) #testing #e2e #examples #quality
+- [ ] Testing: add end-to-end golden tests that compile each examples/\*.bsh file and assert diagnostics/codegen snapshots (high) #testing #e2e #examples #quality
       @created 2026-02-06 23:09
 
 - [ ] Testing: add runtime integration tests that execute generated Bash for representative examples and validate outputs/exit codes #testing #integration #runtime #quality
