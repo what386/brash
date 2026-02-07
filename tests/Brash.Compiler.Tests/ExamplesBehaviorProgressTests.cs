@@ -52,7 +52,7 @@ public class ExamplesBehaviorProgressTests
                 print(i)
             end
 
-            mut counter = 0
+            let mut counter = 0
             while counter < 5
                 counter = counter + 1
             end
