@@ -281,7 +281,11 @@ public partial class BashGenerator
         else
         {
             // Collection iteration
-            rangeExpr = GenerateExpression(forLoop.Range);
+            rangeExpr = forLoop.Range switch
+            {
+                IdentifierExpression ident => $"\"${{{ident.Name}[@]}}\"",
+                _ => GenerateExpression(forLoop.Range)
+            };
         }
 
         Emit($"for {forLoop.Variable} in {rangeExpr}; do");
@@ -538,6 +542,9 @@ public partial class BashGenerator
             return panicArgs.Length > 0 ? $"brash_panic {panicArgs}" : "brash_panic";
         }
 
+        if (call.FunctionName == "bash")
+            return GenerateInlineBashStatement(call);
+
         if (call.FunctionName == "print")
         {
             var printArgs = string.Join(" ", call.Arguments.Select(GenerateSingleShellArg));
@@ -555,6 +562,22 @@ public partial class BashGenerator
         if (IsAlreadyQuotedArg(rendered))
             return rendered;
         return $"\"{rendered}\"";
+    }
+
+    private string GenerateInlineBashStatement(FunctionCallExpression call)
+    {
+        if (call.Arguments.Count == 0)
+            return ":";
+
+        if (call.Arguments[0] is LiteralExpression literal &&
+            literal.Type is PrimitiveType { PrimitiveKind: PrimitiveType.Kind.String } &&
+            literal.Value is string raw)
+        {
+            return raw;
+        }
+
+        var script = GenerateSingleShellArg(call.Arguments[0]);
+        return $"eval {script}";
     }
 
     private static bool IsAlreadyQuotedArg(string rendered)

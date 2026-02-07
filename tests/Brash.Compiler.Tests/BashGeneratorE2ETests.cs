@@ -312,6 +312,36 @@ public class BashGeneratorE2ETests
     }
 
     [Fact]
+    public void E2E_BashBuiltin_EmitsRawInlineScriptFromMultilineLiteral()
+    {
+        const string source =
+            """
+            bash([[printf '%s\n' "inline-1"
+            printf '%s\n' "inline-2"]])
+            """;
+
+        var result = CompileAndRun(source);
+
+        Assert.Equal(0, result.ExitCode);
+        Assert.Equal("inline-1\ninline-2", result.StdOut.Trim());
+    }
+
+    [Fact]
+    public void E2E_BashBuiltin_DynamicExpressionUsesEval()
+    {
+        const string source =
+            """
+            let script = "printf '%s\n' dynamic-inline"
+            bash(script)
+            """;
+
+        var result = CompileAndRun(source);
+
+        Assert.Equal(0, result.ExitCode);
+        Assert.Equal("dynamic-inline", result.StdOut.Trim());
+    }
+
+    [Fact]
     public void E2E_PrintBuiltin_PreservesSpacesInConcatenatedString()
     {
         const string source =

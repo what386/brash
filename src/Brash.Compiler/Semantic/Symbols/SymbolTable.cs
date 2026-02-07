@@ -300,5 +300,17 @@ public class SymbolTable
             ReturnType = new PrimitiveType { PrimitiveKind = PrimitiveType.Kind.Void },
             IsBuiltin = true
         };
+
+        functions["bash"] = new FunctionSymbol
+        {
+            Name = "bash",
+            ParameterTypes = new List<TypeNode>
+            {
+                new PrimitiveType { PrimitiveKind = PrimitiveType.Kind.String }
+            },
+            ParameterNames = new List<string> { "script" },
+            ReturnType = new PrimitiveType { PrimitiveKind = PrimitiveType.Kind.Void },
+            IsBuiltin = true
+        };
     }
 }

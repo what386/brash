@@ -228,7 +228,7 @@ public partial class BashGenerator
         {
             return prim.PrimitiveKind switch
             {
-                PrimitiveType.Kind.String => $"$(printf '%s' {value})",
+                PrimitiveType.Kind.String => $"$(printf '%s' {GenerateFunctionCallArg(cast.Value)})",
                 PrimitiveType.Kind.Int => $"$(( {value} ))",
                 PrimitiveType.Kind.Float => $"$(awk \"BEGIN {{ print ({value}) + 0 }}\")",
                 PrimitiveType.Kind.Bool => $"$(( ({value}) != 0 ))",
@@ -243,6 +243,9 @@ public partial class BashGenerator
     private string GenerateFunctionCall(FunctionCallExpression call)
     {
         // Handle built-in functions
+        if (call.FunctionName == "bash")
+            return HandleUnsupportedExpression(call, "bash(...) in expression context");
+
         if (call.FunctionName == "print")
         {
             var printArgs = string.Join(" ", call.Arguments.Select(GenerateSinglePrintArg));

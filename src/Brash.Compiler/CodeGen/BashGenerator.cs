@@ -170,7 +170,23 @@ public partial class BashGenerator
 
         EmitLine("brash_exec_cmd() {");
         EmitLine("    local __cmd=\"$1\"");
-        EmitLine("    bash -lc \"$__cmd\"");
+        EmitLine("    if [[ -t 1 ]]; then");
+        EmitLine("        bash -lc \"$__cmd\"");
+        EmitLine("        return $?");
+        EmitLine("    fi");
+        EmitLine("    local __out_file");
+        EmitLine("    __out_file=$(mktemp)");
+        EmitLine("    set +e");
+        EmitLine("    if [[ -t 2 && -w /dev/tty ]]; then");
+        EmitLine("        bash -lc \"$__cmd\" 2>&1 | tee \"$__out_file\" >/dev/tty 2>/dev/null");
+        EmitLine("    else");
+        EmitLine("        bash -lc \"$__cmd\" 2>&1 | tee \"$__out_file\" >/dev/null");
+        EmitLine("    fi");
+        EmitLine("    local __status=${PIPESTATUS[0]}");
+        EmitLine("    set -e");
+        EmitLine("    cat \"$__out_file\"");
+        EmitLine("    rm -f \"$__out_file\"");
+        EmitLine("    return ${__status}");
         EmitLine("}");
         EmitLine();
 
