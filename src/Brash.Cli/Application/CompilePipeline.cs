@@ -106,6 +106,7 @@ internal static class CompilePipeline
         }
         observer.PhaseDone("write", outputPath);
 
+        TryMarkExecutable(outputPath);
         Console.WriteLine($"Bash emitted: {outputPath}");
         observer.Success("ok");
         return 0;
@@ -176,6 +177,23 @@ internal static class CompilePipeline
         var statementCount = program?.Statements.Count ?? 0;
         summary = $"AST statements: {statementCount}";
         return true;
+    }
+
+    private static void TryMarkExecutable(string path)
+    {
+        if (OperatingSystem.IsWindows())
+            return;
+
+        try
+        {
+            var mode = File.GetUnixFileMode(path);
+            mode |= UnixFileMode.UserExecute | UnixFileMode.GroupExecute | UnixFileMode.OtherExecute;
+            File.SetUnixFileMode(path, mode);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or PlatformNotSupportedException)
+        {
+            Console.Error.WriteLine($"Warning: unable to set executable permissions on '{path}': {ex.Message}");
+        }
     }
 }
 
