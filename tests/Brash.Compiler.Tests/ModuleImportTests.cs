@@ -117,6 +117,19 @@ public class ModuleImportTests
     }
 
     [Fact]
+    public void SemanticAnalyzer_RejectsRedefiningBuiltinPanic()
+    {
+        var diagnostics = Analyze(
+            """
+            fn panic(message: string)
+                exec("printf", "%s\n", message)
+            end
+            """);
+
+        Assert.Contains(diagnostics.GetErrors(), d => d.Message.Contains("reserved as a builtin"));
+    }
+
+    [Fact]
     public void ModuleLoader_ResolvesStdNamespaceModule()
     {
         using var fixture = new ModuleFixture();
@@ -226,7 +239,15 @@ public class ModuleImportTests
             var current = new DirectoryInfo(Path.GetFullPath(start));
             while (current != null)
             {
-                var candidate = System.IO.Path.Combine(current.FullName, "src", "stdlib");
+                var candidate = System.IO.Path.Combine(current.FullName, "src", "Brash.StandardLibrary", "StdLib");
+                if (Directory.Exists(candidate))
+                    return candidate;
+
+                var legacyCandidate = System.IO.Path.Combine(current.FullName, "src", "stdlib");
+                if (Directory.Exists(legacyCandidate))
+                    return legacyCandidate;
+
+                candidate = System.IO.Path.Combine(current.FullName, "Brash.StandardLibrary", "StdLib");
                 if (Directory.Exists(candidate))
                     return candidate;
 
@@ -234,7 +255,7 @@ public class ModuleImportTests
             }
         }
 
-        throw new InvalidOperationException("Unable to locate src/stdlib for stdlib import tests.");
+        throw new InvalidOperationException("Unable to locate Brash standard library root for stdlib import tests.");
     }
 
     private sealed class StdLibPathScope : IDisposable

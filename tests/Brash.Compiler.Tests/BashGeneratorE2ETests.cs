@@ -184,6 +184,27 @@ public class BashGeneratorE2ETests
     }
 
     [Fact]
+    public void E2E_Panic_IsFatalAndNotCatchable()
+    {
+        const string source =
+            """
+            try
+                panic("boom")
+            catch err
+                exec("printf", "caught:%s\n", err)
+            end
+
+            exec("printf", "after\n")
+            """;
+
+        var result = CompileAndRun(source);
+
+        Assert.Equal(1, result.ExitCode);
+        Assert.DoesNotContain("caught:", result.StdOut);
+        Assert.DoesNotContain("after", result.StdOut);
+    }
+
+    [Fact]
     public void E2E_AsyncExec_IsFireAndForget()
     {
         const string source =
