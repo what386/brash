@@ -2019,6 +2019,10 @@
     "named": false
   },
   {
+    "type": "any",
+    "named": false
+  },
+  {
     "type": "async",
     "named": false
   },
