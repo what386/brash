@@ -45,11 +45,12 @@ let username = user ?? "Guest"
 // ---------------
 
 fn parse_name(fullname: string): (string, string)
-    let parts = ful1lname.split(" ")
+    let parts = fullname.split(" ")
     return (parts[0], parts[1])
 end
 
-let (first, last) = parse_name("John Doe")
+let (mut first, last) = parse_name("John Doe")
+first = "Jane"
 print($"First: {first}, Last: {last}")
 
 

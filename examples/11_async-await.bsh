@@ -3,21 +3,21 @@
 // Async / Await for shell commands and functions
 // ============================================
 
+// NOTE:
+// async/await syntax is accepted by the parser but currently rejected
+// by semantic/transpile readiness checks in this compiler version.
+
 
 // ---------------
 // Basic Async Execution
 // ---------------
 
 // async runs a command in the background and returns a Process handle
-let sleep_proc = cmd("sleep 5").exec_async()
+let sleep_proc = async spawn("sleep", "5")
 
-// Process handle fields:
-// - pid: process ID
-// - is_running(): bool
-// - stdout / stderr / code: captured when awaited
-
-print($"Launched sleep process with PID: {sleep_proc.pid}")
-print($"Running? {sleep_proc.is_running()}")
+// Process handle values are opaque in the current implementation.
+print($"Launched sleep process handle: {sleep_proc}")
+print("Process launched")
 
 
  // ---------------
@@ -26,8 +26,7 @@ print($"Running? {sleep_proc.is_running()}")
 
 // await blocks until the process finishes, then returns output
 let result = await sleep_proc
-print($"Exit code: {result.code}")
-print($"Stdout: {result.stdout}")
+print(result)
 
 
  // ---------------
@@ -64,4 +63,4 @@ let res1 = await proc1
 let res2 = await proc2
 let res3 = await proc3
 
-print($"All processes done: {res1.code}, {res2.code}, {res3.code}")
+print($"All processes done: {res1}, {res2}, {res3}")

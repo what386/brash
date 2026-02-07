@@ -1,5 +1,5 @@
 // ============================================
-// File: examples/08_import-system.bsh
+// File: examples/09_import-system.bsh
 // Module system with imports
 // ============================================
 
@@ -25,56 +25,6 @@ print(CONFIG["version"])
 
 let user = create_user("Alice", 30)
 
-
-// ============================================
-// File: examples/utils.bsh
-// ============================================
-
-
-fn helper_fn(input: string): string
-    return $"Processed: {input}"
-end
-
-fn read_config(path: string): map<string, string>?
-    try
-        let content = cmd("cat", path).stdout
-        // Parse config (simplified)
-        return {"loaded": "true"}
-    catch err
-        return null
-    end
-end
-
-
-// ---------------
-// Result Struct
-// ---------------
-
-struct Result
-    success: bool
-    data: string?
-    error: string?
-end
-
-
-// ---------------
-// Operations with Error Handling
-// ---------------
-
-fn try_operation(op: string): Result
-    try
-        run(op)
-        return Result {
-            success: true,
-            data: "Operation completed",
-            error: null
-        }
-    catch err
-        return Result {
-            success: false,
-            data: null,
-            error: err.message
-        }
-    end
-end
-
+// NOTE:
+// Import syntax is part of the language surface.
+// Full module resolution and transpilation support are still in progress.

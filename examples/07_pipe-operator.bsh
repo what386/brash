@@ -8,9 +8,10 @@
 // Command Pipelines
 // ---------------
 
-// Piping shell commands (stdout -> stdin)
-let result = exec("ls") | exec("grep", ".bsh") | exec("wc", "-l")
-print($"Number of .bsh files: {result.stdout.trim()}")
+// Pipes compose Command values.
+// To execute a pipe, wrap it with exec(...).
+let result = exec(cmd("ls") | cmd("grep", ".bsh") | cmd("wc", "-l"))
+print($"Number of .bsh files: {result}")
 
 
 // ---------------
@@ -18,81 +19,13 @@ print($"Number of .bsh files: {result.stdout.trim()}")
 // ---------------
 
 // More complex pipeline
-let log_errors = exec("cat", "app.log") |
-                 exec("grep", "ERROR") |
-                 exec("sort") |
-                 exec("uniq")
-print(log_errors.stdout)
+let log_errors = exec(
+    cmd("cat", "app.log")
+    | cmd("grep", "ERROR")
+    | cmd("sort")
+    | cmd("uniq"))
+print(log_errors)
 
-
-// ---------------
-// Functions for Piping
-// ---------------
-
-fn uppercase(s: string): string
-    return s.to_upper()
-end
-
-fn reverse(s: string): string
-    let mut result = ""
-    for i in (s.length() - 1)..0 step -1
-        result = result + s[i]
-    end
-    return result
-end
-
-fn add_prefix(s: string, prefix: string = ">> "): string
-    return prefix + s
-end
-
-
-// ---------------
-// Function Pipelines
-// ---------------
-
-// Chain function calls with pipe
-let message = "hello world" | uppercase() | reverse()
-print(message)  // "DLROW OLLEH"
-
-
-// ---------------
-// Mixing Pipes with Expressions
-// ---------------
-
-let greeting = "hello" | uppercase()
-print(greeting)  // "HELLO"
-
-
-// ---------------
-// Piping Collections
-// ---------------
-
-fn sum(numbers: int[]): int
-    let mut total = 0
-    for n in numbers
-        total = total + n
-    end
-    return total
-end
-
-fn double_all(numbers: int[]): int[]
-    let mut result: int[]
-    for n in numbers
-        result.push(n * 2)
-    end
-    return result
-end
-
-fn filter_even(numbers: int[]): int[]
-    let mut result: int[]
-    for n in numbers
-        if n % 2 == 0
-            result.push(n)
-        end
-    end
-    return result
-end
-
-let total = [1, 2, 3, 4, 5] | double_all() | filter_even() | sum()
-print($"Total: {total}")  // 30
-
+// Pipe type rule:
+// Both sides of `|` must be Command.
+// Non-command values should not be piped.

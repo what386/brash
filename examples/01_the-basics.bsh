@@ -31,8 +31,8 @@ let grade: char = 'A'
 // Nullable Types
 // ---------------
 
-let middle_name: string? = null
-let optional_age: int? = null
+let mut middle_name: string? = null
+let mut optional_age: int? = null
 
 middle_name = "Jane"         // can assign value
 optional_age = 25

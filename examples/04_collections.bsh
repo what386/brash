@@ -17,7 +17,7 @@ let mut mixed: string[] = []                  // empty array
 // Nullable Arrays
 // ---------------
 
-let optional_list: int[]? = null
+let mut optional_list: int[]? = null
 optional_list = [1, 2, 3]
 
 
@@ -97,4 +97,3 @@ let users: map<string, int[]> = {
     "alice": [1, 2, 3],
     "bob": [4, 5, 6]
 }
-

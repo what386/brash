@@ -1,348 +1,96 @@
 // ============================================
 // File: examples/00_general-overview.bsh
-// Quick reference guide to BaSH language features
+// Quick reference guide to current Brash syntax
 // ============================================
 
-// ============================================
-// 1. VARIABLES & TYPES
-// ============================================
+// Variables and mutability
+let x = 5
+let mut y = 10
+const PI = 3.14159
+y = 15
 
-// Variable declarations
-let x = 5                    // immutable
-let mut y = 10                   // mutable
-const PI = 3.14159           // constant
-
-// Type annotations
+// Types and nullability
 let name: string = "Alice"
-let age: int = 30
-let balance: float = 100.50
-let is_admin: bool = true
-let grade: char = 'A'
+let mut middle_name: string? = null
+middle_name = "Jane"
+let display_name = middle_name ?? "No middle name"
 
-// Nullable types
-let middle_name: string? = null
-middle_name = "Jane"         // can assign value later
-
-// Null coalescing
-let display = middle_name ?? "No middle name"
-
-// String interpolation
-let greeting = $"Hello, {name}! You are {age} years old."
-
-// Multi-line strings
-let block = [[
-    This is a multi-line
-    string that preserves
-    formatting and "quotes"
-]]
-
-// ============================================
-// 2. FUNCTIONS
-// ============================================
-
-// Basic function
-fn greet(name: string): string
-    return "Hello, " + name
-end
-
-// Optional parameters
-fn greet_custom(name: string, greeting: string = "Hello"): string
+// Functions
+fn greet(name: string, greeting: string = "Hello"): string
     return greeting + ", " + name
 end
 
-// Mutable parameters (only when reassignment is needed)
 fn increment(mut count: int): int
     count = count + 1
     return count
 end
 
-// Nullable return
-fn find_user(id: int): string?
-    if id == 1
-        return "Alice"
-    end
-    return null
+// Tuple returns + tuple destructuring with per-element mutability
+fn pair(): (string, string)
+    return ("left", "right")
 end
 
-// Multiple return values (tuples)
-fn parse_name(fullname: string): (string, string)
-    let parts = fullname.split(" ")
-    return (parts[0], parts[1])
+let (mut thing, otherthing) = pair()
+thing = "updated"
+// otherthing = "nope" // immutable by default
+
+// Control flow
+if x > 0
+    print("positive")
 end
 
-let (first, last) = parse_name("John Doe")
-
-// Void functions
-fn log_message(msg: string): void
-    print($"[LOG] {msg}")
-end
-
-// ============================================
-// 3. CONTROL FLOW
-// ============================================
-
-// If-elif-else
-if score >= 90
-    print("Grade: A")
-elif score >= 80
-    print("Grade: B")
-else
-    print("Grade: F")
-end
-
-// For loops (collections)
-for fruit in ["apple", "banana", "orange"]
-    print(fruit)
-end
-
-// For loops (ranges)
-for i in 0..5              // 0, 1, 2, 3, 4, 5
+for i in 0..10 step 2
     print(i)
 end
 
-for i in 0..10 step 2      // 0, 2, 4, 6, 8, 10
-    print(i)
-end
-
-for i in 5..0 step -1      // 5, 4, 3, 2, 1, 0
-    print(i)
-end
-
-// While loops
 let mut counter = 0
-while counter < 5
-    print(counter)
+while counter < 3
     counter = counter + 1
 end
 
-// Loop control
-for i in 0..10
-    if i == 3
-        continue
-    end
-    if i == 7
-        break
-    end
-    print(i)
+// Structs, enums, impl
+enum AccountType
+    Checking,
+    Savings
 end
 
-// ============================================
-// 4. COLLECTIONS
-// ============================================
-
-// Arrays
-let numbers: int[] = [1, 2, 3, 4, 5]
-let first = numbers[0]
-let mut list = ["a", "b"]
-list.push("c")
-let item = list.pop()
-
-// Maps
-let config: map<string, string> = {
-    "host": "localhost",
-    "port": "8080"
-}
-let host = config["host"]
-config["timeout"] = "30"
-
-// Maps with nullable values
-let ages: map<string, int?> = {
-    "alice": 30,
-    "bob": null
-}
-
-// Nested collections
-let users: map<string, int[]> = {
-    "alice": [1, 2, 3],
-    "bob": [4, 5, 6]
-}
-
-// ============================================
-// 5. DATA STRUCTURES
-// ============================================
-
-// Struct (mutable)
 struct Person
     name: string
     age: int
-    email: string?
-    balance: float
+    account: AccountType
 end
 
-// Struct
-struct Config
-    host: string
-    port: int
-    ssl_enabled: bool
-end
-
-// Enum (simple variants)
-enum AccountType
-    Checking,
-    Savings,
-    Investment
-end
-
-// Implementation blocks
 impl Person
     fn is_adult(): bool
         return self.age >= 18
     end
-
-    fn deposit(amount: float)
-        self.balance = self.balance + amount
-    end
 end
 
-// Creating instances
-let person = Person {
-    name: "Alice",
-    age: 30,
-    email: null,
-    balance: 1500.75
-}
-
-let account_type: AccountType = AccountType.Savings
-
-// Accessing fields and methods
-print(person.name)
+let person = Person { name: "Alice", age: 30, account: AccountType.Checking }
 print(person.is_adult())
 
-// ============================================
-// 6. SHELL INTEGRATION
-// ============================================
+// Command model
+let pipeline = cmd("printf", "abc\n") | cmd("tr", "a-z", "A-Z")
+let output = exec(pipeline)
+print(output)
 
-// Running commands
-exec("echo", "Hello, World!")
-exec("git", "status")
+let pid: Process = spawn("sleep", "1")
+print(pid)
 
-// Capturing output
-let listing = cmd("ls", "-la").exec()
-print(listing.stdout)
-print($"Exit code: {listing.code}")
-
-// Background execution
-let proc = async spawn("sleep", "10")
-print($"PID: {proc.pid}")
-
-// Process control
-struct Process
-    pid: int
-    stdout: string?
-    stderr: string?
-    exit_code: int?
-end
-
-// ============================================
-// 7. PIPE OPERATOR
-// ============================================
-
-// Command pipelines
-let result = exec("ls") | exec("grep", ".bsh") | exec("wc", "-l")
-
-// Function pipelines
-fn uppercase(s: string): string
-    return s.to_upper()
-end
-
-fn reverse(s: string): string
-    // implementation
-end
-
-let message = "hello" | uppercase() | reverse() // output: DLROW OLLEH
-
-// Collection pipelines
-let total = [1, 2, 3, 4, 5] | double_all() | filter_even() | sum()
-
-// ============================================
-// 8. ERROR HANDLING
-// ============================================
-
-// Try-catch blocks
+// Error handling
 try
-    let result = divide(10, 0)
+    throw "boom"
 catch err
-    print($"Error: {err.message}")
-    if err.code != null
-        print($"Code: {err.code}")
-    end
+    // catch variable currently contains textual stderr
+    print(err)
 end
 
-// Throwing errors
-fn divide(a: int, b: int): float
-    if b == 0
-        throw "Division by zero"
-    end
-    return a / b
-end
-
-// Error struct
-struct Error
-    message: string
-    code: int?
-end
-
-// ============================================
-// 9. IMPORT SYSTEM
-// ============================================
-
-// Import entire module
-import "utils.bsh"
-
-// Import specific items
-import { helper_fn, CONFIG } from "lib/tools.bsh"
-
-// Import types
-import User from "models/user.bsh"
-
-// ============================================
-// 10. PREPROCESSOR DIRECTIVES
-// ============================================
-
-// Define constants (text substitution)
+// Preprocessor directives
 #define DEBUG 1
-#define VERSION "1.0.0"
-
-// Conditional compilation
 #if DEBUG
-    print("Debug mode enabled")
+print("debug enabled")
 #endif
 
-// Check if defined
-#ifdef DEBUG
-    print("DEBUG is defined")
-#endif
-
-#ifndef RELEASE
-    print("RELEASE not defined")
-#endif
-
-// Undefine
-#undef DEBUG
-
-// ============================================
-// 11. ASYNC/AWAIT
-// ============================================
-
-// Async command execution
-let proc = cmd("sleep", "5").exec_async()
-print($"Running: {proc.is_running()}")
-
-// Await process completion
-let result = await proc
-print($"Done: {result.code}")
-
-// Async functions
-async fn long_task(name: string): string
-    // ... work ...
-    return $"Task {name} complete"
-end
-
-let task = long_task("Process Data")
-let output = await task
-
-// Multiple async tasks
-let p1 = async spawn("task1")
-let p2 = async spawn("task2")
-let r1 = await p1
-let r2 = await p2
+// Not yet transpilation-ready (kept for future versions):
+// - import resolution
+// - async/await execution model
