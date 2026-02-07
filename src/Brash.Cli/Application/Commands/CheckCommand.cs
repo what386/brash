@@ -1,0 +1,42 @@
+namespace Brash.Cli.Application.Commands;
+
+using System.CommandLine;
+using Brash.Cli.Application;
+
+static class CheckCommand
+{
+    public static Command Create()
+    {
+        Argument<string> fileArgument = new("file")
+        {
+            Description = "Path to the .bsh file to check"
+        };
+
+        fileArgument.Validators.Add(result =>
+        {
+            var value = result.GetValueOrDefault<string>() ?? "";
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                result.AddError("File path cannot be empty.");
+                return;
+            }
+            if (!value.EndsWith(".bsh"))
+            {
+                result.AddError("File must have a .bsh extension.");
+            }
+        });
+
+        var command = new Command("check", "Validate a .bsh file without emitting output")
+        {
+            fileArgument
+        };
+
+        command.SetAction(parseResult =>
+        {
+            var file = parseResult.GetValue(fileArgument);
+            return CompilePipeline.Check(file!);
+        });
+
+        return command;
+    }
+}
