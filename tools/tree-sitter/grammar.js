@@ -240,6 +240,7 @@ module.exports = grammar({
         $.index_access,
         $.command_expression,
         $.exec_expression,
+        $.bash_expression,
         $.async_exec_expression,
         $.async_spawn_expression,
         $.spawn_expression,
@@ -275,6 +276,7 @@ module.exports = grammar({
 
     command_expression: ($) => seq("cmd", "(", optional($.argument_list), ")"),
     exec_expression: ($) => seq("exec", "(", optional($.argument_list), ")"),
+    bash_expression: ($) => seq("bash", "(", optional($.argument_list), ")"),
     async_exec_expression: ($) => seq("async", "exec", "(", optional($.argument_list), ")"),
     async_spawn_expression: ($) => seq("async", "spawn", "(", optional($.argument_list), ")"),
     spawn_expression: ($) => seq("spawn", "(", optional($.argument_list), ")"),

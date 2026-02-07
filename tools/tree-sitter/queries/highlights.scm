@@ -36,6 +36,7 @@
 [
   "cmd"
   "exec"
+  "bash"
 ] @function.builtin
 
 ; Builtin types
