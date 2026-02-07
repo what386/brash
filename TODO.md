@@ -26,9 +26,6 @@
 - [ ] Testing: add runtime integration tests that execute generated Bash for representative examples and validate outputs/exit codes #testing #integration #runtime #quality
       @created 2026-02-06 23:09
 
-- [ ] Tooling: add CI workflow to run build + compiler tests + example progress suite on every push #infra #ci #quality
-      @created 2026-02-06 23:09
-
 - [ ] Docs: align language spec with implemented behavior and mark unsupported example features explicitly #docs #spec #project
       @created 2026-02-06 23:09
 
@@ -82,4 +79,8 @@
       @created 2026-02-06 23:08
       @completed 2026-02-07 02:07
       @completed_version 0.1.0
+
+- [x] Tooling: add CI workflow to run build + compiler tests + example progress suite on every push #infra #ci #quality
+      @created 2026-02-06 23:09
+      @completed 2026-02-07 06:43
 
