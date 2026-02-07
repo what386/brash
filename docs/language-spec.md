@@ -31,13 +31,17 @@ This document describes the behavior currently implemented by the compiler and B
 - To execute a pipeline, wrap it with `exec(...)`.
   - Example: `let out = exec(cmd("ls") | cmd("wc", "-l"))`
 
+### Error handling
+
+- `throw expr` writes the value to stderr and fails the current execution path.
+- `try ... catch err ... end` captures stderr from the `try` block and binds it to `err` in the catch block.
+- Catch blocks run only when the try block exits non-zero.
+
 ### Fail-fast unsupported features
 
 The semantic phase intentionally rejects features not ready for stable transpilation:
 
 - `import ...`
-- `try/catch`
-- `throw ...`
 - map literal code generation
 - tuple value code generation
 - range value code generation
