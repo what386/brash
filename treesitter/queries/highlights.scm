@@ -23,16 +23,20 @@
   "import"
   "from"
   "return"
-  "break"
-  "continue"
   "end"
-  "self"
-  "null"
-  "cmd"
-  "exec"
 ] @keyword
 
-; Types
+[
+  "self"
+  "null"
+] @constant.builtin
+
+[
+  "cmd"
+  "exec"
+] @function.builtin
+
+; Builtin types
 [
   "int"
   "float"
@@ -43,28 +47,75 @@
   "void"
 ] @type.builtin
 
+; Declarations
+(function_declaration name: (identifier) @function)
+(method_declaration name: (identifier) @method)
+(struct_declaration name: (identifier) @type)
+(enum_declaration name: (identifier) @type)
+(enum_variant name: (identifier) @constant)
+(break_statement) @keyword
+(continue_statement) @keyword
+
+; Identifiers by role
+(parameter name: (identifier) @parameter)
+(field_declaration name: (identifier) @property)
+(field_assignment name: (identifier) @property)
+(member_access member: (identifier) @property)
+(safe_navigation_expression member: (identifier) @property)
+(method_call_expression method: (identifier) @function.method.call)
+(function_call name: (identifier) @function.call)
+(import_specifier default: (identifier) @namespace)
+(import_specifier (identifier) @namespace)
+(identifier) @variable
+
 ; Literals
-(boolean) @constant.builtin
+(boolean) @boolean
 (integer) @number
 (float) @number.float
 (string) @string
 (interpolated_string) @string.special
 (multiline_string) @string
-(char) @string.escape
+(char) @character
 
-; Identifiers
-(identifier) @variable
-(function_declaration name: (identifier) @function)
-(method_declaration name: (identifier) @method)
-(function_call name: (identifier) @function.call)
-(enum_declaration name: (identifier) @type)
-(struct_declaration name: (identifier) @type)
+; Operators / punctuation
+[
+  "="
+  "=="
+  "!="
+  "<"
+  ">"
+  "<="
+  ">="
+  "+"
+  "-"
+  "*"
+  "/"
+  "%"
+  "!"
+  "&&"
+  "||"
+  "??"
+  ".."
+  "|"
+  "."
+  "?."
+] @operator
+
+[
+  "("
+  ")"
+  "{"
+  "}"
+  "["
+  "]"
+  ","
+  ":"
+] @punctuation.delimiter
 
 ; Comments
-(line_comment) @comment
-(block_comment) @comment
+(line_comment) @comment.line
+(block_comment) @comment.block
 
 ; Preprocessor
 (shebang_directive) @keyword.directive
 (preprocessor_directive) @keyword.directive
-
