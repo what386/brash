@@ -15,6 +15,7 @@ public partial class BashGenerator
             SelfExpression => "\"${__self}\"",
             BinaryExpression bin => GenerateBinaryExpression(bin),
             UnaryExpression unary => GenerateUnaryExpression(unary),
+            CastExpression cast => GenerateCastExpression(cast),
             FunctionCallExpression call => GenerateFunctionCall(call),
             MethodCallExpression methodCall => GenerateMethodCall(methodCall),
             MemberAccessExpression member => GenerateMemberAccess(member),
@@ -63,14 +64,14 @@ public partial class BashGenerator
             "*" => $"$(({left} * {right}))",
             "/" => $"$(({left} / {right}))",
             "%" => $"$(({left} % {right}))",
-            "==" => $"[[ {left} == {right} ]]",
-            "!=" => $"[[ {left} != {right} ]]",
-            "<" => $"(( {left} < {right} ))",
-            ">" => $"(( {left} > {right} ))",
-            "<=" => $"(( {left} <= {right} ))",
-            ">=" => $"(( {left} >= {right} ))",
-            "&&" => $"(( {left} != 0 )) && (( {right} != 0 ))",
-            "||" => $"(( {left} != 0 )) || (( {right} != 0 ))",
+            "==" => $"$(if [[ {left} == {right} ]]; then echo 1; else echo 0; fi)",
+            "!=" => $"$(if [[ {left} != {right} ]]; then echo 1; else echo 0; fi)",
+            "<" => $"$(if (( {left} < {right} )); then echo 1; else echo 0; fi)",
+            ">" => $"$(if (( {left} > {right} )); then echo 1; else echo 0; fi)",
+            "<=" => $"$(if (( {left} <= {right} )); then echo 1; else echo 0; fi)",
+            ">=" => $"$(if (( {left} >= {right} )); then echo 1; else echo 0; fi)",
+            "&&" => $"$(( ({left} != 0) && ({right} != 0) ))",
+            "||" => $"$(( ({left} != 0) || ({right} != 0) ))",
             _ => $"{left} {bin.Operator} {right}"
         };
     }
@@ -85,6 +86,26 @@ public partial class BashGenerator
             "!" => $"$((!{operand}))",
             _ => operand
         };
+    }
+
+    private string GenerateCastExpression(CastExpression cast)
+    {
+        var value = GenerateExpression(cast.Value);
+
+        if (cast.TargetType is PrimitiveType prim)
+        {
+            return prim.PrimitiveKind switch
+            {
+                PrimitiveType.Kind.String => $"$(printf '%s' {value})",
+                PrimitiveType.Kind.Int => $"$(( {value} ))",
+                PrimitiveType.Kind.Float => $"$(awk \"BEGIN {{ print ({value}) + 0 }}\")",
+                PrimitiveType.Kind.Bool => $"$(( ({value}) != 0 ))",
+                PrimitiveType.Kind.Char => $"$(printf '%s' {value} | head -c 1)",
+                _ => value
+            };
+        }
+
+        return value;
     }
 
     private string GenerateFunctionCall(FunctionCallExpression call)
@@ -102,6 +123,16 @@ public partial class BashGenerator
 
     private string GenerateMethodCall(MethodCallExpression call)
     {
+        if (call.MethodName == "to_string")
+        {
+            if (call.Arguments.Count != 0)
+            {
+                return HandleUnsupportedExpression(call, "to_string() with arguments");
+            }
+
+            return $"$(printf '%s' {GenerateExpression(call.Object)})";
+        }
+
         var receiverHandle = GenerateObjectHandle(call.Object);
         if (receiverHandle == null)
             return HandleUnsupportedExpression(call, $"method receiver '{call.Object.GetType().Name}'");
@@ -205,12 +236,28 @@ public partial class BashGenerator
         return $"$(brash_get_field {receiverHandle} \"{safeNav.MemberName}\")";
     }
 
-    private static string GenerateAddition(Expression leftExpr, Expression rightExpr, string left, string right)
+    private string GenerateAddition(Expression leftExpr, Expression rightExpr, string left, string right)
     {
         if (IsStringLike(leftExpr) || IsStringLike(rightExpr))
-            return $"$(printf '%s%s' {left} {right})";
+        {
+            var leftArg = GenerateStringOperand(leftExpr, left);
+            var rightArg = GenerateStringOperand(rightExpr, right);
+            return $"$(printf '%s%s' {leftArg} {rightArg})";
+        }
 
         return $"$(( {left} + {right} ))";
+    }
+
+    private string GenerateStringOperand(Expression expression, string renderedExpression)
+    {
+        return expression switch
+        {
+            IdentifierExpression ident => $"\"${{{ident.Name}}}\"",
+            LiteralExpression lit when lit.Type is PrimitiveType { PrimitiveKind: PrimitiveType.Kind.String } => renderedExpression,
+            LiteralExpression lit when lit.Type is PrimitiveType { PrimitiveKind: PrimitiveType.Kind.Char } => renderedExpression,
+            CastExpression { TargetType: PrimitiveType { PrimitiveKind: PrimitiveType.Kind.String } } => $"\"{GenerateExpression(expression)}\"",
+            _ => $"\"{renderedExpression}\""
+        };
     }
 
     private static bool IsStringLike(Expression expr)
@@ -219,6 +266,9 @@ public partial class BashGenerator
         {
             LiteralExpression lit when lit.Type is PrimitiveType { PrimitiveKind: PrimitiveType.Kind.String } => true,
             LiteralExpression lit when lit.Type is PrimitiveType { PrimitiveKind: PrimitiveType.Kind.Char } => true,
+            CastExpression { TargetType: PrimitiveType { PrimitiveKind: PrimitiveType.Kind.String } } => true,
+            BinaryExpression bin when bin.Operator == "+" &&
+                                      (IsStringLike(bin.Left) || IsStringLike(bin.Right)) => true,
             _ => false
         };
     }

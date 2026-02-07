@@ -17,6 +17,12 @@ public class UnaryExpression : Expression
     public Expression Operand { get; set; } = null!;
 }
 
+public class CastExpression : Expression
+{
+    public TypeNode TargetType { get; set; } = null!;
+    public Expression Value { get; set; } = null!;
+}
+
 public class RangeExpression : Expression
 {
     public Expression Start { get; set; } = null!;

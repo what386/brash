@@ -43,6 +43,7 @@ public class SymbolResolver
             IdentifierExpression ident => ResolveIdentifier(ident),
             BinaryExpression bin => ResolveBinaryExpression(bin),
             UnaryExpression unary => ResolveUnaryExpression(unary),
+            CastExpression cast => ResolveCastExpression(cast),
             FunctionCallExpression call => ResolveFunctionCall(call),
             MethodCallExpression method => ResolveMethodCall(method),
             MemberAccessExpression member => ResolveMemberAccess(member),
@@ -99,6 +100,23 @@ public class SymbolResolver
         return typeChecker.InferUnaryExpressionType(unary.Operator, operandType);
     }
 
+    private TypeNode ResolveCastExpression(CastExpression cast)
+    {
+        var sourceType = ResolveExpressionType(cast.Value);
+        var targetType = cast.TargetType;
+
+        if (!typeChecker.CanExplicitlyCast(sourceType, targetType))
+        {
+            diagnostics.AddError(
+                $"Cannot cast value of type '{sourceType}' to '{targetType}'",
+                cast.Line,
+                cast.Column);
+            return new UnknownType();
+        }
+
+        return targetType;
+    }
+
     private TypeNode ResolveFunctionCall(FunctionCallExpression call)
     {
         var function = symbolTable.LookupFunction(call.FunctionName);
@@ -125,6 +143,29 @@ public class SymbolResolver
             method.Line,
             method.Column,
             $"method call '{method.MethodName}'");
+
+        if (method.MethodName == "to_string")
+        {
+            if (method.Arguments.Count != 0)
+            {
+                diagnostics.AddError(
+                    "Method 'to_string' expects 0 arguments",
+                    method.Line,
+                    method.Column);
+                return new UnknownType();
+            }
+
+            if (!typeChecker.IsStringConvertible(objectType))
+            {
+                diagnostics.AddError(
+                    $"Type '{objectType}' does not support to_string()",
+                    method.Line,
+                    method.Column);
+                return new UnknownType();
+            }
+
+            return new PrimitiveType { PrimitiveKind = PrimitiveType.Kind.String };
+        }
 
         // Get the type name
         string typeName = objectType switch
@@ -410,6 +451,32 @@ public class SymbolResolver
         int line,
         int column)
     {
+        if (call.MethodName == "to_string")
+        {
+            if (call.Arguments.Count != 0)
+            {
+                diagnostics.AddError(
+                    "Method 'to_string' expects 0 arguments",
+                    call.Line,
+                    call.Column);
+                return new UnknownType();
+            }
+
+            var targetType = ResolveExpressionType(call.Object);
+            if (!typeChecker.IsStringConvertible(targetType))
+            {
+                diagnostics.AddError(
+                    $"Type '{targetType}' does not support to_string()",
+                    call.Line,
+                    call.Column);
+                return new UnknownType();
+            }
+
+            var returnType = new PrimitiveType { PrimitiveKind = PrimitiveType.Kind.String };
+            pipeChecker.ValidateValuePipeTypeInvariant(inputType, returnType, line, column);
+            return returnType;
+        }
+
         var objectType = ResolveExpressionType(call.Object);
         objectType = nullabilityChecker.RequireNonNullable(
             objectType,

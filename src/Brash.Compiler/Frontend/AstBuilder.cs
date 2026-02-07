@@ -598,6 +598,17 @@ public class AstBuilder : BrashBaseVisitor<AstNode>
         };
     }
 
+    public override AstNode VisitCastExpr(BrashParser.CastExprContext context)
+    {
+        return new CastExpression
+        {
+            Line = context.Start.Line,
+            Column = context.Start.Column,
+            TargetType = Visit(context.type()) as TypeNode ?? new UnknownType(),
+            Value = Visit(context.expression()) as Expression ?? new NullLiteral()
+        };
+    }
+
     public override AstNode VisitPipeExpr(BrashParser.PipeExprContext context)
     {
         return new PipeExpression

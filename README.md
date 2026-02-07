@@ -70,11 +70,13 @@ Notes:
 - functions and return types
 - structs, enums, `impl` methods, `self`
 - nullability + `??` + safe navigation
+- explicit casts: `(type)expr` (for example `(string)5`)
+- string concatenation with `+` (for example `"Hello, " + name`)
 - command model:
   - `cmd(...)` -> lazy `Command`
   - `exec(...)` -> blocking execution, returns stdout string
   - `spawn(...)` -> process handle value
-  - pipelines via `|`
+  - pipelines via `|` for command and value flow
 
 Example:
 
@@ -89,11 +91,11 @@ exec("printf", "%s\n", output)
 These are currently rejected during semantic/transpile-readiness checks:
 
 - `import` module system codegen
-- `try/catch` and `throw`
 - `await`
 - `async fn`
 - `async exec(...)` / `async spawn(...)`
-- map/tuple/range value codegen paths not yet implemented
+- map literal codegen
+- range value codegen (ranges are currently supported for `for ... in start..end`)
 
 ## Contributing
 

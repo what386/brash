@@ -146,6 +146,10 @@ public class TranspileReadinessChecker
                 ValidateExpression(unary.Operand);
                 break;
 
+            case CastExpression cast:
+                ValidateExpression(cast.Value);
+                break;
+
             case FunctionCallExpression functionCall:
                 foreach (var arg in functionCall.Arguments)
                     ValidateExpression(arg);

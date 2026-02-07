@@ -372,12 +372,6 @@ public partial class BashGenerator
 
     private string GenerateCondition(Expression condition)
     {
-        if (condition is BinaryExpression bin && IsConditionOperator(bin.Operator))
-        {
-            return GenerateBinaryExpression(bin);
-        }
-
-        // Treat as boolean test
         var expr = GenerateExpression(condition);
         return $"[ {expr} -ne 0 ]";
     }

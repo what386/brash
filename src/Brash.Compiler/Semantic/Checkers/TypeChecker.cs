@@ -85,7 +85,57 @@ public class TypeChecker
 
     public bool IsStringType(TypeNode type)
     {
+        if (type is NullableType nullable)
+            return IsStringType(nullable.BaseType);
+
         return type is PrimitiveType prim && prim.PrimitiveKind == PrimitiveType.Kind.String;
+    }
+
+    public bool IsStringConvertible(TypeNode type)
+    {
+        if (type is UnknownType)
+            return false;
+
+        if (type is NullableType nullable)
+            return IsStringConvertible(nullable.BaseType);
+
+        return type switch
+        {
+            PrimitiveType => true,
+            NamedType => true,
+            TupleType => true,
+            ArrayType => true,
+            MapType => true,
+            _ => false
+        };
+    }
+
+    public bool CanExplicitlyCast(TypeNode sourceType, TypeNode targetType)
+    {
+        if (sourceType is UnknownType || targetType is UnknownType)
+            return false;
+
+        if (AreTypesCompatible(targetType, sourceType))
+            return true;
+
+        sourceType = GetBaseType(sourceType);
+        targetType = GetBaseType(targetType);
+
+        if (IsStringType(targetType))
+            return IsStringConvertible(sourceType);
+
+        if (sourceType is PrimitiveType srcPrim && targetType is PrimitiveType dstPrim)
+        {
+            // Allow explicit casts across primitive types.
+            return srcPrim.PrimitiveKind != PrimitiveType.Kind.Void &&
+                   dstPrim.PrimitiveKind != PrimitiveType.Kind.Void;
+        }
+
+        // Allow enum/struct-ish named values to cast to string explicitly.
+        if (sourceType is NamedType && IsStringType(targetType))
+            return true;
+
+        return false;
     }
 
     public bool IsNullable(TypeNode type)
@@ -167,6 +217,25 @@ public class TypeChecker
 
     public void ValidateArithmeticOperation(string op, TypeNode leftType, TypeNode rightType, int line, int column)
     {
+        if (op == "+" && (IsStringType(leftType) || IsStringType(rightType)))
+        {
+            if (!IsStringConvertible(leftType))
+            {
+                diagnostics.AddError(
+                    $"Operator '{op}' cannot be applied to operand of type '{leftType}'",
+                    line, column);
+            }
+
+            if (!IsStringConvertible(rightType))
+            {
+                diagnostics.AddError(
+                    $"Operator '{op}' cannot be applied to operand of type '{rightType}'",
+                    line, column);
+            }
+
+            return;
+        }
+
         if (!IsNumericType(leftType))
         {
             diagnostics.AddError(
@@ -231,10 +300,17 @@ public class TypeChecker
 
         for (int i = 0; i < argumentTypes.Count; i++)
         {
-            if (!AreTypesCompatible(function.ParameterTypes[i], argumentTypes[i]))
+            var expectedType = function.ParameterTypes[i];
+            var actualType = argumentTypes[i];
+
+            var isStringCoercion =
+                IsStringType(expectedType) &&
+                IsStringConvertible(actualType);
+
+            if (!isStringCoercion && !AreTypesCompatible(expectedType, actualType))
             {
                 diagnostics.AddError(
-                    $"Argument {i + 1} to '{function.Name}': expected '{function.ParameterTypes[i]}', got '{argumentTypes[i]}'",
+                    $"Argument {i + 1} to '{function.Name}': expected '{expectedType}', got '{actualType}'",
                     line, column);
             }
         }
@@ -252,10 +328,17 @@ public class TypeChecker
 
         for (int i = 0; i < argumentTypes.Count; i++)
         {
-            if (!AreTypesCompatible(method.ParameterTypes[i], argumentTypes[i]))
+            var expectedType = method.ParameterTypes[i];
+            var actualType = argumentTypes[i];
+
+            var isStringCoercion =
+                IsStringType(expectedType) &&
+                IsStringConvertible(actualType);
+
+            if (!isStringCoercion && !AreTypesCompatible(expectedType, actualType))
             {
                 diagnostics.AddError(
-                    $"Argument {i + 1} to '{method.Name}': expected '{method.ParameterTypes[i]}', got '{argumentTypes[i]}'",
+                    $"Argument {i + 1} to '{method.Name}': expected '{expectedType}', got '{actualType}'",
                     line, column);
             }
         }

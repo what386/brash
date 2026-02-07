@@ -181,6 +181,7 @@ expressionStatement
 expression
     : primaryExpression                                          # PrimaryExpr
     | 'await' expression                                         # AwaitExpr
+    | '(' type ')' expression                                    # CastExpr
     | expression '|' expression                                  # PipeExpr
     | expression ('.' IDENTIFIER '(' argumentList? ')')          # MethodCallExpr
     | expression '.' IDENTIFIER                                  # MemberAccessExpr
