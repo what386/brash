@@ -236,5 +236,19 @@
       "completed_at": "2026-02-07T06:43:29.620215718Z"
     },
     "version": null
+  },
+  {
+    "change": {
+      "description": "Docs: align language spec with implemented behavior and mark unsupported example features explicitly",
+      "priority": "Medium",
+      "tags": [
+        "docs",
+        "spec",
+        "project"
+      ],
+      "commit": null,
+      "completed_at": "2026-02-07T06:43:29.647284150Z"
+    },
+    "version": null
   }
 ]
