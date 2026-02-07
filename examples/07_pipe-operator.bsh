@@ -34,7 +34,7 @@ fn uppercase(s: string): string
 end
 
 fn reverse(s: string): string
-    mut result = ""
+    let mut result = ""
     for i in (s.length() - 1)..0 step -1
         result = result + s[i]
     end
@@ -68,7 +68,7 @@ print(greeting)  // "HELLO"
 // ---------------
 
 fn sum(numbers: int[]): int
-    mut total = 0
+    let mut total = 0
     for n in numbers
         total = total + n
     end
@@ -76,7 +76,7 @@ fn sum(numbers: int[]): int
 end
 
 fn double_all(numbers: int[]): int[]
-    mut result: int[]
+    let mut result: int[]
     for n in numbers
         result.push(n * 2)
     end
@@ -84,7 +84,7 @@ fn double_all(numbers: int[]): int[]
 end
 
 fn filter_even(numbers: int[]): int[]
-    mut result: int[]
+    let mut result: int[]
     for n in numbers
         if n % 2 == 0
             result.push(n)

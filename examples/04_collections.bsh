@@ -10,7 +10,7 @@
 
 let numbers: int[] = [1, 2, 3, 4, 5]
 let names = ["Alice", "Bob", "Charlie"]   // inferred as string[]
-mut mixed: string[] = []                  // empty array
+let mut mixed: string[] = []                  // empty array
 
 
 // ---------------
@@ -36,7 +36,7 @@ let length = mixed.length()
 // ---------------
 
 let first_num = numbers[0]
-mut mutable_nums = [1, 2, 3]
+let mut mutable_nums = [1, 2, 3]
 mutable_nums[1] = 99
 
 

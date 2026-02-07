@@ -71,7 +71,7 @@ end
 // While Loops
 // ---------------
 
-mut counter = 0
+let mut counter = 0
 while counter < 5
     print($"Counter: {counter}")
     counter = counter + 1

@@ -9,7 +9,7 @@
 
 // Variable declarations
 let x = 5                    // immutable
-mut y = 10                   // mutable
+let mut y = 10                   // mutable
 const PI = 3.14159           // constant
 
 // Type annotations
@@ -48,6 +48,12 @@ end
 // Optional parameters
 fn greet_custom(name: string, greeting: string = "Hello"): string
     return greeting + ", " + name
+end
+
+// Mutable parameters (only when reassignment is needed)
+fn increment(mut count: int): int
+    count = count + 1
+    return count
 end
 
 // Nullable return
@@ -103,7 +109,7 @@ for i in 5..0 step -1      // 5, 4, 3, 2, 1, 0
 end
 
 // While loops
-mut counter = 0
+let mut counter = 0
 while counter < 5
     print(counter)
     counter = counter + 1
@@ -127,7 +133,7 @@ end
 // Arrays
 let numbers: int[] = [1, 2, 3, 4, 5]
 let first = numbers[0]
-mut list = ["a", "b"]
+let mut list = ["a", "b"]
 list.push("c")
 let item = list.pop()
 

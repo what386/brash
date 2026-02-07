@@ -80,7 +80,7 @@ let config = Config {
 print(person.name)
 
 // mutable copy
-mut mutable_person = person
+let mut mutable_person = person
 mutable_person.balance = 2000.00
 
 // --------------------------------------------

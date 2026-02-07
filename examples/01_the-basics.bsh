@@ -9,7 +9,7 @@
 // ---------------
 
 let x = 5                    // immutable
-mut y = 10                   // mutable
+let mut y = 10                   // mutable
 const PI = 3.14159           // constant
 
 y = 15                       // ok

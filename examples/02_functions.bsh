@@ -84,3 +84,14 @@ fn welcome_user(name: string): void
     log_message(message)
 end
 
+
+// ---------------
+// Mutability Rules For Parameters
+// ---------------
+
+// Parameters are immutable by default.
+// Mark a parameter as `mut` only when the function reassigns it.
+fn increment(mut count: int): int
+    count = count + 1
+    return count
+end
