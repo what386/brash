@@ -24,8 +24,10 @@ public class TypeChecker
         if (expected.Equals(actual))
             return true;
 
-        // null can be assigned to nullable types
-        if (allowNullToNullable && expected is NullableType && actual is NullLiteral)
+        // null can be assigned to nullable types (null literal currently resolves as nullable void)
+        if (allowNullToNullable &&
+            expected is NullableType &&
+            actual is NullableType { BaseType: PrimitiveType { PrimitiveKind: PrimitiveType.Kind.Void } })
             return true;
 
         // Nullable type compatibility

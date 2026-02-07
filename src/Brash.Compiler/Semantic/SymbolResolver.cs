@@ -11,12 +11,18 @@ public class SymbolResolver
     private readonly DiagnosticBag diagnostics;
     private readonly SymbolTable symbolTable;
     private readonly TypeChecker typeChecker;
+    private readonly NullabilityChecker nullabilityChecker;
 
-    public SymbolResolver(DiagnosticBag diagnostics, SymbolTable symbolTable, TypeChecker typeChecker)
+    public SymbolResolver(
+        DiagnosticBag diagnostics,
+        SymbolTable symbolTable,
+        TypeChecker typeChecker,
+        NullabilityChecker nullabilityChecker)
     {
         this.diagnostics = diagnostics;
         this.symbolTable = symbolTable;
         this.typeChecker = typeChecker;
+        this.nullabilityChecker = nullabilityChecker;
     }
 
     // ============================================
@@ -109,6 +115,11 @@ public class SymbolResolver
     private TypeNode ResolveMethodCall(MethodCallExpression method)
     {
         var objectType = ResolveExpressionType(method.Object);
+        objectType = nullabilityChecker.RequireNonNullable(
+            objectType,
+            method.Line,
+            method.Column,
+            $"method call '{method.MethodName}'");
 
         // Get the type name
         string typeName = objectType switch
@@ -155,6 +166,11 @@ public class SymbolResolver
         }
 
         var objectType = ResolveExpressionType(member.Object);
+        objectType = nullabilityChecker.RequireNonNullable(
+            objectType,
+            member.Line,
+            member.Column,
+            $"member access '{member.MemberName}'");
 
         if (objectType is NamedType namedType)
         {
@@ -185,6 +201,11 @@ public class SymbolResolver
     private TypeNode ResolveIndexAccess(IndexAccessExpression index)
     {
         var arrayType = ResolveExpressionType(index.Array);
+        arrayType = nullabilityChecker.RequireNonNullable(
+            arrayType,
+            index.Line,
+            index.Column,
+            "index access");
         var indexType = ResolveExpressionType(index.Index);
 
         typeChecker.ValidateIndexAccess(arrayType, indexType, index.Line, index.Column);
@@ -350,6 +371,7 @@ public class SymbolResolver
     {
         var leftType = ResolveExpressionType(nullCoalesce.Left);
         var rightType = ResolveExpressionType(nullCoalesce.Right);
+        nullabilityChecker.ValidateNullCoalesce(leftType, rightType, nullCoalesce.Line, nullCoalesce.Column);
 
         // Result is the non-nullable version of left, or right's type
         if (leftType is NullableType nullable)

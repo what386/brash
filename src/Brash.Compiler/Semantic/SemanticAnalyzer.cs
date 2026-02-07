@@ -11,7 +11,9 @@ public class SemanticAnalyzer
     private readonly DiagnosticBag diagnostics;
     private readonly SymbolTable symbolTable;
     private readonly TypeChecker typeChecker;
+    private readonly NullabilityChecker nullabilityChecker;
     private readonly SymbolResolver symbolResolver;
+    private readonly MutabilityChecker mutabilityChecker;
 
     private TypeNode? currentFunctionReturnType;
     private string? currentTypeName; // For 'self' in methods
@@ -22,7 +24,9 @@ public class SemanticAnalyzer
         this.diagnostics = diagnostics;
         this.symbolTable = new SymbolTable();
         this.typeChecker = new TypeChecker(diagnostics, symbolTable);
-        this.symbolResolver = new SymbolResolver(diagnostics, symbolTable, typeChecker);
+        this.nullabilityChecker = new NullabilityChecker(diagnostics, typeChecker);
+        this.symbolResolver = new SymbolResolver(diagnostics, symbolTable, typeChecker, nullabilityChecker);
+        this.mutabilityChecker = new MutabilityChecker(diagnostics, symbolTable);
     }
 
     public SymbolTable SymbolTable => symbolTable;
@@ -271,29 +275,11 @@ public class SemanticAnalyzer
 
     private void AnalyzeAssignment(Assignment assignment)
     {
+        if (!mutabilityChecker.ValidateAssignmentTarget(assignment.Target, assignment.Line, assignment.Column))
+            return;
+
         var targetType = symbolResolver.ResolveExpressionType(assignment.Target);
         var valueType = symbolResolver.ResolveExpressionType(assignment.Value);
-
-        // Check if target is an identifier (variable)
-        if (assignment.Target is IdentifierExpression ident)
-        {
-            var symbol = symbolTable.LookupVariable(ident.Name);
-            if (symbol == null)
-            {
-                diagnostics.AddError(
-                    $"Undefined variable '{ident.Name}'",
-                    assignment.Line, assignment.Column);
-                return;
-            }
-
-            if (!symbol.IsMutable)
-            {
-                diagnostics.AddError(
-                    $"Cannot assign to immutable variable '{ident.Name}'",
-                    assignment.Line, assignment.Column);
-                return;
-            }
-        }
 
         typeChecker.ValidateAssignment(targetType, valueType, assignment.Line, assignment.Column);
     }
@@ -305,7 +291,7 @@ public class SemanticAnalyzer
         // Declare parameters
         foreach (var param in funcDecl.Parameters)
         {
-            if (!symbolTable.DeclareVariable(param.Name, param.Type, false))
+            if (!symbolTable.DeclareVariable(param.Name, param.Type, param.IsMutable))
             {
                 diagnostics.AddError(
                     $"Parameter '{param.Name}' is already declared",
@@ -338,7 +324,7 @@ public class SemanticAnalyzer
         // Declare parameters
         foreach (var param in method.Parameters)
         {
-            if (!symbolTable.DeclareVariable(param.Name, param.Type, false))
+            if (!symbolTable.DeclareVariable(param.Name, param.Type, param.IsMutable))
             {
                 diagnostics.AddError(
                     $"Parameter '{param.Name}' is already declared",
