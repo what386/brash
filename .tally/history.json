@@ -235,7 +235,12 @@
       "commit": null,
       "completed_at": "2026-02-07T06:43:29.620215718Z"
     },
-    "version": null
+    "version": {
+      "major": 0,
+      "minor": 1,
+      "patch": 0,
+      "is_prerelease": false
+    }
   },
   {
     "change": {
@@ -249,7 +254,12 @@
       "commit": null,
       "completed_at": "2026-02-07T06:43:29.647284150Z"
     },
-    "version": null
+    "version": {
+      "major": 0,
+      "minor": 1,
+      "patch": 0,
+      "is_prerelease": false
+    }
   },
   {
     "change": {
@@ -263,6 +273,68 @@
       "commit": null,
       "completed_at": "2026-02-07T06:43:29.673078797Z"
     },
-    "version": null
+    "version": {
+      "major": 0,
+      "minor": 1,
+      "patch": 0,
+      "is_prerelease": false
+    }
+  },
+  {
+    "change": {
+      "description": "Tooling: add CI workflow to run build + compiler tests + example progress suite on every push",
+      "priority": "Medium",
+      "tags": [
+        "infra",
+        "ci",
+        "quality"
+      ],
+      "commit": null,
+      "completed_at": "2026-02-07T06:43:00Z"
+    },
+    "version": {
+      "major": 0,
+      "minor": 1,
+      "patch": 0,
+      "is_prerelease": false
+    }
+  },
+  {
+    "change": {
+      "description": "Docs: align language spec with implemented behavior and mark unsupported example features explicitly",
+      "priority": "Medium",
+      "tags": [
+        "docs",
+        "spec",
+        "project"
+      ],
+      "commit": null,
+      "completed_at": "2026-02-07T06:43:00Z"
+    },
+    "version": {
+      "major": 0,
+      "minor": 1,
+      "patch": 0,
+      "is_prerelease": false
+    }
+  },
+  {
+    "change": {
+      "description": "Docs: document cmd/exec/spawn and pipe semantics for 0.1.0 (async exec/spawn reserved/unsupported)",
+      "priority": "High",
+      "tags": [
+        "docs",
+        "spec",
+        "release"
+      ],
+      "commit": null,
+      "completed_at": "2026-02-07T06:43:00Z"
+    },
+    "version": {
+      "major": 0,
+      "minor": 1,
+      "patch": 0,
+      "is_prerelease": false
+    }
   }
 ]
