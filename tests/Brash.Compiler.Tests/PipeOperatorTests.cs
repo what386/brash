@@ -102,6 +102,34 @@ public class PipeOperatorTests
     }
 
     [Fact]
+    public void SemanticAnalyzer_AllowsRangeForLoop_WithOptionalStep()
+    {
+        var diagnostics = Analyze(
+            """
+            for i in 0..5
+                exec("printf", "%s\n", i)
+            end
+
+            for j in 10..0 step -2
+                exec("printf", "%s\n", j)
+            end
+            """);
+
+        Assert.DoesNotContain(diagnostics.GetErrors(), d => d.Message.Contains("Feature 'range value code generation' is not supported"));
+    }
+
+    [Fact]
+    public void SemanticAnalyzer_StillRejectsRangeAsStandaloneValue()
+    {
+        var diagnostics = Analyze(
+            """
+            let values = 0..5
+            """);
+
+        Assert.Contains(diagnostics.GetErrors(), d => d.Message.Contains("Feature 'range value code generation' is not supported"));
+    }
+
+    [Fact]
     public void SemanticAnalyzer_AllowsSpawnAssignedToProcessType()
     {
         var diagnostics = Analyze(
