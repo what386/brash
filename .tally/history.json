@@ -65,5 +65,20 @@
       "completed_at": "2026-02-07T02:06:42.691657861Z"
     },
     "version": null
+  },
+  {
+    "change": {
+      "description": "Codegen: implement command execution, pipe operator lowering, async/await flow, and error handling constructs",
+      "priority": "High",
+      "tags": [
+        "codegen",
+        "bash",
+        "shell",
+        "feature"
+      ],
+      "commit": null,
+      "completed_at": "2026-02-07T02:06:42.732164317Z"
+    },
+    "version": null
   }
 ]
