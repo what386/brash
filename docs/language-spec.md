@@ -26,10 +26,30 @@ This document describes the behavior currently implemented by the compiler and B
 
 ### Pipe operator
 
-- `|` composes command values.
-- Type rule: both sides of `|` must be `Command`.
-- To execute a pipeline, wrap it with `exec(...)`.
+- Command mode:
+  - `|` composes command values.
+  - To execute a command pipeline, wrap it with `exec(...)`.
   - Example: `let out = exec(cmd("ls") | cmd("wc", "-l"))`
+- Value mode:
+  - `|` can pass a value into a function/method stage.
+  - The stage receives piped input as the implicit first argument.
+  - Stage return type must match input type.
+  - Example: `a = a | add_two() | double()`
+
+### String concatenation
+
+- `+` supports numeric addition for numeric operands.
+- `+` supports string concatenation when either operand is string-like.
+- Common usage:
+  - `let message = "Hello, " + name`
+
+### Explicit casts
+
+- Cast syntax: `(type)expr`
+- Typical usage:
+  - `(string)5`
+  - `(string)(person.is_adult())`
+- Cast validity is checked in semantic analysis.
 
 ### Error handling
 
@@ -43,7 +63,6 @@ The semantic phase intentionally rejects features not ready for stable transpila
 
 - `import ...`
 - map literal code generation
-- tuple value code generation
 - range value code generation
 - async execution and await flow
 
