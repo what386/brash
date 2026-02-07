@@ -43,6 +43,7 @@
   "string"
   "bool"
   "char"
+  "any"
   "map"
   "void"
 ] @type.builtin

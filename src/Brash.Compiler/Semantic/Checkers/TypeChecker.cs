@@ -20,6 +20,10 @@ public class TypeChecker
 
     public bool AreTypesCompatible(TypeNode expected, TypeNode actual, bool allowNullToNullable = true)
     {
+        // Any accepts any value type.
+        if (expected is PrimitiveType { PrimitiveKind: PrimitiveType.Kind.Any })
+            return true;
+
         // Same type
         if (expected.Equals(actual))
             return true;
@@ -101,7 +105,7 @@ public class TypeChecker
 
         return type switch
         {
-            PrimitiveType => true,
+            PrimitiveType prim => prim.PrimitiveKind != PrimitiveType.Kind.Any,
             NamedType => true,
             TupleType => true,
             ArrayType => true,
@@ -120,6 +124,13 @@ public class TypeChecker
 
         sourceType = GetBaseType(sourceType);
         targetType = GetBaseType(targetType);
+
+        if (sourceType is PrimitiveType { PrimitiveKind: PrimitiveType.Kind.Any } &&
+            targetType is PrimitiveType targetPrimitive &&
+            targetPrimitive.PrimitiveKind != PrimitiveType.Kind.Void)
+        {
+            return true;
+        }
 
         if (IsStringType(targetType))
             return IsStringConvertible(sourceType);

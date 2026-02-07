@@ -362,7 +362,7 @@ module.exports = grammar({
 
     base_type: ($) => choice($.primitive_type, $.map_type, $.identifier),
     type_suffix: (_) => choice(seq("[", "]"), "?"),
-    primitive_type: (_) => choice("int", "float", "string", "bool", "char"),
+    primitive_type: (_) => choice("int", "float", "string", "bool", "char", "any"),
     map_type: ($) => seq("map", "<", field("key_type", $.type), ",", field("value_type", $.type), ">"),
 
     literal: ($) => choice($.integer, $.float, $.string_literal, $.char, $.boolean),

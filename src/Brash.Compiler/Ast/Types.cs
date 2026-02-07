@@ -10,7 +10,7 @@ public abstract class TypeNode : AstNode { }
 
 public class PrimitiveType : TypeNode
 {
-    public enum Kind { Int, Float, String, Bool, Char, Void }
+    public enum Kind { Int, Float, String, Bool, Char, Any, Void }
 
     public Kind PrimitiveKind { get; set; }
 

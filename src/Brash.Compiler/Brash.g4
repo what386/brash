@@ -276,6 +276,7 @@ primitiveType
     | 'string'
     | 'bool'
     | 'char'
+    | 'any'
     ;
 
 mapType
@@ -340,6 +341,7 @@ FLOAT_TYPE  : 'float';
 STRING_TYPE : 'string';
 BOOL_TYPE   : 'bool';
 CHAR_TYPE   : 'char';
+ANY_TYPE    : 'any';
 MAP         : 'map';
 
 // Boolean Literals

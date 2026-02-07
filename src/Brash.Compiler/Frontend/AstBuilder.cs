@@ -924,6 +924,7 @@ public class AstBuilder : BrashBaseVisitor<AstNode>
             "string" => PrimitiveType.Kind.String,
             "bool" => PrimitiveType.Kind.Bool,
             "char" => PrimitiveType.Kind.Char,
+            "any" => PrimitiveType.Kind.Any,
             _ => PrimitiveType.Kind.Void
         };
 

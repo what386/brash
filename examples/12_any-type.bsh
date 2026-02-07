@@ -1,0 +1,25 @@
+// ============================================
+// File: examples/12_any-type.bsh
+// The `any` type and explicit casting
+// ============================================
+
+fn print(text: string)
+    exec("echo", text)
+end
+
+// `any` can hold values of different concrete types.
+let int_value: any = 5
+let string_value: any = "42"
+let bool_value: any = true
+
+// Values of type `any` must be explicitly cast before typed use.
+let parsed_int = (int)string_value
+let int_text = (string)int_value
+let bool_text = (string)bool_value
+
+print("parsed_int = " + (string)parsed_int)
+print("int_text = " + int_text)
+print("bool_text = " + bool_text)
+
+// This would fail semantic checks (implicit use of `any` as string):
+// print(int_value)
