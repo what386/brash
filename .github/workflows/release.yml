@@ -20,7 +20,7 @@ jobs:
           - os: ubuntu-latest
             rid: linux-x64
             output_name: Brash-linux_x86-64
-          - os: macos-13
+          - os: macos-latest
             rid: osx-x64
             output_name: Brash-osx_x86-64
           - os: macos-14

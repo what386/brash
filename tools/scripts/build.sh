@@ -166,7 +166,12 @@ find_published_executable() {
         return
     fi
 
-    find "$temp_dir" -maxdepth 1 -type f -executable -print -quit
+    while IFS= read -r candidate; do
+        if [ -x "$candidate" ]; then
+            echo "$candidate"
+            return
+        fi
+    done < <(find "$temp_dir" -maxdepth 1 -type f -print)
 }
 
 build_tool_for_platform() {
