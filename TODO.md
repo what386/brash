@@ -41,6 +41,9 @@
 - [ ] Codegen: implement try/catch/throw lowering or enforce compile-time errors in transpile mode (high) #codegen #bash #error-handling #feature
       @created 2026-02-07 02:06
 
+- [ ] Testing: add golden snapshot tests for generated Bash across selected examples/* (high) #testing #e2e #examples #quality
+      @created 2026-02-07 02:06
+
 
 ## Completed
 
