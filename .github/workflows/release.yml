@@ -23,10 +23,10 @@ jobs:
           - os: windows-latest
             rid: win-x64
             output_name: Brash-win_x86-64.exe
-          - os: macos-13
+          - os: macos-latest
             rid: osx-x64
             output_name: Brash-osx_x86-64
-          - os: macos-14
+          - os: macos-latest
             rid: osx-arm64
             output_name: Brash-osx_arm-64
 
