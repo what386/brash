@@ -8,7 +8,6 @@
    - declaration collection
    - impl/method analysis
    - type/symbol/nullability/mutability checks
-   - transpile-readiness checks for unsupported features
 4. Generate Bash (`CodeGen/BashGenerator*.cs`).
 
 ### Semantic subsystems
@@ -18,7 +17,6 @@
 - `NullabilityChecker`: nullable safety diagnostics.
 - `MutabilityChecker`: assignment mutability checks (`let mut`, mutable params).
 - `PipeChecker`: enforces command pipe typing.
-- `TranspileReadinessChecker`: fail-fast diagnostics for unsupported constructs.
 
 ### Command model
 
@@ -29,6 +27,7 @@
 - `async spawn(...)` creates async process handles.
 - `await process` waits and materializes captured stdout.
 - Command pipelines are lazy values until materialized with `exec(...)`.
+- `bash(...)` executes raw shell text in statement context.
 
 ### Runtime helpers emitted in Bash
 
@@ -40,5 +39,5 @@
 
 ### Failure policy
 
-- Unsupported language/runtime features should fail in semantic analysis with clear errors (for example unsupported literal/value forms like map literals as runtime values).
-- CLI also treats remaining codegen unsupported warnings as fatal when emitting Bash.
+- Unsupported language/runtime features should fail with clear diagnostics.
+- CLI treats remaining codegen unsupported warnings as fatal when emitting Bash.

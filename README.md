@@ -6,34 +6,20 @@ It is inspired by Lua ergonomics, with language ideas from C# and Rust (`let mut
 
 ## Current status
 
-Brash is pre-`0.1.0` and under active development.
+Brash is approaching a stable `0.1.0` core.
 
-- Parser, AST, semantic analysis, and Bash codegen are working for a growing core subset.
-- Unsupported features fail fast with explicit diagnostics.
-
-### Tally snapshot (2026-02-07)
-
-Completed in `tally`:
-- CLI compile/check/run pipeline
-- struct/enum/member Bash codegen
-- parser precedence fixes and broad AST coverage improvements
-- mutability model (`let mut`, mutable params) + `MutabilityChecker`
-- CI workflow for build + tests on push/PR
-- docs alignment for language spec and command/pipe semantics
-
-Actively tracked in `tally`:
-- standard library/runtime contract hardening (`Process`, helpers, collections)
-- additional semantic tightening (nullability/type quality)
-- broader golden/snapshot coverage across examples
+- Parser, AST, semantic analysis, and Bash codegen are working across the main language surface.
+- Remaining unsupported features fail fast with explicit diagnostics.
 
 ## Repository layout
 
-- `src/Brash.Compiler`: compiler implementation (ANTLR grammar, AST, semantic, codegen, CLI)
+- `src/Brash.Compiler`: compiler implementation (ANTLR grammar, AST, semantic, codegen)
+- `src/Brash.Cli`: user-facing CLI (`brash`)
+- `src/Brash.StandardLibrary`: Brash standard library modules (`std/*`)
 - `tests/Brash.Compiler.Tests`: unit/integration/E2E tests
 - `examples`: language examples and progress targets
 - `docs/language-spec.md`: current implemented language behavior
 - `docs/architecture.md`: compiler architecture overview
-- `TODO.md`: active backlog (mirrors tally tasks)
 
 ## Build and test
 
@@ -96,6 +82,7 @@ Notes:
   - `async spawn(...)` -> background process handle (awaitable)
   - `await process` -> waits for `Process` and returns captured stdout
   - pipelines via `|` for command and value flow
+  - `bash("...")` / `bash([[...]])` -> inject raw shell execution (statement context)
 - module imports:
   - `import { item } from "path.bsh"`
   - `import Name from "path.bsh"`
@@ -132,10 +119,10 @@ Recommended order in `examples/`:
 
 ## Explicitly unsupported (fail-fast)
 
-These are currently rejected during semantic/transpile-readiness checks:
+These currently fail during transpilation/codegen:
 
-- map literal codegen
-- range value codegen (ranges are currently supported for `for ... in start..end`)
+- range value codegen (ranges are supported for `for ... in start..end`)
+- `bash(...)` in expression context (use as a statement)
 
 ## Contributing
 

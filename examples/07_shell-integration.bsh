@@ -45,3 +45,11 @@ exec("kill", pid)
 // Get environment variable
 let home = exec("bash", "-lc", "echo $HOME")
 print($"Home directory: {home}")
+
+// ---------------
+// Raw Bash Injection
+// ---------------
+
+// Use bash(...) when you need to emit/execute shell that is easier
+// to express directly than with exec(...) arguments.
+bash([[printf '%s\n' "inline bash works"]])

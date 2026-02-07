@@ -12,7 +12,6 @@ This document describes the behavior currently implemented by the compiler and B
 - Functions:
   - `fn name(args...): ReturnType ... end`
   - `pub fn name(args...): ReturnType ... end`
-  - `async fn` currently parses and transpiles with the same runtime behavior as `fn`.
 - Types:
   - `struct Name ... end`
   - `pub struct Name ... end`
@@ -41,6 +40,9 @@ This document describes the behavior currently implemented by the compiler and B
 - `async exec(...)` starts command execution asynchronously in fire-and-forget mode.
 - `async spawn(...)` starts background execution and returns a `Process` handle.
 - `await expr` waits for a `Process` handle and returns captured stdout.
+- `bash(expr)` executes shell text directly (statement context):
+  - for string literals, emitted inline in generated Bash
+  - for dynamic strings, emitted as `eval <expr>`
 
 ### Pipe operator
 
@@ -77,12 +79,10 @@ This document describes the behavior currently implemented by the compiler and B
 
 ### Fail-fast unsupported features
 
-The semantic phase intentionally rejects features not ready for stable transpilation:
+The compiler fails fast for features not ready for stable transpilation:
 
-- map literal code generation
-- range value code generation
-
-These errors are emitted as hard errors so unsupported behavior does not silently transpile.
+- range value code generation (`let r = 0..5` as a value)
+- `bash(...)` in expression context (it is statement-only)
 
 ### Codegen behavior
 
