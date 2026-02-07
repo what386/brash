@@ -66,10 +66,6 @@ public class SemanticAnalyzer
                     CollectStructDeclaration(structDecl);
                     break;
 
-                case RecordDeclaration recordDecl:
-                    CollectRecordDeclaration(recordDecl);
-                    break;
-
                 case FunctionDeclaration funcDecl:
                     CollectFunctionDeclaration(funcDecl);
                     break;
@@ -88,16 +84,6 @@ public class SemanticAnalyzer
             diagnostics.AddError(
                 $"Type '{structDecl.Name}' is already defined",
                 structDecl.Line, structDecl.Column);
-        }
-    }
-
-    private void CollectRecordDeclaration(RecordDeclaration recordDecl)
-    {
-        if (!symbolTable.DeclareType(recordDecl.Name, recordDecl))
-        {
-            diagnostics.AddError(
-                $"Type '{recordDecl.Name}' is already defined",
-                recordDecl.Line, recordDecl.Column);
         }
     }
 
@@ -236,7 +222,6 @@ public class SemanticAnalyzer
                 break;
 
             case StructDeclaration:
-            case RecordDeclaration:
             case EnumDeclaration:
             case ImplBlock:
                 // Already handled in earlier phases
@@ -288,6 +273,13 @@ public class SemanticAnalyzer
 
     private void AnalyzeFunctionDeclaration(FunctionDeclaration funcDecl)
     {
+        if (funcDecl.IsAsync)
+        {
+            diagnostics.AddError(
+                "async fn is not supported in this compiler version",
+                funcDecl.Line, funcDecl.Column);
+        }
+
         symbolTable.EnterScope();
 
         // Declare parameters
@@ -322,6 +314,7 @@ public class SemanticAnalyzer
         // Set type context for 'self'
         var previousTypeName = currentTypeName;
         currentTypeName = typeName;
+        symbolResolver.SetCurrentTypeContext(typeName);
 
         // Declare parameters
         foreach (var param in method.Parameters)
@@ -346,6 +339,7 @@ public class SemanticAnalyzer
 
         currentFunctionReturnType = previousReturnType;
         currentTypeName = previousTypeName;
+        symbolResolver.SetCurrentTypeContext(previousTypeName);
         symbolTable.ExitScope();
     }
 

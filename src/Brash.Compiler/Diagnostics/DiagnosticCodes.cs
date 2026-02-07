@@ -70,7 +70,7 @@ public static class DiagnosticCodes
     public const string CannotAssignNullToNonNullable = "E601";
 
     // ============================================
-    // Struct/Record Errors (E700-E799)
+    // Struct Errors (E700-E799)
     // ============================================
 
     public const string MissingStructField = "E700";

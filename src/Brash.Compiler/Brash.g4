@@ -27,7 +27,6 @@ statement
     | assignment
     | functionDeclaration
     | structDeclaration
-    | recordDeclaration
     | enumDeclaration
     | implBlock
     | ifStatement
@@ -78,13 +77,9 @@ functionBody
     : statement* 'end'
     ;
 
-// Struct and Record Declarations
+// Struct Declarations
 structDeclaration
     : 'struct' IDENTIFIER structBody
-    ;
-
-recordDeclaration
-    : 'record' IDENTIFIER structBody
     ;
 
 enumDeclaration
@@ -181,9 +176,11 @@ expression
     | expression ('.' IDENTIFIER '(' argumentList? ')')          # MethodCallExpr
     | expression '.' IDENTIFIER                                  # MemberAccessExpr
     | expression '[' expression ']'                              # IndexAccessExpr
-    | 'cmd' '(' argumentList ')' ('.' IDENTIFIER '(' ')')?       # CommandExpr
+    | 'cmd' '(' argumentList ')'                                 # CommandExpr
     | 'exec' '(' argumentList ')'                                # ExecExpr
-    | 'async' '(' argumentList ')'                               # AsyncExpr
+    | 'async' 'exec' '(' argumentList ')'                        # AsyncExecExpr
+    | 'async' 'spawn' '(' argumentList ')'                       # AsyncSpawnExpr
+    | 'spawn' '(' argumentList ')'                               # SpawnExpr
     | ('!' | '-' | '+') expression                               # UnaryExpr
     | expression ('*' | '/' | '%') expression                    # MultiplicativeExpr
     | expression ('+' | '-') expression                          # AdditiveExpr
@@ -197,11 +194,11 @@ expression
 primaryExpression
     : literal
     | functionCall
+    | structLiteral
     | IDENTIFIER
     | tupleExpression
     | arrayLiteral
     | mapLiteral
-    | structLiteral
     | '(' expression ')'
     | 'self'
     | 'null'
@@ -302,8 +299,8 @@ CONST       : 'const';
 FN          : 'fn';
 ASYNC       : 'async';
 AWAIT       : 'await';
+SPAWN       : 'spawn';
 STRUCT      : 'struct';
-RECORD      : 'record';
 IMPL        : 'impl';
 IF          : 'if';
 ELIF        : 'elif';

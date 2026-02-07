@@ -21,14 +21,26 @@ public class MutabilityChecker
 
     public bool ValidateAssignmentTarget(Expression target, int line, int column)
     {
-        if (target is not IdentifierExpression ident)
-            return true;
+        if (target is IdentifierExpression ident)
+        {
+            return ValidateVariableAssignment(ident.Name, line, column);
+        }
 
-        var symbol = symbolTable.LookupVariable(ident.Name);
+        if (target is MemberAccessExpression member)
+        {
+            return ValidateMemberAssignment(member, line, column);
+        }
+
+        return true;
+    }
+
+    private bool ValidateVariableAssignment(string name, int line, int column)
+    {
+        var symbol = symbolTable.LookupVariable(name);
         if (symbol == null)
         {
             diagnostics.AddError(
-                $"Undefined variable '{ident.Name}'",
+                $"Undefined variable '{name}'",
                 line, column);
             return false;
         }
@@ -36,10 +48,21 @@ public class MutabilityChecker
         if (!symbol.IsMutable)
         {
             diagnostics.AddError(
-                $"Cannot assign to immutable variable '{ident.Name}'. Declare with 'let mut' or mark parameter as 'mut'.",
+                $"Cannot assign to immutable variable '{name}'. Declare with 'let mut' or mark parameter as 'mut'.",
                 line, column);
             return false;
         }
+
+        return true;
+    }
+
+    private bool ValidateMemberAssignment(MemberAccessExpression member, int line, int column)
+    {
+        if (member.Object is not IdentifierExpression ident)
+            return true;
+
+        if (!ValidateVariableAssignment(ident.Name, line, column))
+            return false;
 
         return true;
     }

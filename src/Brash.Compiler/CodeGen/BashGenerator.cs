@@ -26,6 +26,8 @@ public partial class BashGenerator
         EmitLine();
         EmitLine("set -euo pipefail");
         EmitLine();
+        EmitRuntimeHelpers();
+        EmitLine();
 
         // Generate code for each statement
         foreach (var stmt in program.Statements)
@@ -35,6 +37,71 @@ public partial class BashGenerator
         }
 
         return output.ToString();
+    }
+
+    private void EmitRuntimeHelpers()
+    {
+        EmitLine("brash_get_field() {");
+        EmitLine("    local __obj=\"$1\"");
+        EmitLine("    local __field=\"$2\"");
+        EmitLine("    local __key=\"${__obj}_${__field}\"");
+        EmitLine("    printf '%s' \"${!__key-}\"");
+        EmitLine("}");
+        EmitLine();
+
+        EmitLine("brash_set_field() {");
+        EmitLine("    local __obj=\"$1\"");
+        EmitLine("    local __field=\"$2\"");
+        EmitLine("    local __value=\"$3\"");
+        EmitLine("    local __key=\"${__obj}_${__field}\"");
+        EmitLine("    printf -v \"$__key\" '%s' \"$__value\"");
+        EmitLine("}");
+        EmitLine();
+
+        EmitLine("brash_call_method() {");
+        EmitLine("    local __obj=\"$1\"");
+        EmitLine("    local __method=\"$2\"");
+        EmitLine("    shift 2");
+        EmitLine("    local __type_key=\"${__obj}__type\"");
+        EmitLine("    local __type=\"${!__type_key-}\"");
+        EmitLine("    if [[ -z \"$__type\" ]]; then");
+        EmitLine("        echo \"\" >&2");
+        EmitLine("        return 1");
+        EmitLine("    fi");
+        EmitLine("    local __fn=\"${__type}__${__method}\"");
+        EmitLine("    \"$__fn\" \"$__obj\" \"$@\"");
+        EmitLine("}");
+        EmitLine();
+
+        EmitLine("brash_build_cmd() {");
+        EmitLine("    local __part");
+        EmitLine("    local __out=\"\"");
+        EmitLine("    for __part in \"$@\"; do");
+        EmitLine("        printf -v __part '%q' \"$__part\"");
+        EmitLine("        __out+=\" ${__part}\"");
+        EmitLine("    done");
+        EmitLine("    printf '%s' \"${__out# }\"");
+        EmitLine("}");
+        EmitLine();
+
+        EmitLine("brash_pipe_cmd() {");
+        EmitLine("    local __left=\"$1\"");
+        EmitLine("    local __right=\"$2\"");
+        EmitLine("    printf '%s | %s' \"$__left\" \"$__right\"");
+        EmitLine("}");
+        EmitLine();
+
+        EmitLine("brash_exec_cmd() {");
+        EmitLine("    local __cmd=\"$1\"");
+        EmitLine("    bash -lc \"$__cmd\"");
+        EmitLine("}");
+        EmitLine();
+
+        EmitLine("brash_spawn_cmd() {");
+        EmitLine("    local __cmd=\"$1\"");
+        EmitLine("    bash -lc \"$__cmd\" &");
+        EmitLine("    printf '%s' \"$!\"");
+        EmitLine("}");
     }
 
     private void Emit(string code)

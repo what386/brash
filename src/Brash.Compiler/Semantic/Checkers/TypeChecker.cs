@@ -62,7 +62,7 @@ public class TypeChecker
             return true;
         }
 
-        // Named type compatibility (structs/records)
+        // Named type compatibility (structs/enums)
         if (expected is NamedType expectedNamed && actual is NamedType actualNamed)
             return expectedNamed.Name == actualNamed.Name;
 

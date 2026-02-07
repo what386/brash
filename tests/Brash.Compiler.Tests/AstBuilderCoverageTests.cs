@@ -63,7 +63,7 @@ public class AstBuilderCoverageTests
         var program = ParseProgram(
             """
             let piped = exec("ls") | exec("wc", "-l")
-            let proc = await async("sleep", "1")
+            let proc = await async exec("sleep", "1")
             let listing = cmd("ls", "-la")
             """);
 
@@ -75,13 +75,12 @@ public class AstBuilderCoverageTests
         var awaited = Assert.IsType<VariableDeclaration>(program.Statements[1]);
         var awaitExpr = Assert.IsType<AwaitExpression>(awaited.Value);
         var asyncCmd = Assert.IsType<CommandExpression>(awaitExpr.Expression);
+        Assert.Equal(CommandKind.Exec, asyncCmd.Kind);
         Assert.True(asyncCmd.IsAsync);
-        Assert.False(asyncCmd.IsExec);
 
         var cmdDecl = Assert.IsType<VariableDeclaration>(program.Statements[2]);
         var cmdExpr = Assert.IsType<CommandExpression>(cmdDecl.Value);
-        Assert.False(cmdExpr.IsExec);
-        Assert.False(cmdExpr.IsAsync);
+        Assert.Equal(CommandKind.Cmd, cmdExpr.Kind);
         Assert.Equal(2, cmdExpr.Arguments.Count);
     }
 

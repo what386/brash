@@ -49,23 +49,19 @@ public partial class BashGenerator
                 break;
 
             case ExpressionStatement exprStmt:
-                Emit(GenerateExpression(exprStmt.Expression));
+                GenerateExpressionStatement(exprStmt.Expression);
                 break;
 
             case StructDeclaration structDecl:
-                EmitComment($"Struct '{structDecl.Name}' currently has no direct Bash output.");
-                break;
-
-            case RecordDeclaration recordDecl:
-                EmitComment($"Record '{recordDecl.Name}' currently has no direct Bash output.");
+                EmitComment($"Struct '{structDecl.Name}' declaration");
                 break;
 
             case EnumDeclaration enumDecl:
-                EmitComment($"Enum '{enumDecl.Name}' currently has no direct Bash output.");
+                GenerateEnumDeclaration(enumDecl);
                 break;
 
             case ImplBlock implBlock:
-                EmitComment($"Impl block for '{implBlock.TypeName}' is not yet emitted to Bash.");
+                GenerateImplBlock(implBlock);
                 break;
 
             case TryStatement:
@@ -91,6 +87,19 @@ public partial class BashGenerator
 
     private void GenerateVariableDeclaration(VariableDeclaration varDecl)
     {
+        if (varDecl.Value is StructLiteral structLiteral)
+        {
+            if (varDecl.Kind == VariableDeclaration.VarKind.Const)
+            {
+                EmitComment($"Const struct binding '{varDecl.Name}' is treated as mutable fields for now.");
+                ReportUnsupported("const struct immutability in codegen");
+                EmitLine();
+            }
+
+            GenerateStructBinding(varDecl.Name, structLiteral);
+            return;
+        }
+
         var value = GenerateExpression(varDecl.Value);
 
         if (varDecl.Kind == VariableDeclaration.VarKind.Const)
@@ -106,6 +115,12 @@ public partial class BashGenerator
 
     private void GenerateAssignment(Assignment assignment)
     {
+        if (assignment.Target is MemberAccessExpression memberTarget)
+        {
+            GenerateMemberAssignment(memberTarget, assignment.Value);
+            return;
+        }
+
         var target = GenerateAssignmentTarget(assignment.Target);
         if (target == null)
             return;
@@ -265,17 +280,28 @@ public partial class BashGenerator
         return target switch
         {
             IdentifierExpression ident => ident.Name,
-            MemberAccessExpression member => GenerateMemberAssignmentTarget(member),
             _ => HandleUnsupportedAssignmentTarget(target)
         };
     }
 
-    private string? GenerateMemberAssignmentTarget(MemberAccessExpression member)
+    private void GenerateMemberAssignment(MemberAccessExpression member, Expression valueExpression)
     {
-        if (member.Object is IdentifierExpression ident)
-            return $"{ident.Name}_{member.MemberName}";
+        var value = GenerateExpression(valueExpression);
 
-        return HandleUnsupportedAssignmentTarget(member);
+        if (TryGetMemberPath(member, out var path))
+        {
+            Emit($"{path}={value}");
+            return;
+        }
+
+        var objectHandle = ResolveObjectHandleForAssignment(member.Object);
+        if (objectHandle == null)
+        {
+            HandleUnsupportedAssignmentTarget(member);
+            return;
+        }
+
+        Emit($"brash_set_field {objectHandle} \"{member.MemberName}\" {value}");
     }
 
     private string? HandleUnsupportedAssignmentTarget(Expression target)
@@ -287,18 +313,191 @@ public partial class BashGenerator
 
     private string GenerateCondition(Expression condition)
     {
-        if (condition is BinaryExpression bin && IsComparisonOperator(bin.Operator))
+        if (condition is BinaryExpression bin && IsConditionOperator(bin.Operator))
         {
             return GenerateBinaryExpression(bin);
         }
 
         // Treat as boolean test
         var expr = GenerateExpression(condition);
-        return $"[ {expr} -eq 0 ]";
+        return $"[ {expr} -ne 0 ]";
     }
 
-    private bool IsComparisonOperator(string op)
+    private bool IsConditionOperator(string op)
     {
-        return op is "==" or "!=" or "<" or ">" or "<=" or ">=";
+        return op is "==" or "!=" or "<" or ">" or "<=" or ">=" or "&&" or "||";
+    }
+
+    private void GenerateStructBinding(string variableName, StructLiteral literal)
+    {
+        // Object handle stores its own path prefix.
+        Emit($"{variableName}=\"{variableName}\"");
+        EmitLine();
+        Emit($"{variableName}__type=\"{literal.TypeName}\"");
+
+        foreach (var (field, value) in literal.Fields)
+        {
+            EmitLine();
+            GenerateStructFieldAssignment($"{variableName}_{field}", value);
+        }
+    }
+
+    private void GenerateStructFieldAssignment(string fieldPath, Expression value)
+    {
+        if (value is StructLiteral nestedStruct)
+        {
+            Emit($"{fieldPath}=\"{fieldPath}\"");
+            EmitLine();
+            Emit($"{fieldPath}__type=\"{nestedStruct.TypeName}\"");
+
+            foreach (var (nestedField, nestedValue) in nestedStruct.Fields)
+            {
+                EmitLine();
+                GenerateStructFieldAssignment($"{fieldPath}_{nestedField}", nestedValue);
+            }
+
+            return;
+        }
+
+        Emit($"{fieldPath}={GenerateExpression(value)}");
+    }
+
+    private void GenerateExpressionStatement(Expression expression)
+    {
+        switch (expression)
+        {
+            case FunctionCallExpression call:
+                Emit(GenerateFunctionCallStatement(call));
+                return;
+
+            case MethodCallExpression methodCall:
+                Emit(GenerateMethodCallStatement(methodCall));
+                return;
+
+            case CommandExpression commandExpression:
+                Emit(GenerateCommandStatement(commandExpression));
+                return;
+
+            case PipeExpression pipeExpression:
+                Emit(GeneratePipeStatement(pipeExpression));
+                return;
+        }
+
+        Emit(GenerateExpression(expression));
+    }
+
+    private string GenerateFunctionCallStatement(FunctionCallExpression call)
+    {
+        var args = string.Join(" ", call.Arguments.Select(GenerateExpression));
+        if (call.FunctionName == "print")
+            return $"printf '%s\\n' {args}";
+
+        return args.Length > 0 ? $"{call.FunctionName} {args}" : call.FunctionName;
+    }
+
+    private string GenerateMethodCallStatement(MethodCallExpression call)
+    {
+        var raw = GenerateRawMethodCall(call);
+        if (raw == null)
+            return UnsupportedExpression(call);
+        return raw;
+    }
+
+    private string GenerateCommandStatement(CommandExpression expr)
+    {
+        if (expr.IsAsync)
+            return UnsupportedExpression(expr);
+
+        return expr.Kind switch
+        {
+            CommandKind.Exec => GenerateExecStatement(expr),
+            CommandKind.Spawn => GenerateSpawnStatement(expr),
+            CommandKind.Cmd => ":",
+            _ => UnsupportedExpression(expr)
+        };
+    }
+
+    private string GeneratePipeStatement(PipeExpression expr)
+    {
+        // Pipe expressions are lazy command values. Expression statements don't execute them.
+        return ":";
+    }
+
+    private string GenerateExecStatement(CommandExpression expr)
+    {
+        if (expr.Arguments.Count == 1 && expr.Arguments[0] is CommandExpression or PipeExpression)
+            return $"brash_exec_cmd \"{GenerateExpression(expr.Arguments[0])}\"";
+
+        return $"brash_exec_cmd \"{GenerateExpression(new CommandExpression { Kind = CommandKind.Cmd, Arguments = expr.Arguments })}\"";
+    }
+
+    private string GenerateSpawnStatement(CommandExpression expr)
+    {
+        if (expr.Arguments.Count == 1 && expr.Arguments[0] is CommandExpression or PipeExpression)
+            return $"brash_spawn_cmd \"{GenerateExpression(expr.Arguments[0])}\" >/dev/null";
+
+        return $"brash_spawn_cmd \"{GenerateExpression(new CommandExpression { Kind = CommandKind.Cmd, Arguments = expr.Arguments })}\" >/dev/null";
+    }
+
+    private void GenerateEnumDeclaration(EnumDeclaration enumDecl)
+    {
+        foreach (var variant in enumDecl.Variants)
+        {
+            Emit($"{enumDecl.Name}_{variant.Name}=\"{variant.Name}\"");
+            EmitLine();
+        }
+
+        if (enumDecl.Variants.Count > 0)
+            output.Length -= Environment.NewLine.Length;
+    }
+
+    private void GenerateImplBlock(ImplBlock implBlock)
+    {
+        foreach (var method in implBlock.Methods)
+        {
+            GenerateMethodDeclaration(implBlock.TypeName, method);
+            EmitLine();
+        }
+    }
+
+    private void GenerateMethodDeclaration(string typeName, MethodDeclaration method)
+    {
+        Emit($"{typeName}__{method.Name}() {{");
+        indentLevel++;
+
+        EmitLine("local __self=\"$1\"");
+        EmitLine("shift");
+
+        for (int i = 0; i < method.Parameters.Count; i++)
+        {
+            var param = method.Parameters[i];
+            EmitLine($"local {param.Name}=\"${{{i + 1}}}\"");
+        }
+
+        if (method.Parameters.Count > 0)
+            EmitLine();
+
+        foreach (var stmt in method.Body)
+        {
+            GenerateStatement(stmt);
+            EmitLine();
+        }
+
+        indentLevel--;
+        Emit("}");
+    }
+
+    private string? ResolveObjectHandleForAssignment(Expression objectExpression)
+    {
+        if (objectExpression is IdentifierExpression identifier)
+            return $"\"${{{identifier.Name}}}\"";
+
+        if (objectExpression is SelfExpression)
+            return "\"${__self}\"";
+
+        if (objectExpression is MemberAccessExpression member && TryGetMemberPath(member, out var path))
+            return $"\"${{{path}}}\"";
+
+        return null;
     }
 }

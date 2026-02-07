@@ -1,5 +1,6 @@
 namespace Brash.Compiler.CodeGen;
 
+using System.Globalization;
 using Brash.Compiler.Ast;
 using Brash.Compiler.Ast.Expressions;
 
@@ -11,13 +12,22 @@ public partial class BashGenerator
         {
             LiteralExpression lit => GenerateLiteral(lit),
             IdentifierExpression ident => $"${{{ident.Name}}}",
+            SelfExpression => "\"${__self}\"",
             BinaryExpression bin => GenerateBinaryExpression(bin),
             UnaryExpression unary => GenerateUnaryExpression(unary),
             FunctionCallExpression call => GenerateFunctionCall(call),
             MethodCallExpression methodCall => GenerateMethodCall(methodCall),
             MemberAccessExpression member => GenerateMemberAccess(member),
+            SafeNavigationExpression safeNav => GenerateSafeNavigation(safeNav),
+            IndexAccessExpression index => GenerateIndexAccess(index),
             ArrayLiteral array => GenerateArrayLiteral(array),
+            MapLiteral => HandleUnsupportedExpression(expr, "map literal"),
+            TupleExpression tuple => GenerateTupleExpression(tuple),
+            PipeExpression pipe => GeneratePipeExpression(pipe),
             NullCoalesceExpression nullCoalesce => GenerateNullCoalesce(nullCoalesce),
+            CommandExpression command => GenerateCommandExpression(command),
+            AwaitExpression awaitExpr => GenerateAwaitExpression(awaitExpr),
+            RangeExpression => HandleUnsupportedExpression(expr, "range as value"),
             NullLiteral => "\"\"",
             _ => UnsupportedExpression(expr)
         };
@@ -31,8 +41,8 @@ public partial class BashGenerator
             {
                 PrimitiveType.Kind.String => $"\"{EscapeString(lit.Value.ToString() ?? "")}\"",
                 PrimitiveType.Kind.Int => lit.Value.ToString() ?? "0",
-                PrimitiveType.Kind.Float => lit.Value.ToString() ?? "0.0",
-                PrimitiveType.Kind.Bool => lit.Value.ToString()?.ToLower() == "true" ? "0" : "1",
+                PrimitiveType.Kind.Float => Convert.ToString(lit.Value, CultureInfo.InvariantCulture) ?? "0.0",
+                PrimitiveType.Kind.Bool => lit.Value.ToString()?.ToLowerInvariant() == "true" ? "1" : "0",
                 PrimitiveType.Kind.Char => $"'{lit.Value}'",
                 _ => "\"\""
             };
@@ -48,19 +58,19 @@ public partial class BashGenerator
 
         return bin.Operator switch
         {
-            "+" => $"$(({left} + {right}))",
+            "+" => GenerateAddition(bin.Left, bin.Right, left, right),
             "-" => $"$(({left} - {right}))",
             "*" => $"$(({left} * {right}))",
             "/" => $"$(({left} / {right}))",
             "%" => $"$(({left} % {right}))",
-            "==" => $"[ {left} -eq {right} ]",
-            "!=" => $"[ {left} -ne {right} ]",
-            "<" => $"[ {left} -lt {right} ]",
-            ">" => $"[ {left} -gt {right} ]",
-            "<=" => $"[ {left} -le {right} ]",
-            ">=" => $"[ {left} -ge {right} ]",
-            "&&" => $"{left} && {right}",
-            "||" => $"{left} || {right}",
+            "==" => $"[[ {left} == {right} ]]",
+            "!=" => $"[[ {left} != {right} ]]",
+            "<" => $"(( {left} < {right} ))",
+            ">" => $"(( {left} > {right} ))",
+            "<=" => $"(( {left} <= {right} ))",
+            ">=" => $"(( {left} >= {right} ))",
+            "&&" => $"(( {left} != 0 )) && (( {right} != 0 ))",
+            "||" => $"(( {left} != 0 )) || (( {right} != 0 ))",
             _ => $"{left} {bin.Operator} {right}"
         };
     }
@@ -84,7 +94,7 @@ public partial class BashGenerator
         // Handle built-in functions
         if (call.FunctionName == "print")
         {
-            return $"echo {args}";
+            return $"printf '%s\\n' {args}";
         }
 
         return args.Length > 0 ? $"$({call.FunctionName} {args})" : $"$({call.FunctionName})";
@@ -92,26 +102,27 @@ public partial class BashGenerator
 
     private string GenerateMethodCall(MethodCallExpression call)
     {
-        if (call.Object is IdentifierExpression ident)
-        {
-            // Lower `x.foo(a, b)` to function-style call `foo x a b`.
-            var args = new List<string> { $"${{{ident.Name}}}" };
-            args.AddRange(call.Arguments.Select(GenerateExpression));
-            return $"$({call.MethodName} {string.Join(" ", args)})";
-        }
+        var receiverHandle = GenerateObjectHandle(call.Object);
+        if (receiverHandle == null)
+            return HandleUnsupportedExpression(call, $"method receiver '{call.Object.GetType().Name}'");
 
-        ReportUnsupported($"method call receiver '{call.Object.GetType().Name}'");
-        return "\"\"";
+        var args = string.Join(" ", call.Arguments.Select(GenerateExpression));
+        if (string.IsNullOrWhiteSpace(args))
+            return $"$(brash_call_method {receiverHandle} \"{call.MethodName}\")";
+
+        return $"$(brash_call_method {receiverHandle} \"{call.MethodName}\" {args})";
     }
 
     private string GenerateMemberAccess(MemberAccessExpression member)
     {
-        // Simplified storage convention: `<var>_<field>`
-        if (member.Object is IdentifierExpression ident)
-            return $"${{{ident.Name}_{member.MemberName}}}";
+        if (TryGetMemberPath(member, out var path))
+            return $"${{{path}}}";
 
-        ReportUnsupported($"member access receiver '{member.Object.GetType().Name}'");
-        return "\"\"";
+        var receiverHandle = GenerateObjectHandle(member.Object);
+        if (receiverHandle == null)
+            return HandleUnsupportedExpression(member, $"member access receiver '{member.Object.GetType().Name}'");
+
+        return $"$(brash_get_field {receiverHandle} \"{member.MemberName}\")";
     }
 
     private string GenerateArrayLiteral(ArrayLiteral array)
@@ -126,10 +137,85 @@ public partial class BashGenerator
 
         return expr.Left switch
         {
-            IdentifierExpression ident => $"${{{ident.Name}:-{right}}}",
-            MemberAccessExpression member when member.Object is IdentifierExpression ident =>
-                $"${{{ident.Name}_{member.MemberName}:-{right}}}",
+            _ when TryGetMemberPath(expr.Left, out var path) => $"${{{path}:-{right}}}",
             _ => HandleUnsupportedNullCoalesceLeft(expr.Left, right)
+        };
+    }
+
+    private string GeneratePipeExpression(PipeExpression expr)
+    {
+        var left = GenerateCommandValue(expr.Left);
+        var right = GenerateCommandValue(expr.Right);
+        if (left == null || right == null)
+            return HandleUnsupportedExpression(expr, "pipe expression");
+
+        return $"$(brash_pipe_cmd \"{left}\" \"{right}\")";
+    }
+
+    private string GenerateCommandExpression(CommandExpression expr)
+    {
+        if (expr.IsAsync)
+            return HandleUnsupportedExpression(expr, $"async {expr.Kind.ToString().ToLowerInvariant()}(...)");
+
+        return expr.Kind switch
+        {
+            CommandKind.Cmd => GenerateCmdValue(expr),
+            CommandKind.Exec => GenerateExecValue(expr),
+            CommandKind.Spawn => GenerateSpawnValue(expr),
+            _ => HandleUnsupportedExpression(expr, $"command kind '{expr.Kind}'")
+        };
+    }
+
+    private string GenerateAwaitExpression(AwaitExpression expr)
+    {
+        // Await lowering is currently a passthrough.
+        return GenerateExpression(expr.Expression);
+    }
+
+    private string GenerateTupleExpression(TupleExpression tuple)
+    {
+        var values = string.Join(" ", tuple.Elements.Select(GenerateExpression));
+        return $"\"{values}\"";
+    }
+
+    private string GenerateIndexAccess(IndexAccessExpression index)
+    {
+        if (index.Array is IdentifierExpression ident)
+        {
+            var idx = GenerateExpression(index.Index);
+            return $"${{{ident.Name}[{idx}]}}";
+        }
+
+        return HandleUnsupportedExpression(index, "index access receiver");
+    }
+
+    private string GenerateSafeNavigation(SafeNavigationExpression safeNav)
+    {
+        if (TryGetMemberPath(safeNav.Object, out var path))
+            return $"${{{path}_{safeNav.MemberName}:-}}";
+
+        var receiverHandle = GenerateObjectHandle(safeNav.Object);
+        if (receiverHandle == null)
+            return HandleUnsupportedExpression(safeNav, $"safe navigation receiver '{safeNav.Object.GetType().Name}'");
+
+        return $"$(brash_get_field {receiverHandle} \"{safeNav.MemberName}\")";
+    }
+
+    private static string GenerateAddition(Expression leftExpr, Expression rightExpr, string left, string right)
+    {
+        if (IsStringLike(leftExpr) || IsStringLike(rightExpr))
+            return $"$(printf '%s%s' {left} {right})";
+
+        return $"$(( {left} + {right} ))";
+    }
+
+    private static bool IsStringLike(Expression expr)
+    {
+        return expr switch
+        {
+            LiteralExpression lit when lit.Type is PrimitiveType { PrimitiveKind: PrimitiveType.Kind.String } => true,
+            LiteralExpression lit when lit.Type is PrimitiveType { PrimitiveKind: PrimitiveType.Kind.Char } => true,
+            _ => false
         };
     }
 
@@ -137,5 +223,125 @@ public partial class BashGenerator
     {
         ReportUnsupported($"null coalesce left operand '{left.GetType().Name}'");
         return right;
+    }
+
+    private string HandleUnsupportedExpression(Expression expr, string feature)
+    {
+        ReportUnsupported(feature);
+        return UnsupportedExpression(expr);
+    }
+
+    private string? GenerateObjectHandle(Expression expr)
+    {
+        if (expr is IdentifierExpression ident)
+            return $"\"${{{ident.Name}}}\"";
+
+        if (expr is SelfExpression)
+            return "\"${__self}\"";
+
+        if (expr is MemberAccessExpression member && TryGetMemberPath(member, out var path))
+            return $"\"${{{path}}}\"";
+
+        return null;
+    }
+
+    private string? GeneratePipableCommand(Expression expr)
+    {
+        return expr switch
+        {
+            CommandExpression cmd when cmd.Kind is CommandKind.Cmd or CommandKind.Exec or CommandKind.Spawn => GenerateExpression(cmd),
+            PipeExpression pipe => GenerateExpression(pipe),
+            FunctionCallExpression call => $"$({call.FunctionName} {string.Join(" ", call.Arguments.Select(GenerateExpression))})",
+            MethodCallExpression methodCall => $"$({GenerateRawMethodCall(methodCall)})",
+            _ => null
+        };
+    }
+
+    private string? GenerateRawMethodCall(MethodCallExpression call)
+    {
+        var receiverHandle = GenerateObjectHandle(call.Object);
+        if (receiverHandle == null)
+            return null;
+
+        var args = string.Join(" ", call.Arguments.Select(GenerateExpression));
+        return string.IsNullOrWhiteSpace(args)
+            ? $"brash_call_method {receiverHandle} \"{call.MethodName}\""
+            : $"brash_call_method {receiverHandle} \"{call.MethodName}\" {args}";
+    }
+
+    private string? GenerateCommandValue(Expression expr)
+    {
+        return expr switch
+        {
+            CommandExpression cmd when cmd.Kind is CommandKind.Cmd or CommandKind.Exec or CommandKind.Spawn => GenerateExpression(cmd),
+            PipeExpression pipe => GenerateExpression(pipe),
+            _ => null
+        };
+    }
+
+    private string GenerateCmdValue(CommandExpression expr)
+    {
+        if (expr.Arguments.Count == 1 && expr.Arguments[0] is CommandExpression or PipeExpression)
+            return GenerateExpression(expr.Arguments[0]);
+
+        if (expr.Arguments.Count == 0)
+            return "\"\"";
+
+        var args = string.Join(" ", expr.Arguments.Select(GenerateExpression));
+        return $"$(brash_build_cmd {args})";
+    }
+
+    private string GenerateExecValue(CommandExpression expr)
+    {
+        if (expr.Arguments.Count == 1 && expr.Arguments[0] is CommandExpression or PipeExpression)
+        {
+            var cmdValue = GenerateExpression(expr.Arguments[0]);
+            return $"$(brash_exec_cmd \"{cmdValue}\")";
+        }
+
+        var cmd = GenerateCmdValue(new CommandExpression
+        {
+            Line = expr.Line,
+            Column = expr.Column,
+            Kind = CommandKind.Cmd,
+            Arguments = expr.Arguments
+        });
+        return $"$(brash_exec_cmd \"{cmd}\")";
+    }
+
+    private string GenerateSpawnValue(CommandExpression expr)
+    {
+        if (expr.Arguments.Count == 1 && expr.Arguments[0] is CommandExpression or PipeExpression)
+        {
+            var cmdValue = GenerateExpression(expr.Arguments[0]);
+            return $"$(brash_spawn_cmd \"{cmdValue}\")";
+        }
+
+        var cmd = GenerateCmdValue(new CommandExpression
+        {
+            Line = expr.Line,
+            Column = expr.Column,
+            Kind = CommandKind.Cmd,
+            Arguments = expr.Arguments
+        });
+        return $"$(brash_spawn_cmd \"{cmd}\")";
+    }
+
+    private bool TryGetMemberPath(Expression expr, out string path)
+    {
+        if (expr is IdentifierExpression ident)
+        {
+            path = ident.Name;
+            return true;
+        }
+
+        if (expr is MemberAccessExpression member && TryGetMemberPath(member.Object, out var basePath))
+        {
+            path = $"{basePath}_{member.MemberName}";
+            return true;
+        }
+
+        path = string.Empty;
+        return false;
     }
 }

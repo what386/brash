@@ -28,11 +28,10 @@ public class FunctionSymbol
 public class TypeSymbol
 {
     public string Name { get; set; } = string.Empty;
-    public Statement Declaration { get; set; } = null!; // StructDeclaration, RecordDeclaration, or EnumDeclaration
+    public Statement Declaration { get; set; } = null!; // StructDeclaration or EnumDeclaration
     public Dictionary<string, TypeNode> Fields { get; set; } = new();
     public HashSet<string> EnumVariants { get; set; } = new();
     public bool IsEnum { get; set; }
-    public bool IsImmutable { get; set; } // true for records
 }
 
 public class MethodSymbol
@@ -167,7 +166,7 @@ public class SymbolTable
     }
 
     // ============================================
-    // Types (Structs/Records/Enums)
+    // Types (Structs/Enums)
     // ============================================
 
     public bool DeclareType(string name, Statement declaration)
@@ -178,26 +177,16 @@ public class SymbolTable
         var fields = new Dictionary<string, TypeNode>();
         var enumVariants = new HashSet<string>();
         bool isEnum = false;
-        bool isImmutable = false;
-
         if (declaration is StructDeclaration structDecl)
         {
             foreach (var field in structDecl.Fields)
                 fields[field.Name] = field.Type;
-            isImmutable = false;
-        }
-        else if (declaration is RecordDeclaration recordDecl)
-        {
-            foreach (var field in recordDecl.Fields)
-                fields[field.Name] = field.Type;
-            isImmutable = true;
         }
         else if (declaration is EnumDeclaration enumDecl)
         {
             foreach (var variant in enumDecl.Variants)
                 enumVariants.Add(variant.Name);
             isEnum = true;
-            isImmutable = true;
         }
 
         types[name] = new TypeSymbol
@@ -206,8 +195,7 @@ public class SymbolTable
             Declaration = declaration,
             Fields = fields,
             EnumVariants = enumVariants,
-            IsEnum = isEnum,
-            IsImmutable = isImmutable
+            IsEnum = isEnum
         };
 
         return true;

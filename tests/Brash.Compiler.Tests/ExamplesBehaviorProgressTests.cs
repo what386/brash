@@ -63,14 +63,14 @@ public class ExamplesBehaviorProgressTests
 
         yield return new object[]
         {
-            "data_structures_struct_record_enum_impl",
+            "data_structures_struct_enum_impl",
             """
             struct Person
                 name: string
                 age: int
             end
 
-            record Config
+            struct Config
                 host: string
                 port: int
             end
@@ -148,7 +148,7 @@ public class ExamplesBehaviorProgressTests
                 return name
             end
 
-            let proc = async("sleep", "1")
+            let proc = async spawn("sleep", "1")
             let result = await proc
             """
         };
@@ -235,7 +235,7 @@ public class ExamplesBehaviorProgressTests
                     Name = "Person",
                     Fields = { new FieldDeclaration { Name = "name", Type = new PrimitiveType { PrimitiveKind = PrimitiveType.Kind.String } } }
                 },
-                new RecordDeclaration
+                new StructDeclaration
                 {
                     Name = "Person",
                     Fields = { new FieldDeclaration { Name = "name", Type = new PrimitiveType { PrimitiveKind = PrimitiveType.Kind.String } } }

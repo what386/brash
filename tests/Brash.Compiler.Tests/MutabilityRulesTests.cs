@@ -78,6 +78,128 @@ public class MutabilityRulesTests
         Assert.False(diagnostics.HasErrors, string.Join(Environment.NewLine, diagnostics.GetErrors()));
     }
 
+    [Fact]
+    public void SemanticAnalyzer_RejectsMutatingFieldOnImmutableStructBinding()
+    {
+        var diagnostics = new DiagnosticBag();
+        var analyzer = new SemanticAnalyzer(diagnostics);
+
+        var program = new ProgramNode
+        {
+            Statements =
+            {
+                new StructDeclaration
+                {
+                    Name = "User",
+                    Fields =
+                    {
+                        new FieldDeclaration
+                        {
+                            Name = "name",
+                            Type = new PrimitiveType { PrimitiveKind = PrimitiveType.Kind.String }
+                        }
+                    }
+                },
+                new VariableDeclaration
+                {
+                    Kind = VariableDeclaration.VarKind.Let,
+                    Name = "user",
+                    Type = new NamedType { Name = "User" },
+                    Value = new StructLiteral
+                    {
+                        TypeName = "User",
+                        Fields =
+                        {
+                            ("name", new LiteralExpression
+                            {
+                                Value = "Alice",
+                                Type = new PrimitiveType { PrimitiveKind = PrimitiveType.Kind.String }
+                            })
+                        }
+                    }
+                },
+                new Assignment
+                {
+                    Target = new MemberAccessExpression
+                    {
+                        Object = new IdentifierExpression { Name = "user" },
+                        MemberName = "name"
+                    },
+                    Value = new LiteralExpression
+                    {
+                        Value = "Bob",
+                        Type = new PrimitiveType { PrimitiveKind = PrimitiveType.Kind.String }
+                    }
+                }
+            }
+        };
+
+        analyzer.Analyze(program);
+
+        Assert.Contains(diagnostics.GetErrors(), d => d.Message.Contains("immutable variable 'user'"));
+    }
+
+    [Fact]
+    public void SemanticAnalyzer_AllowsMutatingFieldOnMutableStructBinding()
+    {
+        var diagnostics = new DiagnosticBag();
+        var analyzer = new SemanticAnalyzer(diagnostics);
+
+        var program = new ProgramNode
+        {
+            Statements =
+            {
+                new StructDeclaration
+                {
+                    Name = "User",
+                    Fields =
+                    {
+                        new FieldDeclaration
+                        {
+                            Name = "name",
+                            Type = new PrimitiveType { PrimitiveKind = PrimitiveType.Kind.String }
+                        }
+                    }
+                },
+                new VariableDeclaration
+                {
+                    Kind = VariableDeclaration.VarKind.Mut,
+                    Name = "user",
+                    Type = new NamedType { Name = "User" },
+                    Value = new StructLiteral
+                    {
+                        TypeName = "User",
+                        Fields =
+                        {
+                            ("name", new LiteralExpression
+                            {
+                                Value = "Alice",
+                                Type = new PrimitiveType { PrimitiveKind = PrimitiveType.Kind.String }
+                            })
+                        }
+                    }
+                },
+                new Assignment
+                {
+                    Target = new MemberAccessExpression
+                    {
+                        Object = new IdentifierExpression { Name = "user" },
+                        MemberName = "name"
+                    },
+                    Value = new LiteralExpression
+                    {
+                        Value = "Bob",
+                        Type = new PrimitiveType { PrimitiveKind = PrimitiveType.Kind.String }
+                    }
+                }
+            }
+        };
+
+        analyzer.Analyze(program);
+
+        Assert.False(diagnostics.HasErrors, string.Join(Environment.NewLine, diagnostics.GetErrors()));
+    }
+
     private static ProgramNode ParseProgram(string source)
     {
         var input = new AntlrInputStream(source);

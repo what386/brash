@@ -37,7 +37,7 @@ public class BashGeneratorReadinessTests
         var bash = new BashGenerator().Generate(program);
 
         Assert.Contains("x=1", bash);
-        Assert.Contains("x=$((${x} + 1))", bash);
+        Assert.Contains("x=$(( ${x} + 1 ))", bash);
         Assert.DoesNotContain("${x}=", bash);
     }
 
@@ -130,6 +130,68 @@ public class BashGeneratorReadinessTests
 
         var bash = new BashGenerator().Generate(program);
         Assert.Contains("display=${name:-\"unknown\"}", bash);
+    }
+
+    [Fact]
+    public void BashGenerator_EmitsStructLiteralFieldStorage()
+    {
+        var program = new ProgramNode
+        {
+            Statements =
+            {
+                new VariableDeclaration
+                {
+                    Kind = VariableDeclaration.VarKind.Let,
+                    Name = "user",
+                    Value = new StructLiteral
+                    {
+                        TypeName = "User",
+                        Fields =
+                        {
+                            ("name", new LiteralExpression
+                            {
+                                Value = "Alice",
+                                Type = new PrimitiveType { PrimitiveKind = PrimitiveType.Kind.String }
+                            })
+                        }
+                    }
+                }
+            }
+        };
+
+        var bash = new BashGenerator().Generate(program);
+
+        Assert.Contains("user=\"user\"", bash);
+        Assert.Contains("user__type=\"User\"", bash);
+        Assert.Contains("user_name=\"Alice\"", bash);
+    }
+
+    [Fact]
+    public void BashGenerator_EmitsNestedMemberAccessPath()
+    {
+        var program = new ProgramNode
+        {
+            Statements =
+            {
+                new VariableDeclaration
+                {
+                    Kind = VariableDeclaration.VarKind.Let,
+                    Name = "city",
+                    Value = new MemberAccessExpression
+                    {
+                        Object = new MemberAccessExpression
+                        {
+                            Object = new IdentifierExpression { Name = "user" },
+                            MemberName = "address"
+                        },
+                        MemberName = "city"
+                    }
+                }
+            }
+        };
+
+        var bash = new BashGenerator().Generate(program);
+        Assert.Contains("city=${user_address_city}", bash);
     }
 
     private static LiteralExpression IntLiteral(int value)

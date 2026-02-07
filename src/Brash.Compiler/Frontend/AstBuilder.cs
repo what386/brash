@@ -174,30 +174,6 @@ public class AstBuilder : BrashBaseVisitor<AstNode>
         return structDecl;
     }
 
-    public override AstNode VisitRecordDeclaration(BrashParser.RecordDeclarationContext context)
-    {
-        var recordDecl = new RecordDeclaration
-        {
-            Line = context.Start.Line,
-            Column = context.Start.Column,
-            Name = context.IDENTIFIER().GetText()
-        };
-
-        if (context.structBody() != null)
-        {
-            foreach (var field in context.structBody().fieldDeclaration())
-            {
-                recordDecl.Fields.Add(new FieldDeclaration
-                {
-                    Name = field.IDENTIFIER().GetText(),
-                    Type = Visit(field.type()) as TypeNode ?? new PrimitiveType { PrimitiveKind = PrimitiveType.Kind.Void }
-                });
-            }
-        }
-
-        return recordDecl;
-    }
-
     public override AstNode VisitEnumDeclaration(BrashParser.EnumDeclarationContext context)
     {
         var enumDecl = new EnumDeclaration
@@ -676,36 +652,27 @@ public class AstBuilder : BrashBaseVisitor<AstNode>
 
     public override AstNode VisitCommandExpr(BrashParser.CommandExprContext context)
     {
-        var cmd = new CommandExpression
-        {
-            Line = context.Start.Line,
-            Column = context.Start.Column
-        };
-
-        if (context.argumentList() != null)
-        {
-            foreach (var arg in context.argumentList().expression())
-            {
-                var expr = Visit(arg) as Expression;
-                if (expr != null)
-                    cmd.Arguments.Add(expr);
-            }
-        }
-
-        if (context.IDENTIFIER() != null)
-            cmd.MethodName = context.IDENTIFIER().GetText();
-
-        return cmd;
+        return BuildCommandExpression(context, CommandKind.Cmd, isAsync: false);
     }
 
     public override AstNode VisitExecExpr(BrashParser.ExecExprContext context)
     {
-        return BuildCommandExpression(context, isExec: true, isAsync: false);
+        return BuildCommandExpression(context, CommandKind.Exec, isAsync: false);
     }
 
-    public override AstNode VisitAsyncExpr(BrashParser.AsyncExprContext context)
+    public override AstNode VisitAsyncExecExpr(BrashParser.AsyncExecExprContext context)
     {
-        return BuildCommandExpression(context, isExec: false, isAsync: true);
+        return BuildCommandExpression(context, CommandKind.Exec, isAsync: true);
+    }
+
+    public override AstNode VisitAsyncSpawnExpr(BrashParser.AsyncSpawnExprContext context)
+    {
+        return BuildCommandExpression(context, CommandKind.Spawn, isAsync: true);
+    }
+
+    public override AstNode VisitSpawnExpr(BrashParser.SpawnExprContext context)
+    {
+        return BuildCommandExpression(context, CommandKind.Spawn, isAsync: false);
     }
 
     public override AstNode VisitTupleExpression(BrashParser.TupleExpressionContext context)
@@ -977,13 +944,13 @@ public class AstBuilder : BrashBaseVisitor<AstNode>
         };
     }
 
-    private CommandExpression BuildCommandExpression(ParserRuleContext context, bool isExec, bool isAsync)
+    private CommandExpression BuildCommandExpression(ParserRuleContext context, CommandKind kind, bool isAsync)
     {
         var cmd = new CommandExpression
         {
             Line = context.Start.Line,
             Column = context.Start.Column,
-            IsExec = isExec,
+            Kind = kind,
             IsAsync = isAsync
         };
 

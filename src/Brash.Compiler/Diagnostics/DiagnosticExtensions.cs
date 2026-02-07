@@ -162,7 +162,7 @@ public static class DiagnosticExtensions
     }
 
     // ============================================
-    // Struct/Record Errors
+    // Struct Errors
     // ============================================
 
     public static void ReportMissingStructField(this DiagnosticBag diagnostics,

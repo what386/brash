@@ -14,6 +14,8 @@ public class SymbolResolver
     private readonly SymbolTable symbolTable;
     private readonly TypeChecker typeChecker;
     private readonly NullabilityChecker nullabilityChecker;
+    private readonly PipeChecker pipeChecker;
+    private string? currentTypeName;
 
     public SymbolResolver(
         DiagnosticBag diagnostics,
@@ -25,6 +27,7 @@ public class SymbolResolver
         this.symbolTable = symbolTable;
         this.typeChecker = typeChecker;
         this.nullabilityChecker = nullabilityChecker;
+        this.pipeChecker = new PipeChecker(diagnostics);
     }
 
     // ============================================
@@ -360,13 +363,11 @@ public class SymbolResolver
 
     private TypeNode ResolvePipeExpression(PipeExpression pipe)
     {
-        // The left side is piped to the right side
-        // Right side should be a function call that takes the left's output
         var leftType = ResolveExpressionType(pipe.Left);
         var rightType = ResolveExpressionType(pipe.Right);
+        pipeChecker.ValidatePipeTypes(leftType, rightType, pipe.Line, pipe.Column);
 
-        // Return the right side's type (the result of the pipeline)
-        return rightType;
+        return new NamedType { Name = "Command" };
     }
 
     private TypeNode ResolveNullCoalesce(NullCoalesceExpression nullCoalesce)
@@ -407,24 +408,95 @@ public class SymbolResolver
 
     private TypeNode ResolveCommand(CommandExpression cmd)
     {
-        // Commands return a Process type (or string for stdout)
-        // For now, return a special process type
-        return new NamedType { Name = "Process" };
+        var argTypes = cmd.Arguments.Select(ResolveExpressionType).ToList();
+
+        if (cmd.IsAsync)
+        {
+            diagnostics.AddError(
+                $"async {cmd.Kind.ToString().ToLowerInvariant()}(...) is not supported in this compiler version",
+                cmd.Line, cmd.Column);
+            return new UnknownType();
+        }
+
+        return cmd.Kind switch
+        {
+            CommandKind.Cmd => ResolveCmdExpression(argTypes, cmd),
+            CommandKind.Exec => ResolveExecExpression(argTypes, cmd),
+            CommandKind.Spawn => ResolveSpawnExpression(argTypes, cmd),
+            _ => new UnknownType()
+        };
     }
 
     private TypeNode ResolveAwait(AwaitExpression await)
     {
-        var exprType = ResolveExpressionType(await.Expression);
+        diagnostics.AddError(
+            "await is not supported in this compiler version",
+            await.Line, await.Column);
+        ResolveExpressionType(await.Expression);
+        return new UnknownType();
+    }
 
-        // Awaiting a process returns its result
-        // For simplicity, return the inner type
-        return exprType;
+    private TypeNode ResolveCmdExpression(List<TypeNode> argTypes, CommandExpression cmd)
+    {
+        if (argTypes.Count == 1 && argTypes[0] is NamedType { Name: "Command" })
+            return new NamedType { Name = "Command" };
+
+        if (argTypes.Any(t => t is NamedType { Name: "Command" }))
+        {
+            diagnostics.AddError(
+                "cmd(...) cannot mix Command values with positional arguments",
+                cmd.Line, cmd.Column);
+            return new UnknownType();
+        }
+
+        return new NamedType { Name = "Command" };
+    }
+
+    private TypeNode ResolveExecExpression(List<TypeNode> argTypes, CommandExpression cmd)
+    {
+        if (argTypes.Count == 1 && argTypes[0] is NamedType { Name: "Command" })
+            return new PrimitiveType { PrimitiveKind = PrimitiveType.Kind.String };
+
+        if (argTypes.Any(t => t is NamedType { Name: "Command" }))
+        {
+            diagnostics.AddError(
+                "exec(...) accepts either a single Command value or raw command arguments",
+                cmd.Line, cmd.Column);
+            return new UnknownType();
+        }
+
+        return new PrimitiveType { PrimitiveKind = PrimitiveType.Kind.String };
+    }
+
+    private TypeNode ResolveSpawnExpression(List<TypeNode> argTypes, CommandExpression cmd)
+    {
+        if (argTypes.Count == 1 && argTypes[0] is NamedType { Name: "Command" })
+            return new NamedType { Name = "Process" };
+
+        if (argTypes.Any(t => t is NamedType { Name: "Command" }))
+        {
+            diagnostics.AddError(
+                "spawn(...) accepts either a single Command value or raw command arguments",
+                cmd.Line, cmd.Column);
+            return new UnknownType();
+        }
+
+        return new NamedType { Name = "Process" };
     }
 
     private TypeNode ResolveSelf()
     {
-        // 'self' type depends on context (current method's type)
-        // For now, return unknown - this needs context tracking
-        return new UnknownType();
+        if (currentTypeName == null)
+        {
+            diagnostics.AddError("Cannot use 'self' outside of an impl method", 0, 0);
+            return new UnknownType();
+        }
+
+        return new NamedType { Name = currentTypeName };
+    }
+
+    public void SetCurrentTypeContext(string? typeName)
+    {
+        currentTypeName = typeName;
     }
 }

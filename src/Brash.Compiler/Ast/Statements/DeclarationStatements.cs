@@ -28,12 +28,6 @@ public class StructDeclaration : Statement
     public List<FieldDeclaration> Fields { get; set; } = new();
 }
 
-public class RecordDeclaration : Statement
-{
-    public string Name { get; set; } = string.Empty;
-    public List<FieldDeclaration> Fields { get; set; } = new();
-}
-
 public class EnumDeclaration : Statement
 {
     public string Name { get; set; } = string.Empty;
