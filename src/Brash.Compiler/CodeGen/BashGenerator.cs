@@ -2,16 +2,23 @@ namespace Brash.Compiler.CodeGen;
 
 using System.Text;
 using Brash.Compiler.Ast;
+using Brash.Compiler.Ast.Expressions;
+using Brash.Compiler.Ast.Statements;
 
 public class BashGenerator
 {
     private readonly StringBuilder output = new();
+    private readonly List<string> warnings = new();
     private int indentLevel = 0;
     private const string IndentString = "    ";
+    private string currentContext = "<unknown>";
+
+    public IReadOnlyList<string> Warnings => warnings;
 
     public string Generate(ProgramNode program)
     {
         output.Clear();
+        warnings.Clear();
         indentLevel = 0;
 
         // Bash shebang
@@ -32,6 +39,8 @@ public class BashGenerator
 
     private void GenerateStatement(Statement stmt)
     {
+        currentContext = stmt.GetType().Name;
+
         switch (stmt)
         {
             case VariableDeclaration varDecl:
@@ -73,6 +82,41 @@ public class BashGenerator
             case ExpressionStatement exprStmt:
                 Emit(GenerateExpression(exprStmt.Expression));
                 break;
+
+            case StructDeclaration structDecl:
+                EmitComment($"Struct '{structDecl.Name}' currently has no direct Bash output.");
+                break;
+
+            case RecordDeclaration recordDecl:
+                EmitComment($"Record '{recordDecl.Name}' currently has no direct Bash output.");
+                break;
+
+            case EnumDeclaration enumDecl:
+                EmitComment($"Enum '{enumDecl.Name}' currently has no direct Bash output.");
+                break;
+
+            case ImplBlock implBlock:
+                EmitComment($"Impl block for '{implBlock.TypeName}' is not yet emitted to Bash.");
+                break;
+
+            case TryStatement:
+                EmitComment("Try/catch is not yet emitted to Bash.");
+                ReportUnsupported("try/catch statement");
+                break;
+
+            case ThrowStatement:
+                EmitComment("Throw is not yet emitted to Bash.");
+                ReportUnsupported("throw statement");
+                break;
+
+            case ImportStatement importStmt:
+                EmitComment($"Import '{importStmt.Module ?? importStmt.FromModule ?? "<unknown>"}' is compile-time only.");
+                break;
+
+            default:
+                EmitComment($"Unsupported statement '{stmt.GetType().Name}'.");
+                ReportUnsupported($"statement '{stmt.GetType().Name}'");
+                break;
         }
     }
 
@@ -93,7 +137,10 @@ public class BashGenerator
 
     private void GenerateAssignment(Assignment assignment)
     {
-        var target = GenerateExpression(assignment.Target);
+        var target = GenerateAssignmentTarget(assignment.Target);
+        if (target == null)
+            return;
+
         var value = GenerateExpression(assignment.Value);
         Emit($"{target}={value}");
     }
@@ -255,7 +302,7 @@ public class BashGenerator
             MemberAccessExpression member => GenerateMemberAccess(member),
             ArrayLiteral array => GenerateArrayLiteral(array),
             NullLiteral => "\"\"",
-            _ => "\"\""
+            _ => UnsupportedExpression(expr)
         };
     }
 
@@ -326,6 +373,23 @@ public class BashGenerator
         return $"({elements})";
     }
 
+    private string? GenerateAssignmentTarget(Expression target)
+    {
+        return target switch
+        {
+            IdentifierExpression ident => ident.Name,
+            _ =>
+                HandleUnsupportedAssignmentTarget(target)
+        };
+    }
+
+    private string? HandleUnsupportedAssignmentTarget(Expression target)
+    {
+        EmitComment($"Unsupported assignment target '{target.GetType().Name}'.");
+        ReportUnsupported($"assignment target '{target.GetType().Name}'");
+        return null;
+    }
+
     private string GenerateCondition(Expression condition)
     {
         if (condition is BinaryExpression bin && IsComparisonOperator(bin.Operator))
@@ -363,5 +427,22 @@ public class BashGenerator
         if (!string.IsNullOrEmpty(code))
             Emit(code);
         output.AppendLine();
+    }
+
+    private void EmitComment(string comment)
+    {
+        Emit($"# {comment}");
+    }
+
+    private string UnsupportedExpression(Expression expr)
+    {
+        ReportUnsupported($"expression '{expr.GetType().Name}' in {currentContext}");
+        return "\"\"";
+    }
+
+    private void ReportUnsupported(string feature)
+    {
+        if (!warnings.Contains(feature))
+            warnings.Add(feature);
     }
 }

@@ -1,6 +1,8 @@
 namespace Brash.Compiler.Semantic;
 
 using Brash.Compiler.Ast;
+using Brash.Compiler.Ast.Statements;
+using Brash.Compiler.Ast.Expressions;
 using Brash.Compiler.Diagnostics;
 
 /// <summary>

@@ -2,7 +2,8 @@ namespace Brash.Compiler.Frontend;
 
 using Antlr4.Runtime;
 using Brash.Compiler.Ast;
-using Brash.Compiler.Frontend;
+using Brash.Compiler.Ast.Statements;
+using Brash.Compiler.Ast.Expressions;
 
 public class AstBuilder : BrashBaseVisitor<AstNode>
 {
@@ -486,6 +487,9 @@ public class AstBuilder : BrashBaseVisitor<AstNode>
         if (context.literal() != null)
             return Visit(context.literal());
 
+        if (context.functionCall() != null)
+            return Visit(context.functionCall());
+
         if (context.IDENTIFIER() != null)
             return new IdentifierExpression
             {
@@ -518,7 +522,7 @@ public class AstBuilder : BrashBaseVisitor<AstNode>
         return new NullLiteral();
     }
 
-    public override AstNode VisitFunctionCallExpr(BrashParser.FunctionCallExprContext context)
+    public override AstNode VisitFunctionCall(BrashParser.FunctionCallContext context)
     {
         var call = new FunctionCallExpression
         {

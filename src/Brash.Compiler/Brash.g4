@@ -181,7 +181,6 @@ expression
     | expression ('.' IDENTIFIER '(' argumentList? ')')          # MethodCallExpr
     | expression '.' IDENTIFIER                                  # MemberAccessExpr
     | expression '[' expression ']'                              # IndexAccessExpr
-    | IDENTIFIER '(' argumentList? ')'                           # FunctionCallExpr
     | 'cmd' '(' argumentList ')' ('.' IDENTIFIER '(' ')')?       # CommandExpr
     | 'exec' '(' argumentList ')'                                # ExecExpr
     | 'async' '(' argumentList ')'                               # AsyncExpr
@@ -197,6 +196,7 @@ expression
 
 primaryExpression
     : literal
+    | functionCall
     | IDENTIFIER
     | tupleExpression
     | arrayLiteral
@@ -233,6 +233,10 @@ fieldAssignment
 
 argumentList
     : expression (',' expression)*
+    ;
+
+functionCall
+    : IDENTIFIER '(' argumentList? ')'
     ;
 
 memberAccess
