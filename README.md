@@ -101,6 +101,7 @@ Notes:
   - `import Name from "path.bsh"`
   - `import "path.bsh"` for all public exports
   - import paths are resolved from the entry file directory
+  - standard library modules use the `std/` namespace (for example `import "std/paths"` or `import { join } from "std/paths"`)
 
 Example:
 
