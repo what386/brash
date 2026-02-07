@@ -882,7 +882,8 @@ public class AstBuilder : BrashBaseVisitor<AstNode>
                 Column = context.Start.Column,
                 Value = UnquoteStringLiteral(stringLiteral.GetText()),
                 Type = new PrimitiveType { PrimitiveKind = PrimitiveType.Kind.String },
-                IsInterpolated = stringLiteral.INTERPOLATED_STRING() != null
+                IsInterpolated = stringLiteral.INTERPOLATED_STRING() != null,
+                IsMultiline = stringLiteral.MULTILINE_STRING() != null
             };
         }
 

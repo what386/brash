@@ -404,6 +404,22 @@ public class BashGeneratorE2ETests
         Assert.Equal("11|Abc Def|ABC DEF|abc def|1|1|1|1", result.StdOut.Trim());
     }
 
+    [Fact]
+    public void E2E_MultilineString_PreservesLineBreaks()
+    {
+        const string source =
+            """
+            let text = [[line1
+            line2]]
+            exec("printf", "%s\n", text)
+            """;
+
+        var result = CompileAndRun(source);
+
+        Assert.Equal(0, result.ExitCode);
+        Assert.Equal("line1\nline2", result.StdOut.Trim());
+    }
+
     private static (int ExitCode, string StdOut, string StdErr) CompileAndRun(string source)
     {
         var parserDiagnostics = new DiagnosticBag();

@@ -43,7 +43,7 @@ public partial class BashGenerator
             {
                 PrimitiveType.Kind.String => lit.IsInterpolated
                     ? GenerateInterpolatedStringLiteral(lit.Value.ToString() ?? "")
-                    : $"\"{EscapeString(lit.Value.ToString() ?? "")}\"",
+                    : $"\"{EscapeString(lit.Value.ToString() ?? "", preserveLineBreaks: lit.IsMultiline)}\"",
                 PrimitiveType.Kind.Int => lit.Value.ToString() ?? "0",
                 PrimitiveType.Kind.Float => Convert.ToString(lit.Value, CultureInfo.InvariantCulture) ?? "0.0",
                 PrimitiveType.Kind.Bool => lit.Value.ToString()?.ToLowerInvariant() == "true" ? "1" : "0",

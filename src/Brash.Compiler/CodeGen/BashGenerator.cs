@@ -284,13 +284,18 @@ public partial class BashGenerator
         Emit($"# {comment}");
     }
 
-    private string EscapeString(string str)
+    private string EscapeString(string str, bool preserveLineBreaks = false)
     {
-        return str.Replace("\\", "\\\\")
-                  .Replace("\"", "\\\"")
-                  .Replace("\n", "\\n")
-                  .Replace("\r", "\\r")
-                  .Replace("\t", "\\t");
+        var escaped = str.Replace("\\", "\\\\")
+                         .Replace("\"", "\\\"");
+
+        if (!preserveLineBreaks)
+        {
+            escaped = escaped.Replace("\n", "\\n")
+                             .Replace("\r", "\\r");
+        }
+
+        return escaped.Replace("\t", "\\t");
     }
 
     private void ReportUnsupported(string feature)

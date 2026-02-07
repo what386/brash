@@ -9,6 +9,7 @@ public class LiteralExpression : Expression
     public object Value { get; set; } = null!;
     public TypeNode Type { get; set; } = null!;
     public bool IsInterpolated { get; set; }
+    public bool IsMultiline { get; set; }
 }
 
 public class IdentifierExpression : Expression
