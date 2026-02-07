@@ -200,7 +200,7 @@ public class ModuleImportTests
         fixture.Write(
             "main.bsh",
             """
-            import { join } from "std/paths"
+            import { join } from "std/fs"
             let out = join("/tmp", "file.txt")
             exec("printf", "%s\n", out)
             """);
