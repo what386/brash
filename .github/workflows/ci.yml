@@ -26,5 +26,8 @@ jobs:
         with:
           dotnet-version: "9.0.x"
 
+      - name: Build compiler
+        run: dotnet build src/Brash.Compiler/Brash.Compiler.csproj --configuration Release --verbosity minimal
+
       - name: Run compiler tests
         run: dotnet test tests/Brash.Compiler.Tests/Brash.Compiler.Tests.csproj --configuration Release --verbosity minimal

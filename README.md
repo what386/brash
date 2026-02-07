@@ -11,6 +11,22 @@ Brash is pre-`0.1.0` and under active development.
 - Parser, AST, semantic analysis, and Bash codegen are working for a growing core subset.
 - Unsupported features fail fast with explicit diagnostics.
 
+### Tally snapshot (2026-02-07)
+
+Completed in `tally`:
+- CLI compile/check/run pipeline
+- struct/enum/member Bash codegen
+- parser precedence fixes and broad AST coverage improvements
+- mutability model (`let mut`, mutable params) + `MutabilityChecker`
+- CI workflow for build + tests on push/PR
+- docs alignment for language spec and command/pipe semantics
+
+Actively tracked in `tally`:
+- module/import resolution and multi-file linking
+- standard library/runtime contract hardening (`Process`, helpers, collections)
+- additional semantic tightening (nullability/type quality)
+- broader golden/snapshot coverage across examples
+
 ## Repository layout
 
 - `src/Brash.Compiler`: compiler implementation (ANTLR grammar, AST, semantic, codegen, CLI)
