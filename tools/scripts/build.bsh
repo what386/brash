@@ -2,7 +2,7 @@
 
 const PROJECT_NAME = "Brash"
 const PROJECT_PATH = "./src/Brash.Cli/Brash.Cli.csproj"
-const OUTPUT_DIR = "./target/release"
+const OUTPUT_DIR = "target/release"
 const CONFIGURATION = "Release"
 
 fn is_option(arg: string): bool
@@ -14,28 +14,30 @@ fn log(text: string): void
 end
 
 fn show_help(): void
-    log("Usage: build.bsh [OPTIONS] <platform1> [platform2] ...")
-    log("")
-    log("Options:")
-    log("  --no-trim          Disable trimming (faster builds, larger binaries)")
-    log("  --no-single-file   Publish as multiple files (faster builds, easier debugging)")
-    log("  --no-ready2run     Disable ReadyToRun compilation (faster builds, slower startup)")
-    log("  -h, --help         Show this help message")
-    log("")
-    log("Arguments:")
-    log("  <platforms>  Space-separated list of platforms to build")
-    log("")
-    log("Available platforms:")
-    log("  win-x64, win-x86, win-arm64")
-    log("  linux-x64, linux-arm64, linux-arm")
-    log("  osx-x64, osx-arm64")
-    log("")
-    log("Examples:")
-    log("  build.bsh win-x64")
-    log("  build.bsh --no-trim win-x64")
-    log("  build.bsh --no-single-file --no-trim win-x64")
-    log("  build.bsh win-x64 linux-x64")
-    log("  build.bsh osx-x64 osx-arm64")
+    log([[
+Usage: build.bsh [OPTIONS] <platform1> [platform2] ...
+
+Options:
+  --no-trim          Disable trimming (faster builds, larger binaries)
+  --no-single-file   Publish as multiple files (faster builds, easier debugging)
+  --no-ready2run     Disable ReadyToRun compilation (faster builds, slower startup)
+  -h, --help         Show this help message
+
+Arguments:
+  <platforms>  Space-separated list of platforms to build
+
+Available platforms:
+  win-x64, win-x86, win-arm64
+  linux-x64, linux-arm64, linux-arm
+  osx-x64, osx-arm64
+
+Examples:
+  build.bsh win-x64
+  build.bsh --no-trim win-x64
+  build.bsh --no-single-file --no-trim win-x64
+  build.bsh win-x64 linux-x64
+  build.bsh osx-x64 osx-arm64]]
+)
 end
 
 fn file_exists(path_value: string): bool
