@@ -171,7 +171,7 @@ public class SymbolResolver
         string typeName = objectType switch
         {
             NamedType named => named.Name,
-            _ => objectType.ToString()
+            _ => objectType.ToString() ?? "<unknown>"
         };
 
         var methodSymbol = symbolTable.LookupMethod(typeName, method.MethodName);
@@ -487,7 +487,7 @@ public class SymbolResolver
         var typeName = objectType switch
         {
             NamedType named => named.Name,
-            _ => objectType.ToString()
+            _ => objectType.ToString() ?? "<unknown>"
         };
 
         var method = symbolTable.LookupMethod(typeName, call.MethodName);

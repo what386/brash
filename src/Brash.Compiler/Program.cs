@@ -39,6 +39,11 @@ public static class Program
             diagnostics.PrintToConsole();
             return 1;
         }
+        if (program is null)
+        {
+            Console.Error.WriteLine("Failed to load program.");
+            return 1;
+        }
 
         if (options.PrintAst)
         {
