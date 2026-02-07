@@ -17,9 +17,6 @@
 - [ ] Modules: implement import resolution and multi-file symbol linking for module, named, and default imports (high) #modules #frontend #feature
       @created 2026-02-06 23:08
 
-- [ ] Codegen: implement command execution, pipe operator lowering, async/await flow, and error handling constructs (high) #codegen #bash #shell #feature
-      @created 2026-02-06 23:08
-
 - [ ] Runtime: define and implement standard library contract used by generated Bash (Process, cmd/exec helpers, collection helpers) (high) #runtime #stdlib #feature
       @created 2026-02-06 23:08
 
@@ -72,4 +69,8 @@
 - [x] CLI: wire full compile pipeline (parse -> AST -> semantic -> codegen -> output file) with stable diagnostics and exit codes (high) #cli #compiler #feature
       @created 2026-02-06 23:09
       @completed 2026-02-07 02:06
+
+- [x] Codegen: implement command execution, pipe operator lowering, async/await flow, and error handling constructs (high) #codegen #bash #shell #feature
+      @created 2026-02-06 23:08
+      @completed 2026-02-07 02:07
 
