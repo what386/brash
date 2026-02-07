@@ -65,7 +65,7 @@ public class PipeOperatorTests
     }
 
     [Fact]
-    public void SemanticAnalyzer_FailsFast_OnTryThrowImportAndMapLiteral()
+    public void SemanticAnalyzer_FailsFast_OnImportAndMapLiteral()
     {
         var diagnostics = Analyze(
             """
@@ -82,9 +82,23 @@ public class PipeOperatorTests
 
         var errors = diagnostics.GetErrors().ToList();
         Assert.Contains(errors, d => d.Message.Contains("Feature 'import' is not supported"));
-        Assert.Contains(errors, d => d.Message.Contains("Feature 'try/catch' is not supported"));
-        Assert.Contains(errors, d => d.Message.Contains("Feature 'throw' is not supported"));
         Assert.Contains(errors, d => d.Message.Contains("Feature 'map literal code generation' is not supported"));
+    }
+
+    [Fact]
+    public void SemanticAnalyzer_AllowsTryCatchThrow()
+    {
+        var diagnostics = Analyze(
+            """
+            try
+                throw "boom"
+            catch err
+                print(err)
+            end
+            """);
+
+        Assert.DoesNotContain(diagnostics.GetErrors(), d => d.Message.Contains("Feature 'try/catch' is not supported"));
+        Assert.DoesNotContain(diagnostics.GetErrors(), d => d.Message.Contains("Feature 'throw' is not supported"));
     }
 
     [Fact]

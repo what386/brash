@@ -141,6 +141,24 @@ public class BashGeneratorE2ETests
         Assert.Equal("ok", result.StdOut.Trim());
     }
 
+    [Fact]
+    public void E2E_TryCatchThrow_HandlesErrorAndContinues()
+    {
+        const string source =
+            """
+            try
+                throw "boom"
+            catch err
+                exec("printf", "caught:%s\n", err)
+            end
+            """;
+
+        var result = CompileAndRun(source);
+
+        Assert.Equal(0, result.ExitCode);
+        Assert.Equal("caught:boom", result.StdOut.Trim());
+    }
+
     private static (int ExitCode, string StdOut, string StdErr) CompileAndRun(string source)
     {
         var parserDiagnostics = new DiagnosticBag();

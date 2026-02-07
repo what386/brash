@@ -140,4 +140,35 @@ public class FormatterRulesTests
         var formatted = BrashFormatter.Format(input);
         Assert.Equal(expected, formatted);
     }
+
+    [Fact]
+    public void Formatter_AddsStructLiteralBraceSpacing()
+    {
+        const string input = "let p:Person=Person{name:\"Ada\",age:42}";
+        const string expected = "let p: Person = Person { name: \"Ada\", age: 42 }\n";
+
+        var formatted = BrashFormatter.Format(input);
+        Assert.Equal(expected, formatted);
+    }
+
+    [Fact]
+    public void Formatter_WrapsLongArgumentLists()
+    {
+        const string input =
+            """
+            let result = very_long_function_name("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "cccccccccccccccccccccccccccccccc")
+            """;
+
+        const string expected =
+            """
+            let result = very_long_function_name(
+                "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                "cccccccccccccccccccccccccccccccc"
+            )
+            """;
+
+        var formatted = BrashFormatter.Format(input);
+        Assert.Equal(expected.Replace("\r\n", "\n") + "\n", formatted);
+    }
 }

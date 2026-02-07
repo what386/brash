@@ -194,6 +194,72 @@ public class BashGeneratorReadinessTests
         Assert.Contains("city=${user_address_city}", bash);
     }
 
+    [Fact]
+    public void BashGenerator_EmitsTryCatchWithErrorCapture()
+    {
+        var program = new ProgramNode
+        {
+            Statements =
+            {
+                new TryStatement
+                {
+                    ErrorVariable = "err",
+                    TryBlock =
+                    {
+                        new ThrowStatement
+                        {
+                            Value = new LiteralExpression
+                            {
+                                Value = "boom",
+                                Type = new PrimitiveType { PrimitiveKind = PrimitiveType.Kind.String }
+                            }
+                        }
+                    },
+                    CatchBlock =
+                    {
+                        new ExpressionStatement
+                        {
+                            Expression = new FunctionCallExpression
+                            {
+                                FunctionName = "print",
+                                Arguments = { new IdentifierExpression { Name = "err" } }
+                            }
+                        }
+                    }
+                }
+            }
+        };
+
+        var bash = new BashGenerator().Generate(program);
+        Assert.Contains("if {", bash);
+        Assert.Contains("2>\"${__brash_err_file_", bash);
+        Assert.Contains("err=$(cat \"${__brash_err_file_", bash);
+        Assert.Contains("brash_throw \"boom\"", bash);
+    }
+
+    [Fact]
+    public void BashGenerator_EmitsThrowRuntimeCall()
+    {
+        var program = new ProgramNode
+        {
+            Statements =
+            {
+                new ThrowStatement
+                {
+                    Value = new LiteralExpression
+                    {
+                        Value = "fatal",
+                        Type = new PrimitiveType { PrimitiveKind = PrimitiveType.Kind.String }
+                    }
+                }
+            }
+        };
+
+        var bash = new BashGenerator().Generate(program);
+        Assert.Contains("brash_throw() {", bash);
+        Assert.Contains("brash_throw \"fatal\"", bash);
+    }
+
     private static LiteralExpression IntLiteral(int value)
     {
         return new LiteralExpression
