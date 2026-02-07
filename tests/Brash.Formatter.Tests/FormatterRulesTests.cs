@@ -1,7 +1,7 @@
 using Brash.Formatter;
 using Xunit;
 
-namespace Brash.Compiler.Tests;
+namespace Brash.Formatter.Tests;
 
 public class FormatterRulesTests
 {

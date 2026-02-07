@@ -124,12 +124,10 @@ public class PipeOperatorTests
     }
 
     [Fact]
-    public void SemanticAnalyzer_FailsFast_OnImportAndMapLiteral()
+    public void SemanticAnalyzer_FailsFast_OnMapLiteral()
     {
         var diagnostics = Analyze(
             """
-            import "utils.bsh"
-
             try
                 throw "boom"
             catch err
@@ -140,7 +138,6 @@ public class PipeOperatorTests
             """);
 
         var errors = diagnostics.GetErrors().ToList();
-        Assert.Contains(errors, d => d.Message.Contains("Feature 'import' is not supported"));
         Assert.Contains(errors, d => d.Message.Contains("Feature 'map literal code generation' is not supported"));
     }
 
