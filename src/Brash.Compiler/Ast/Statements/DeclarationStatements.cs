@@ -13,6 +13,18 @@ public class VariableDeclaration : Statement
     public Expression Value { get; set; } = null!;
 }
 
+public class TupleBindingElement : AstNode
+{
+    public bool IsMutable { get; set; }
+    public string Name { get; set; } = string.Empty;
+}
+
+public class TupleVariableDeclaration : Statement
+{
+    public List<TupleBindingElement> Elements { get; set; } = new();
+    public Expression Value { get; set; } = null!;
+}
+
 public class FunctionDeclaration : Statement
 {
     public bool IsAsync { get; set; }

@@ -44,6 +44,15 @@ statement
 // Variable Declarations
 variableDeclaration
     : ('let' 'mut'? | 'const') IDENTIFIER (':' type)? '=' expression
+    | 'let' tupleBinding '=' expression
+    ;
+
+tupleBinding
+    : '(' tupleBindingElement (',' tupleBindingElement)+ ')'
+    ;
+
+tupleBindingElement
+    : 'mut'? IDENTIFIER
     ;
 
 assignment

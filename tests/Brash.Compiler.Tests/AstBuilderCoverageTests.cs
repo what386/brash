@@ -144,6 +144,23 @@ public class AstBuilderCoverageTests
         Assert.IsType<NullableType>(mapType.ValueType);
     }
 
+    [Fact]
+    public void AstBuilder_ParsesTupleDestructuringWithPerElementMutability()
+    {
+        var program = ParseProgram(
+            """
+            let (mut thing, otherthing) = ("a", "b")
+            """);
+
+        var tupleDecl = Assert.IsType<TupleVariableDeclaration>(Assert.Single(program.Statements));
+        Assert.Equal(2, tupleDecl.Elements.Count);
+        Assert.True(tupleDecl.Elements[0].IsMutable);
+        Assert.Equal("thing", tupleDecl.Elements[0].Name);
+        Assert.False(tupleDecl.Elements[1].IsMutable);
+        Assert.Equal("otherthing", tupleDecl.Elements[1].Name);
+        Assert.IsType<TupleExpression>(tupleDecl.Value);
+    }
+
     private static ProgramNode ParseProgram(string source)
     {
         var diagnostics = new DiagnosticBag();

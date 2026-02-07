@@ -174,8 +174,12 @@ public partial class BashGenerator
 
     private string GenerateTupleExpression(TupleExpression tuple)
     {
-        var values = string.Join(" ", tuple.Elements.Select(GenerateExpression));
-        return $"\"{values}\"";
+        if (tuple.Elements.Count == 0)
+            return "\"\"";
+
+        var args = tuple.Elements.Select(GenerateExpression).ToList();
+        var format = string.Join("\\t", Enumerable.Repeat("%s", args.Count));
+        return $"$(printf '{format}' {string.Join(" ", args)})";
     }
 
     private string GenerateIndexAccess(IndexAccessExpression index)

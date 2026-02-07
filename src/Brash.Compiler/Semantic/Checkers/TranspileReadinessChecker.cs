@@ -38,6 +38,10 @@ public class TranspileReadinessChecker
                 ValidateExpression(varDecl.Value);
                 break;
 
+            case TupleVariableDeclaration tupleDecl:
+                ValidateExpression(tupleDecl.Value);
+                break;
+
             case Assignment assignment:
                 ValidateExpression(assignment.Target);
                 ValidateExpression(assignment.Value);
@@ -118,7 +122,6 @@ public class TranspileReadinessChecker
                 break;
 
             case TupleExpression tupleExpr:
-                ReportUnsupported("tuple value code generation", tupleExpr.Line, tupleExpr.Column);
                 foreach (var element in tupleExpr.Elements)
                     ValidateExpression(element);
                 break;

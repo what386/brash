@@ -44,6 +44,29 @@ public class AstBuilder : BrashBaseVisitor<AstNode>
 
     public override AstNode VisitVariableDeclaration(BrashParser.VariableDeclarationContext context)
     {
+        if (context.tupleBinding() != null)
+        {
+            var tupleDecl = new TupleVariableDeclaration
+            {
+                Line = context.Start.Line,
+                Column = context.Start.Column,
+                Value = Visit(context.expression()) as Expression ?? new NullLiteral()
+            };
+
+            foreach (var element in context.tupleBinding().tupleBindingElement())
+            {
+                tupleDecl.Elements.Add(new TupleBindingElement
+                {
+                    Line = element.Start.Line,
+                    Column = element.Start.Column,
+                    IsMutable = element.MUT() != null,
+                    Name = element.IDENTIFIER().GetText()
+                });
+            }
+
+            return tupleDecl;
+        }
+
         var kind = context.CONST() != null
             ? VariableDeclaration.VarKind.Const
             : context.MUT() != null

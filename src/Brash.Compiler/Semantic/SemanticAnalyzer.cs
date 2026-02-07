@@ -175,6 +175,10 @@ public class SemanticAnalyzer
                 AnalyzeVariableDeclaration(varDecl);
                 break;
 
+            case TupleVariableDeclaration tupleDecl:
+                AnalyzeTupleVariableDeclaration(tupleDecl);
+                break;
+
             case Assignment assignment:
                 AnalyzeAssignment(assignment);
                 break;
@@ -261,6 +265,42 @@ public class SemanticAnalyzer
             diagnostics.AddError(
                 $"Variable '{varDecl.Name}' is already declared in this scope",
                 varDecl.Line, varDecl.Column);
+        }
+    }
+
+    private void AnalyzeTupleVariableDeclaration(TupleVariableDeclaration tupleDecl)
+    {
+        var valueType = symbolResolver.ResolveExpressionType(tupleDecl.Value);
+
+        if (valueType is not TupleType tupleType)
+        {
+            diagnostics.AddError(
+                $"Tuple destructuring requires a tuple value, got '{valueType}'",
+                tupleDecl.Line,
+                tupleDecl.Column);
+            return;
+        }
+
+        if (tupleType.ElementTypes.Count != tupleDecl.Elements.Count)
+        {
+            diagnostics.AddError(
+                $"Tuple destructuring arity mismatch: expected {tupleDecl.Elements.Count} values, got {tupleType.ElementTypes.Count}",
+                tupleDecl.Line,
+                tupleDecl.Column);
+            return;
+        }
+
+        for (var i = 0; i < tupleDecl.Elements.Count; i++)
+        {
+            var element = tupleDecl.Elements[i];
+            var elementType = tupleType.ElementTypes[i];
+            if (!symbolTable.DeclareVariable(element.Name, elementType, element.IsMutable))
+            {
+                diagnostics.AddError(
+                    $"Variable '{element.Name}' is already declared in this scope",
+                    element.Line,
+                    element.Column);
+            }
         }
     }
 

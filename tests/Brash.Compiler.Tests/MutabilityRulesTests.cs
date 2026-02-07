@@ -200,6 +200,57 @@ public class MutabilityRulesTests
         Assert.False(diagnostics.HasErrors, string.Join(Environment.NewLine, diagnostics.GetErrors()));
     }
 
+    [Fact]
+    public void SemanticAnalyzer_RespectsTupleDestructuringElementMutability()
+    {
+        var diagnostics = new DiagnosticBag();
+        var analyzer = new SemanticAnalyzer(diagnostics);
+
+        var program = ParseProgram(
+            """
+            let (mut thing, otherthing) = ("a", "b")
+            thing = "updated"
+            otherthing = "nope"
+            """);
+
+        analyzer.Analyze(program);
+
+        Assert.Contains(diagnostics.GetErrors(), d => d.Message.Contains("immutable variable 'otherthing'"));
+        Assert.DoesNotContain(diagnostics.GetErrors(), d => d.Message.Contains("immutable variable 'thing'"));
+    }
+
+    [Fact]
+    public void SemanticAnalyzer_RejectsTupleDestructuringArityMismatch()
+    {
+        var diagnostics = new DiagnosticBag();
+        var analyzer = new SemanticAnalyzer(diagnostics);
+
+        var program = ParseProgram(
+            """
+            let (mut a, b) = ("x", "y", "z")
+            """);
+
+        analyzer.Analyze(program);
+
+        Assert.Contains(diagnostics.GetErrors(), d => d.Message.Contains("Tuple destructuring arity mismatch"));
+    }
+
+    [Fact]
+    public void SemanticAnalyzer_RejectsTupleDestructuringFromNonTupleValue()
+    {
+        var diagnostics = new DiagnosticBag();
+        var analyzer = new SemanticAnalyzer(diagnostics);
+
+        var program = ParseProgram(
+            """
+            let (mut a, b) = 123
+            """);
+
+        analyzer.Analyze(program);
+
+        Assert.Contains(diagnostics.GetErrors(), d => d.Message.Contains("Tuple destructuring requires a tuple value"));
+    }
+
     private static ProgramNode ParseProgram(string source)
     {
         var input = new AntlrInputStream(source);

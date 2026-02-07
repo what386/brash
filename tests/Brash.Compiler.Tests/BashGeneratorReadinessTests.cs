@@ -260,6 +260,44 @@ public class BashGeneratorReadinessTests
         Assert.Contains("brash_throw \"fatal\"", bash);
     }
 
+    [Fact]
+    public void BashGenerator_EmitsTupleDestructuringRead()
+    {
+        var program = new ProgramNode
+        {
+            Statements =
+            {
+                new TupleVariableDeclaration
+                {
+                    Elements =
+                    {
+                        new TupleBindingElement { Name = "thing", IsMutable = true },
+                        new TupleBindingElement { Name = "otherthing", IsMutable = false }
+                    },
+                    Value = new TupleExpression
+                    {
+                        Elements =
+                        {
+                            new LiteralExpression
+                            {
+                                Value = "a",
+                                Type = new PrimitiveType { PrimitiveKind = PrimitiveType.Kind.String }
+                            },
+                            new LiteralExpression
+                            {
+                                Value = "b",
+                                Type = new PrimitiveType { PrimitiveKind = PrimitiveType.Kind.String }
+                            }
+                        }
+                    }
+                }
+            }
+        };
+
+        var bash = new BashGenerator().Generate(program);
+        Assert.Contains("read -r thing otherthing <<<", bash);
+    }
+
     private static LiteralExpression IntLiteral(int value)
     {
         return new LiteralExpression

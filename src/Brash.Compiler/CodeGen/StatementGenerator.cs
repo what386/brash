@@ -16,6 +16,10 @@ public partial class BashGenerator
                 GenerateVariableDeclaration(varDecl);
                 break;
 
+            case TupleVariableDeclaration tupleDecl:
+                GenerateTupleVariableDeclaration(tupleDecl);
+                break;
+
             case Assignment assignment:
                 GenerateAssignment(assignment);
                 break;
@@ -109,6 +113,19 @@ public partial class BashGenerator
             // Both 'let' and 'mut' become regular bash variables
             Emit($"{varDecl.Name}={value}");
         }
+    }
+
+    private void GenerateTupleVariableDeclaration(TupleVariableDeclaration tupleDecl)
+    {
+        if (tupleDecl.Elements.Count == 0)
+        {
+            Emit(":");
+            return;
+        }
+
+        var names = string.Join(" ", tupleDecl.Elements.Select(e => e.Name));
+        var value = GenerateExpression(tupleDecl.Value);
+        Emit($"read -r {names} <<< {value}");
     }
 
     private void GenerateAssignment(Assignment assignment)
