@@ -56,24 +56,30 @@
 - [x] astbuilder: add more expr types
       @created 2026-02-06 01:48
       @completed 2026-02-06 23:20
+      @completed_version 0.1.0
 
 - [x] Language: switch mut to modifier syntax ( + mutable parameters) and enforce parameter mutability with a dedicated MutabilityChecker (high) #language #semantic #parser #feature
       @created 2026-02-06 23:23
       @completed 2026-02-06 23:27
+      @completed_version 0.1.0
 
 - [x] Parser: fix expression precedence so function calls like f(x) resolve as FunctionCallExpression instead of IdentifierExpression (high) #parser #ast #bug
       @created 2026-02-07 00:53
       @completed 2026-02-07 00:59
+      @completed_version 0.1.0
 
 - [x] Codegen: generate Bash for structs/enums, method dispatch, and field/member access semantics (high) #codegen #bash #feature
       @created 2026-02-06 23:08
       @completed 2026-02-07 02:06
+      @completed_version 0.1.0
 
 - [x] CLI: wire full compile pipeline (parse -> AST -> semantic -> codegen -> output file) with stable diagnostics and exit codes (high) #cli #compiler #feature
       @created 2026-02-06 23:09
       @completed 2026-02-07 02:06
+      @completed_version 0.1.0
 
 - [x] Codegen: implement command execution, pipe operator lowering, async/await flow, and error handling constructs (high) #codegen #bash #shell #feature
       @created 2026-02-06 23:08
       @completed 2026-02-07 02:07
+      @completed_version 0.1.0
 

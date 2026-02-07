@@ -7,7 +7,12 @@
       "commit": null,
       "completed_at": "2026-02-06T23:20:15.810646560Z"
     },
-    "version": null
+    "version": {
+      "major": 0,
+      "minor": 1,
+      "patch": 0,
+      "is_prerelease": false
+    }
   },
   {
     "change": {
@@ -22,7 +27,12 @@
       "commit": null,
       "completed_at": "2026-02-06T23:27:11.406574160Z"
     },
-    "version": null
+    "version": {
+      "major": 0,
+      "minor": 1,
+      "patch": 0,
+      "is_prerelease": false
+    }
   },
   {
     "change": {
@@ -36,7 +46,12 @@
       "commit": null,
       "completed_at": "2026-02-07T00:59:38.539052711Z"
     },
-    "version": null
+    "version": {
+      "major": 0,
+      "minor": 1,
+      "patch": 0,
+      "is_prerelease": false
+    }
   },
   {
     "change": {
@@ -50,7 +65,12 @@
       "commit": null,
       "completed_at": "2026-02-07T02:06:42.661520554Z"
     },
-    "version": null
+    "version": {
+      "major": 0,
+      "minor": 1,
+      "patch": 0,
+      "is_prerelease": false
+    }
   },
   {
     "change": {
@@ -64,7 +84,12 @@
       "commit": null,
       "completed_at": "2026-02-07T02:06:42.691657861Z"
     },
-    "version": null
+    "version": {
+      "major": 0,
+      "minor": 1,
+      "patch": 0,
+      "is_prerelease": false
+    }
   },
   {
     "change": {
@@ -79,6 +104,123 @@
       "commit": null,
       "completed_at": "2026-02-07T02:06:42.732164317Z"
     },
-    "version": null
+    "version": {
+      "major": 0,
+      "minor": 1,
+      "patch": 0,
+      "is_prerelease": false
+    }
+  },
+  {
+    "change": {
+      "description": "astbuilder: add more expr types",
+      "priority": "Medium",
+      "tags": [],
+      "commit": null,
+      "completed_at": "2026-02-06T23:20:00Z"
+    },
+    "version": {
+      "major": 0,
+      "minor": 1,
+      "patch": 0,
+      "is_prerelease": false
+    }
+  },
+  {
+    "change": {
+      "description": "Language: switch mut to modifier syntax ( + mutable parameters) and enforce parameter mutability with a dedicated MutabilityChecker",
+      "priority": "High",
+      "tags": [
+        "language",
+        "semantic",
+        "parser",
+        "feature"
+      ],
+      "commit": null,
+      "completed_at": "2026-02-06T23:27:00Z"
+    },
+    "version": {
+      "major": 0,
+      "minor": 1,
+      "patch": 0,
+      "is_prerelease": false
+    }
+  },
+  {
+    "change": {
+      "description": "Parser: fix expression precedence so function calls like f(x) resolve as FunctionCallExpression instead of IdentifierExpression",
+      "priority": "High",
+      "tags": [
+        "parser",
+        "ast",
+        "bug"
+      ],
+      "commit": null,
+      "completed_at": "2026-02-07T00:59:00Z"
+    },
+    "version": {
+      "major": 0,
+      "minor": 1,
+      "patch": 0,
+      "is_prerelease": false
+    }
+  },
+  {
+    "change": {
+      "description": "Codegen: generate Bash for structs/enums, method dispatch, and field/member access semantics",
+      "priority": "High",
+      "tags": [
+        "codegen",
+        "bash",
+        "feature"
+      ],
+      "commit": null,
+      "completed_at": "2026-02-07T02:06:00Z"
+    },
+    "version": {
+      "major": 0,
+      "minor": 1,
+      "patch": 0,
+      "is_prerelease": false
+    }
+  },
+  {
+    "change": {
+      "description": "CLI: wire full compile pipeline (parse -> AST -> semantic -> codegen -> output file) with stable diagnostics and exit codes",
+      "priority": "High",
+      "tags": [
+        "cli",
+        "compiler",
+        "feature"
+      ],
+      "commit": null,
+      "completed_at": "2026-02-07T02:06:00Z"
+    },
+    "version": {
+      "major": 0,
+      "minor": 1,
+      "patch": 0,
+      "is_prerelease": false
+    }
+  },
+  {
+    "change": {
+      "description": "Codegen: implement command execution, pipe operator lowering, async/await flow, and error handling constructs",
+      "priority": "High",
+      "tags": [
+        "codegen",
+        "bash",
+        "shell",
+        "feature"
+      ],
+      "commit": null,
+      "completed_at": "2026-02-07T02:07:00Z"
+    },
+    "version": {
+      "major": 0,
+      "minor": 1,
+      "patch": 0,
+      "is_prerelease": false
+    }
   }
 ]
