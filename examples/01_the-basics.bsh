@@ -55,6 +55,14 @@ let age_display = optional_age ?? 0
 
 
 // ---------------
+// Explicit Casts
+// ---------------
+
+let age_as_string = (string)age
+let bool_text = (string)is_admin
+
+
+// ---------------
 // String Literals
 // ---------------
 
@@ -79,6 +87,9 @@ let inline_block = [[Keep it on the ""same"" '''line!''' "" ignores "quotes]]
 let user = "Bob"
 let greeting = $"Hello, {user}!"
 let math = $"5 + 3 = {5 + 3}"
+
+let concat = "User: " + user
+let tagged_age = "Age: " + (string)age
 
 
 // ---------------

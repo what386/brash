@@ -14,6 +14,7 @@ let name: string = "Alice"
 let mut middle_name: string? = null
 middle_name = "Jane"
 let display_name = middle_name ?? "No middle name"
+let count_as_text = (string)5
 
 // Functions
 fn greet(name: string, greeting: string = "Hello"): string
@@ -44,7 +45,7 @@ if x > 0
 end
 
 for i in 0..10 step 2
-    print(i)
+    print((string)i)
 end
 
 let mut counter = 0
@@ -71,7 +72,7 @@ impl Person
 end
 
 let person = Person { name: "Alice", age: 30, account: AccountType.Checking }
-print(person.is_adult())
+print((string)(person.is_adult()))
 
 // Command model
 let pipeline = cmd("printf", "abc\n") | cmd("tr", "a-z", "A-Z")
@@ -79,14 +80,14 @@ let output = exec(pipeline)
 print(output)
 
 let pid: Process = spawn("sleep", "1")
-print(pid)
+print((string)pid)
 
 // Error handling
 try
     throw "boom"
 catch err
     // catch variable currently contains textual stderr
-    print(err)
+    print((string)err)
 end
 
 // Preprocessor directives
