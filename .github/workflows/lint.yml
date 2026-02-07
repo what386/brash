@@ -1,0 +1,39 @@
+name: Lint
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+jobs:
+  format-and-analyze:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "9.0.x"
+
+      - name: Verify formatting (Brash.Compiler)
+        run: dotnet format src/Brash.Compiler/Brash.Compiler.csproj --verify-no-changes --verbosity minimal
+
+      - name: Verify formatting (Brash.Cli)
+        run: dotnet format src/Brash.Cli/Brash.Cli.csproj --verify-no-changes --verbosity minimal
+
+      - name: Verify formatting (Brash.Formatter)
+        run: dotnet format src/Brash.Formatter/Brash.Formatter.csproj --verify-no-changes --verbosity minimal
+
+      - name: Verify formatting (Brash.Compiler.Tests)
+        run: dotnet format tests/Brash.Compiler.Tests/Brash.Compiler.Tests.csproj --verify-no-changes --verbosity minimal
+
+      - name: Build compiler (release)
+        run: dotnet build src/Brash.Compiler/Brash.Compiler.csproj --configuration Release --verbosity minimal
+
+      - name: Build CLI (release)
+        run: dotnet build src/Brash.Cli/Brash.Cli.csproj --configuration Release --verbosity minimal
