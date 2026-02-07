@@ -425,7 +425,7 @@ public partial class BashGenerator
 
     private string GenerateExecStatement(CommandExpression expr)
     {
-        if (expr.Arguments.Count == 1 && expr.Arguments[0] is CommandExpression or PipeExpression)
+        if (expr.Arguments.Count == 1)
             return $"brash_exec_cmd \"{GenerateExpression(expr.Arguments[0])}\"";
 
         return $"brash_exec_cmd \"{GenerateExpression(new CommandExpression { Kind = CommandKind.Cmd, Arguments = expr.Arguments })}\"";
@@ -433,7 +433,7 @@ public partial class BashGenerator
 
     private string GenerateSpawnStatement(CommandExpression expr)
     {
-        if (expr.Arguments.Count == 1 && expr.Arguments[0] is CommandExpression or PipeExpression)
+        if (expr.Arguments.Count == 1)
             return $"brash_spawn_cmd \"{GenerateExpression(expr.Arguments[0])}\" >/dev/null";
 
         return $"brash_spawn_cmd \"{GenerateExpression(new CommandExpression { Kind = CommandKind.Cmd, Arguments = expr.Arguments })}\" >/dev/null";

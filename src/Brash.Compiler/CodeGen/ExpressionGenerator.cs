@@ -284,6 +284,9 @@ public partial class BashGenerator
         if (expr.Arguments.Count == 1 && expr.Arguments[0] is CommandExpression or PipeExpression)
             return GenerateExpression(expr.Arguments[0]);
 
+        if (expr.Arguments.Count == 1)
+            return GenerateCommandTextExpression(expr.Arguments[0]);
+
         if (expr.Arguments.Count == 0)
             return "\"\"";
 
@@ -293,7 +296,7 @@ public partial class BashGenerator
 
     private string GenerateExecValue(CommandExpression expr)
     {
-        if (expr.Arguments.Count == 1 && expr.Arguments[0] is CommandExpression or PipeExpression)
+        if (expr.Arguments.Count == 1)
         {
             var cmdValue = GenerateExpression(expr.Arguments[0]);
             return $"$(brash_exec_cmd \"{cmdValue}\")";
@@ -311,7 +314,7 @@ public partial class BashGenerator
 
     private string GenerateSpawnValue(CommandExpression expr)
     {
-        if (expr.Arguments.Count == 1 && expr.Arguments[0] is CommandExpression or PipeExpression)
+        if (expr.Arguments.Count == 1)
         {
             var cmdValue = GenerateExpression(expr.Arguments[0]);
             return $"$(brash_spawn_cmd \"{cmdValue}\")";
@@ -325,6 +328,21 @@ public partial class BashGenerator
             Arguments = expr.Arguments
         });
         return $"$(brash_spawn_cmd \"{cmd}\")";
+    }
+
+    private string GenerateCommandTextExpression(Expression expression)
+    {
+        // For string literals, preserve spaces in a single command text.
+        if (expression is LiteralExpression
+            {
+                Type: PrimitiveType { PrimitiveKind: PrimitiveType.Kind.String },
+                Value: string commandText
+            })
+        {
+            return EscapeString(commandText);
+        }
+
+        return GenerateExpression(expression);
     }
 
     private bool TryGetMemberPath(Expression expr, out string path)

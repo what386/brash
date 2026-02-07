@@ -107,9 +107,10 @@ public static class Program
             Console.WriteLine($"Bash emitted: {options.EmitBashPath}");
             if (generator.Warnings.Count > 0)
             {
-                Console.WriteLine("Code generation warnings:");
+                Console.Error.WriteLine("Code generation unsupported features:");
                 foreach (var warning in generator.Warnings)
-                    Console.WriteLine($"- Unsupported: {warning}");
+                    Console.Error.WriteLine($"- Unsupported: {warning}");
+                return 1;
             }
         }
 
