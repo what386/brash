@@ -47,6 +47,9 @@
 - [ ] Semantic: resolve nullable warnings and tighten method/self nullability/type checks in SymbolResolver #semantic #types #quality
       @created 2026-02-07 02:06
 
+- [ ] Runtime: define Process handle contract for spawn (pid, wait/exit semantics) and add Bash helper coverage (high) #runtime #process #bash #feature
+      @created 2026-02-07 02:07
+
 
 ## Completed
 
