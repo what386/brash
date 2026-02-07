@@ -214,6 +214,25 @@ public class BashGeneratorE2ETests
         Assert.Equal("spawn-ok", result.StdOut.Trim());
     }
 
+    [Fact]
+    public void E2E_InterpolatedString_SubstitutesAwaitedVariables()
+    {
+        const string source =
+            """
+            let proc1 = async spawn("printf", "one")
+            let proc2 = async spawn("printf", "two")
+            let res1 = await proc1
+            let res2 = await proc2
+            let output = $"vals:{res1}-{res2}"
+            exec("printf", "%s\n", output)
+            """;
+
+        var result = CompileAndRun(source);
+
+        Assert.Equal(0, result.ExitCode);
+        Assert.Equal("vals:one-two", result.StdOut.Trim());
+    }
+
     private static (int ExitCode, string StdOut, string StdErr) CompileAndRun(string source)
     {
         var parserDiagnostics = new DiagnosticBag();

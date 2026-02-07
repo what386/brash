@@ -1,6 +1,7 @@
 namespace Brash.Compiler.CodeGen;
 
 using System.Globalization;
+using System.Text;
 using Brash.Compiler.Ast;
 using Brash.Compiler.Ast.Expressions;
 
@@ -40,7 +41,9 @@ public partial class BashGenerator
         {
             return prim.PrimitiveKind switch
             {
-                PrimitiveType.Kind.String => $"\"{EscapeString(lit.Value.ToString() ?? "")}\"",
+                PrimitiveType.Kind.String => lit.IsInterpolated
+                    ? GenerateInterpolatedStringLiteral(lit.Value.ToString() ?? "")
+                    : $"\"{EscapeString(lit.Value.ToString() ?? "")}\"",
                 PrimitiveType.Kind.Int => lit.Value.ToString() ?? "0",
                 PrimitiveType.Kind.Float => Convert.ToString(lit.Value, CultureInfo.InvariantCulture) ?? "0.0",
                 PrimitiveType.Kind.Bool => lit.Value.ToString()?.ToLowerInvariant() == "true" ? "1" : "0",
@@ -50,6 +53,135 @@ public partial class BashGenerator
         }
 
         return "\"\"";
+    }
+
+    private static string GenerateInterpolatedStringLiteral(string template)
+    {
+        var builder = new StringBuilder();
+        builder.Append('"');
+
+        int cursor = 0;
+        while (cursor < template.Length)
+        {
+            var openBrace = FindNextUnescaped(template, '{', cursor);
+            if (openBrace < 0)
+            {
+                builder.Append(EscapeForDoubleQuotes(template[cursor..]));
+                break;
+            }
+
+            builder.Append(EscapeForDoubleQuotes(template[cursor..openBrace]));
+
+            var closeBrace = FindNextUnescaped(template, '}', openBrace + 1);
+            if (closeBrace < 0)
+            {
+                builder.Append(EscapeForDoubleQuotes(template[openBrace..]));
+                break;
+            }
+
+            var placeholder = template[(openBrace + 1)..closeBrace].Trim();
+            if (TryGetPlaceholderExpansion(placeholder, out var expansion))
+            {
+                builder.Append(expansion);
+            }
+            else
+            {
+                builder.Append(EscapeForDoubleQuotes(template[openBrace..(closeBrace + 1)]));
+            }
+
+            cursor = closeBrace + 1;
+        }
+
+        builder.Append('"');
+        return builder.ToString();
+    }
+
+    private static int FindNextUnescaped(string text, char needle, int start)
+    {
+        for (int i = start; i < text.Length; i++)
+        {
+            if (text[i] != needle)
+                continue;
+
+            if (i == 0 || text[i - 1] != '\\')
+                return i;
+        }
+
+        return -1;
+    }
+
+    private static string EscapeForDoubleQuotes(string input)
+    {
+        return input
+            .Replace("\\", "\\\\", StringComparison.Ordinal)
+            .Replace("\"", "\\\"", StringComparison.Ordinal)
+            .Replace("$", "\\$", StringComparison.Ordinal)
+            .Replace("`", "\\`", StringComparison.Ordinal);
+    }
+
+    private static bool TryGetPlaceholderExpansion(string placeholder, out string expansion)
+    {
+        if (TryGetIdentifierPath(placeholder, out var path))
+        {
+            expansion = "${" + path + "}";
+            return true;
+        }
+
+        if (string.Equals(placeholder, "self", StringComparison.Ordinal))
+        {
+            expansion = "${__self}";
+            return true;
+        }
+
+        expansion = string.Empty;
+        return false;
+    }
+
+    private static bool TryGetIdentifierPath(string input, out string path)
+    {
+        path = string.Empty;
+        if (string.IsNullOrWhiteSpace(input))
+            return false;
+
+        var parts = input.Split('.', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        if (parts.Length == 0)
+            return false;
+
+        foreach (var part in parts)
+        {
+            if (!IsIdentifier(part))
+                return false;
+        }
+
+        path = string.Join("_", parts);
+        return true;
+    }
+
+    private static bool IsIdentifier(string value)
+    {
+        if (string.IsNullOrEmpty(value))
+            return false;
+
+        if (!IsIdentifierStart(value[0]))
+            return false;
+
+        for (int i = 1; i < value.Length; i++)
+        {
+            if (!IsIdentifierPart(value[i]))
+                return false;
+        }
+
+        return true;
+    }
+
+    private static bool IsIdentifierStart(char c)
+    {
+        return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_';
+    }
+
+    private static bool IsIdentifierPart(char c)
+    {
+        return IsIdentifierStart(c) || (c >= '0' && c <= '9');
     }
 
     private string GenerateBinaryExpression(BinaryExpression bin)

@@ -869,12 +869,14 @@ public class AstBuilder : BrashBaseVisitor<AstNode>
 
         if (context.stringLiteral() != null)
         {
+            var stringLiteral = context.stringLiteral();
             return new LiteralExpression
             {
                 Line = context.Start.Line,
                 Column = context.Start.Column,
-                Value = UnquoteStringLiteral(context.stringLiteral().GetText()),
-                Type = new PrimitiveType { PrimitiveKind = PrimitiveType.Kind.String }
+                Value = UnquoteStringLiteral(stringLiteral.GetText()),
+                Type = new PrimitiveType { PrimitiveKind = PrimitiveType.Kind.String },
+                IsInterpolated = stringLiteral.INTERPOLATED_STRING() != null
             };
         }
 

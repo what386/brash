@@ -8,6 +8,10 @@
 // Basic Async Execution
 // ---------------
 
+fn print(input: string)
+    exec("printf", input)
+end
+
 // async spawn runs in the background and returns a Process handle.
 let sleep_proc = async spawn("sleep", "1")
 
