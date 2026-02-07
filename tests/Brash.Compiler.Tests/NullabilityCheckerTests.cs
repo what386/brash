@@ -1,5 +1,7 @@
 using Antlr4.Runtime;
 using Brash.Compiler.Ast;
+using Brash.Compiler.Ast.Expressions;
+using Brash.Compiler.Ast.Statements;
 using Brash.Compiler.Diagnostics;
 using Brash.Compiler.Frontend;
 using Brash.Compiler.Semantic;
