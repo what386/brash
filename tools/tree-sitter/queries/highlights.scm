@@ -4,6 +4,7 @@
   "mut"
   "pub"
   "const"
+  "static"
   "fn"
   "async"
   "await"

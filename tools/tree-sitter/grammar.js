@@ -150,6 +150,7 @@ module.exports = grammar({
     method_declaration: ($) =>
       seq(
         optional("pub"),
+        optional("static"),
         "fn",
         field("name", $.identifier),
         "(",
