@@ -15,6 +15,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Brash.Compiler.Tests", "tes
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Brash.Formatter", "src\Brash.Formatter\Brash.Formatter.csproj", "{10E55A2C-A77E-41F6-980F-1990F9C73322}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Brash.Formatter.Tests", "tests\Brash.Formatter.Tests\Brash.Formatter.Tests.csproj", "{10BBA5A0-745F-4352-94CF-3D47E72859B7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -73,6 +75,18 @@ Global
 		{10E55A2C-A77E-41F6-980F-1990F9C73322}.Release|x64.Build.0 = Release|Any CPU
 		{10E55A2C-A77E-41F6-980F-1990F9C73322}.Release|x86.ActiveCfg = Release|Any CPU
 		{10E55A2C-A77E-41F6-980F-1990F9C73322}.Release|x86.Build.0 = Release|Any CPU
+		{10BBA5A0-745F-4352-94CF-3D47E72859B7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{10BBA5A0-745F-4352-94CF-3D47E72859B7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{10BBA5A0-745F-4352-94CF-3D47E72859B7}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{10BBA5A0-745F-4352-94CF-3D47E72859B7}.Debug|x64.Build.0 = Debug|Any CPU
+		{10BBA5A0-745F-4352-94CF-3D47E72859B7}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{10BBA5A0-745F-4352-94CF-3D47E72859B7}.Debug|x86.Build.0 = Debug|Any CPU
+		{10BBA5A0-745F-4352-94CF-3D47E72859B7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{10BBA5A0-745F-4352-94CF-3D47E72859B7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{10BBA5A0-745F-4352-94CF-3D47E72859B7}.Release|x64.ActiveCfg = Release|Any CPU
+		{10BBA5A0-745F-4352-94CF-3D47E72859B7}.Release|x64.Build.0 = Release|Any CPU
+		{10BBA5A0-745F-4352-94CF-3D47E72859B7}.Release|x86.ActiveCfg = Release|Any CPU
+		{10BBA5A0-745F-4352-94CF-3D47E72859B7}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -82,5 +96,6 @@ Global
 		{7932A396-CCD0-48FC-90AC-EE4FB894BF97} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 		{BDCD9D9D-16C9-4D13-882D-C80168C80233} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
 		{10E55A2C-A77E-41F6-980F-1990F9C73322} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
+		{10BBA5A0-745F-4352-94CF-3D47E72859B7} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
 	EndGlobalSection
 EndGlobal
