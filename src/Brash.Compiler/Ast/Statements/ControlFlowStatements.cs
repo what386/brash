@@ -1,0 +1,37 @@
+namespace Brash.Compiler.Ast.Statements;
+
+// ============================================
+// Control Flow Statements
+// ============================================
+
+public class IfStatement : Statement
+{
+    public Expression Condition { get; set; } = null!;
+    public List<Statement> ThenBlock { get; set; } = new();
+    public List<ElifClause> ElifClauses { get; set; } = new();
+    public List<Statement>? ElseBlock { get; set; }
+}
+
+public class ForLoop : Statement
+{
+    public bool IsIncrementing { get; set; } = true;
+    public string Variable { get; set; } = string.Empty;
+    public Expression Range { get; set; } = null!;
+    public Expression? Step { get; set; }
+    public List<Statement> Body { get; set; } = new();
+}
+
+public class WhileLoop : Statement
+{
+    public Expression Condition { get; set; } = null!;
+    public List<Statement> Body { get; set; } = new();
+}
+
+public class ReturnStatement : Statement
+{
+    public Expression? Value { get; set; }
+}
+
+public class BreakStatement : Statement { }
+
+public class ContinueStatement : Statement { }
