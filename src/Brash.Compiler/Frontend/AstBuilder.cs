@@ -77,6 +77,7 @@ public class AstBuilder : BrashBaseVisitor<AstNode>
         {
             Line = context.Start.Line,
             Column = context.Start.Column,
+            IsPublic = context.PUB() != null,
             Kind = kind,
             Name = context.IDENTIFIER().GetText(),
             Type = context.type() != null ? Visit(context.type()) as TypeNode : null,
@@ -121,6 +122,7 @@ public class AstBuilder : BrashBaseVisitor<AstNode>
         {
             Line = context.Start.Line,
             Column = context.Start.Column,
+            IsPublic = context.PUB() != null,
             IsAsync = context.ASYNC() != null,
             Name = context.IDENTIFIER().GetText()
         };
@@ -179,6 +181,7 @@ public class AstBuilder : BrashBaseVisitor<AstNode>
         {
             Line = context.Start.Line,
             Column = context.Start.Column,
+            IsPublic = context.PUB() != null,
             Name = context.IDENTIFIER().GetText()
         };
 
@@ -203,6 +206,7 @@ public class AstBuilder : BrashBaseVisitor<AstNode>
         {
             Line = context.Start.Line,
             Column = context.Start.Column,
+            IsPublic = context.PUB() != null,
             Name = context.IDENTIFIER().GetText()
         };
 
@@ -424,6 +428,7 @@ public class AstBuilder : BrashBaseVisitor<AstNode>
         {
             Line = context.Start.Line,
             Column = context.Start.Column,
+            IsPublic = context.PUB() != null,
             Name = context.IDENTIFIER().GetText()
         };
 

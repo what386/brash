@@ -2,12 +2,10 @@ namespace Brash.Compiler;
 
 using System.Collections;
 using System.Reflection;
-using Antlr4.Runtime;
 using Brash.Compiler.Ast;
 using Brash.Compiler.CodeGen;
 using Brash.Compiler.Diagnostics;
 using Brash.Compiler.Frontend;
-using Brash.Compiler.Preprocessor;
 using Brash.Compiler.Semantic;
 
 public static class Program
@@ -35,50 +33,10 @@ public static class Program
             return 1;
         }
 
-        string source;
-        try
-        {
-            source = File.ReadAllText(path);
-        }
-        catch (Exception ex)
-        {
-            Console.Error.WriteLine($"Failed to read '{path}': {ex.Message}");
-            return 1;
-        }
-
         var diagnostics = new DiagnosticBag();
-        var preprocessor = new BrashPreprocessor();
-        source = preprocessor.Process(source, diagnostics);
-
-        if (diagnostics.HasErrors)
+        if (!ModuleLoader.TryLoadProgram(path, diagnostics, out var program))
         {
             diagnostics.PrintToConsole();
-            return 1;
-        }
-
-        var input = new AntlrInputStream(source);
-        var lexer = new BrashLexer(input);
-        var tokens = new CommonTokenStream(lexer);
-        var parser = new BrashParser(tokens);
-
-        lexer.RemoveErrorListeners();
-        parser.RemoveErrorListeners();
-        lexer.AddErrorListener(new LexerDiagnosticErrorListener(diagnostics));
-        parser.AddErrorListener(new Brash.Compiler.Diagnostics.DiagnosticErrorListener(diagnostics));
-
-        var parseTree = parser.program();
-
-        if (diagnostics.HasErrors)
-        {
-            diagnostics.PrintToConsole();
-            return 1;
-        }
-
-        var astBuilder = new AstBuilder();
-        var ast = astBuilder.VisitProgram(parseTree);
-        if (ast is not ProgramNode program)
-        {
-            Console.Error.WriteLine("Failed to build AST root.");
             return 1;
         }
 
@@ -192,32 +150,6 @@ internal sealed class Options
             IsValid = false,
             ErrorMessage = message
         };
-    }
-}
-
-internal sealed class LexerDiagnosticErrorListener : IAntlrErrorListener<int>
-{
-    private readonly DiagnosticBag diagnostics;
-
-    public LexerDiagnosticErrorListener(DiagnosticBag diagnostics)
-    {
-        this.diagnostics = diagnostics;
-    }
-
-    public void SyntaxError(
-        TextWriter output,
-        IRecognizer recognizer,
-        int offendingSymbol,
-        int line,
-        int charPositionInLine,
-        string msg,
-        RecognitionException e)
-    {
-        diagnostics.AddError(
-            SyntaxErrorFormatter.FormatLexerError(msg),
-            line,
-            charPositionInLine,
-            "E000");
     }
 }
 

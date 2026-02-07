@@ -40,5 +40,5 @@
 
 ### Failure policy
 
-- Unsupported language/runtime features should fail in semantic analysis with clear errors (for example `import` and unsupported literal/value forms).
+- Unsupported language/runtime features should fail in semantic analysis with clear errors (for example unsupported literal/value forms like map literals as runtime values).
 - CLI also treats remaining codegen unsupported warnings as fatal when emitting Bash.

@@ -8,6 +8,7 @@ public class VariableDeclaration : Statement
 {
     public enum VarKind { Let, Mut, Const }
     public VarKind Kind { get; set; }
+    public bool IsPublic { get; set; }
     public string Name { get; set; } = string.Empty;
     public TypeNode? Type { get; set; }
     public Expression Value { get; set; } = null!;
@@ -27,6 +28,7 @@ public class TupleVariableDeclaration : Statement
 
 public class FunctionDeclaration : Statement
 {
+    public bool IsPublic { get; set; }
     public bool IsAsync { get; set; }
     public string Name { get; set; } = string.Empty;
     public List<Parameter> Parameters { get; set; } = new();
@@ -36,12 +38,14 @@ public class FunctionDeclaration : Statement
 
 public class StructDeclaration : Statement
 {
+    public bool IsPublic { get; set; }
     public string Name { get; set; } = string.Empty;
     public List<FieldDeclaration> Fields { get; set; } = new();
 }
 
 public class EnumDeclaration : Statement
 {
+    public bool IsPublic { get; set; }
     public string Name { get; set; } = string.Empty;
     public List<EnumVariant> Variants { get; set; } = new();
 }
@@ -54,6 +58,7 @@ public class ImplBlock : Statement
 
 public class MethodDeclaration : AstNode
 {
+    public bool IsPublic { get; set; }
     public string Name { get; set; } = string.Empty;
     public List<Parameter> Parameters { get; set; } = new();
     public TypeNode? ReturnType { get; set; }

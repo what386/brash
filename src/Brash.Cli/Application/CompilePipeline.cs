@@ -6,7 +6,6 @@ using Brash.Compiler.Ast;
 using Brash.Compiler.CodeGen;
 using Brash.Compiler.Diagnostics;
 using Brash.Compiler.Frontend;
-using Brash.Compiler.Preprocessor;
 using Brash.Compiler.Semantic;
 
 internal static class CompilePipeline
@@ -111,73 +110,13 @@ internal static class CompilePipeline
     {
         program = null;
 
-        string source;
-        try
-        {
-            source = File.ReadAllText(inputPath);
-        }
-        catch (Exception ex)
-        {
-            Console.Error.WriteLine($"Failed to read '{inputPath}': {ex.Message}");
-            return false;
-        }
-
         var diagnostics = new DiagnosticBag();
-        var preprocessor = new BrashPreprocessor();
-        source = preprocessor.Process(source, diagnostics);
-        if (diagnostics.HasErrors)
+        if (!ModuleLoader.TryLoadProgram(inputPath, diagnostics, out program))
         {
             diagnostics.PrintToConsole();
-            return false;
-        }
-
-        var input = new AntlrInputStream(source);
-        var lexer = new BrashLexer(input);
-        var tokens = new CommonTokenStream(lexer);
-        var parser = new BrashParser(tokens);
-
-        lexer.RemoveErrorListeners();
-        parser.RemoveErrorListeners();
-        lexer.AddErrorListener(new CliLexerDiagnosticErrorListener(diagnostics));
-        parser.AddErrorListener(new Brash.Compiler.Diagnostics.DiagnosticErrorListener(diagnostics));
-
-        var parseTree = parser.program();
-        if (diagnostics.HasErrors)
-        {
-            diagnostics.PrintToConsole();
-            return false;
-        }
-
-        var ast = new AstBuilder().VisitProgram(parseTree);
-        program = ast as ProgramNode;
-        if (program == null)
-        {
-            Console.Error.WriteLine("Failed to build AST root.");
             return false;
         }
 
         return true;
-    }
-}
-
-internal sealed class CliLexerDiagnosticErrorListener : IAntlrErrorListener<int>
-{
-    private readonly DiagnosticBag diagnostics;
-
-    public CliLexerDiagnosticErrorListener(DiagnosticBag diagnostics)
-    {
-        this.diagnostics = diagnostics;
-    }
-
-    public void SyntaxError(
-        TextWriter output,
-        IRecognizer recognizer,
-        int offendingSymbol,
-        int line,
-        int charPositionInLine,
-        string msg,
-        RecognitionException e)
-    {
-        diagnostics.AddError($"Lexer error: {msg}", line, charPositionInLine, "E000");
     }
 }

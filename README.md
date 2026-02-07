@@ -22,7 +22,6 @@ Completed in `tally`:
 - docs alignment for language spec and command/pipe semantics
 
 Actively tracked in `tally`:
-- module/import resolution and multi-file linking
 - standard library/runtime contract hardening (`Process`, helpers, collections)
 - additional semantic tightening (nullability/type quality)
 - broader golden/snapshot coverage across examples
@@ -83,6 +82,7 @@ Notes:
 ## Language highlights (implemented)
 
 - `let`, `let mut`, `const`
+- `pub` exports for top-level API surface: `pub fn`, `pub const`, `pub struct`, `pub enum`
 - functions and return types
 - structs, enums, `impl` methods, `self`
 - nullability + `??` + safe navigation
@@ -96,6 +96,11 @@ Notes:
   - `async spawn(...)` -> background process handle (awaitable)
   - `await process` -> waits for `Process` and returns captured stdout
   - pipelines via `|` for command and value flow
+- module imports:
+  - `import { item } from "path.bsh"`
+  - `import Name from "path.bsh"`
+  - `import "path.bsh"` for all public exports
+  - import paths are resolved from the entry file directory
 
 Example:
 
@@ -119,7 +124,7 @@ Recommended order in `examples/`:
 8. `07_shell-integration.bsh`
 9. `08_pipe-operator.bsh`
 10. `09_error-handling.bsh`
-11. `10_import-system.bsh` (syntax-focused; codegen still in progress)
+11. `10_import-system.bsh`
 12. `11_async-await.bsh`
 13. `12_preprocessor-directives.bsh`
 
@@ -127,7 +132,6 @@ Recommended order in `examples/`:
 
 These are currently rejected during semantic/transpile-readiness checks:
 
-- `import` module system codegen
 - map literal codegen
 - range value codegen (ranges are currently supported for `for ... in start..end`)
 

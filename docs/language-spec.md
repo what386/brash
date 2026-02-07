@@ -8,13 +8,30 @@ This document describes the behavior currently implemented by the compiler and B
   - `let name = expr`
   - `let mut name = expr`
   - `const name = expr`
+  - `pub const NAME = expr` for module exports
 - Functions:
   - `fn name(args...): ReturnType ... end`
+  - `pub fn name(args...): ReturnType ... end`
   - `async fn` currently parses and transpiles with the same runtime behavior as `fn`.
 - Types:
   - `struct Name ... end`
+  - `pub struct Name ... end`
   - `enum Name ... end`
+  - `pub enum Name ... end`
   - `impl Name ... end` methods using `self`
+
+### Imports
+
+- Named imports:
+  - `import { helper_fn, CONFIG } from "lib/tools.bsh"`
+  - `import Name from "models/name.bsh"` (single-name form)
+- Module import:
+  - `import "shared/common.bsh"` imports all public top-level exports from that module.
+- Export visibility:
+  - Only `pub` declarations are importable (`pub fn`, `pub const`, `pub struct`, `pub enum`).
+  - `pub let` / `pub let mut` are rejected.
+- Import path resolution:
+  - Import paths are resolved from the entry file directory (absolute-to-main behavior), not from the importing module's directory.
 
 ### Commands and processes
 
@@ -62,7 +79,6 @@ This document describes the behavior currently implemented by the compiler and B
 
 The semantic phase intentionally rejects features not ready for stable transpilation:
 
-- `import ...`
 - map literal code generation
 - range value code generation
 

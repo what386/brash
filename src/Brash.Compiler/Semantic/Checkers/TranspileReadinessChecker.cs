@@ -30,10 +30,6 @@ public class TranspileReadinessChecker
                 ValidateExpression(throwStmt.Value);
                 break;
 
-            case ImportStatement importStmt:
-                ReportUnsupported("import", importStmt.Line, importStmt.Column);
-                break;
-
             case VariableDeclaration varDecl:
                 ValidateExpression(varDecl.Value);
                 break;

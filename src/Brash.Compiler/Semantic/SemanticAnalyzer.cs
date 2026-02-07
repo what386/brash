@@ -172,6 +172,7 @@ public class SemanticAnalyzer
         switch (stmt)
         {
             case VariableDeclaration varDecl:
+                ValidateVariableVisibility(varDecl);
                 AnalyzeVariableDeclaration(varDecl);
                 break;
 
@@ -184,6 +185,7 @@ public class SemanticAnalyzer
                 break;
 
             case FunctionDeclaration funcDecl:
+                ValidateTopLevelVisibility(funcDecl.IsPublic, "function", funcDecl.Name, funcDecl.Line, funcDecl.Column);
                 AnalyzeFunctionDeclaration(funcDecl);
                 break;
 
@@ -229,11 +231,46 @@ public class SemanticAnalyzer
                 symbolResolver.ResolveExpressionType(exprStmt.Expression);
                 break;
 
-            case StructDeclaration:
-            case EnumDeclaration:
+            case StructDeclaration structDecl:
+                ValidateTopLevelVisibility(structDecl.IsPublic, "struct", structDecl.Name, structDecl.Line, structDecl.Column);
+                break;
+
+            case EnumDeclaration enumDecl:
+                ValidateTopLevelVisibility(enumDecl.IsPublic, "enum", enumDecl.Name, enumDecl.Line, enumDecl.Column);
+                break;
+
             case ImplBlock:
                 // Already handled in earlier phases
                 break;
+        }
+    }
+
+    private void ValidateVariableVisibility(VariableDeclaration varDecl)
+    {
+        if (!varDecl.IsPublic)
+            return;
+
+        ValidateTopLevelVisibility(true, "variable", varDecl.Name, varDecl.Line, varDecl.Column);
+        if (varDecl.Kind != VariableDeclaration.VarKind.Const)
+        {
+            diagnostics.AddError(
+                $"Only const declarations can be public. Change '{varDecl.Name}' to 'pub const'.",
+                varDecl.Line,
+                varDecl.Column);
+        }
+    }
+
+    private void ValidateTopLevelVisibility(bool isPublic, string kind, string name, int line, int column)
+    {
+        if (!isPublic)
+            return;
+
+        if (symbolTable.CurrentScopeLevel > 1)
+        {
+            diagnostics.AddError(
+                $"Public {kind} '{name}' must be declared at module top level",
+                line,
+                column);
         }
     }
 

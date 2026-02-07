@@ -25,6 +25,10 @@ print(CONFIG["version"])
 
 let user = create_user("Alice", 30)
 
-// NOTE:
-// Import syntax is part of the language surface.
-// Full module resolution and transpilation support are still in progress.
+// Export rules in imported modules:
+// - Use `pub fn`, `pub const`, `pub struct`, `pub enum` for importable symbols.
+// - `pub let` and `pub let mut` are not allowed.
+//
+// Import path resolution:
+// - Paths are resolved from the entry file directory (absolute-to-main),
+//   not from the importing module's directory.

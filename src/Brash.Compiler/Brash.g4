@@ -43,7 +43,7 @@ statement
 
 // Variable Declarations
 variableDeclaration
-    : ('let' 'mut'? | 'const') IDENTIFIER (':' type)? '=' expression
+    : 'pub'? ('let' 'mut'? | 'const') IDENTIFIER (':' type)? '=' expression
     | 'let' tupleBinding '=' expression
     ;
 
@@ -61,7 +61,7 @@ assignment
 
 // Function Declaration
 functionDeclaration
-    : 'async'? 'fn' IDENTIFIER '(' parameterList? ')' (':' returnType)? functionBody
+    : 'pub'? 'async'? 'fn' IDENTIFIER '(' parameterList? ')' (':' returnType)? functionBody
     ;
 
 parameterList
@@ -88,11 +88,11 @@ functionBody
 
 // Struct Declarations
 structDeclaration
-    : 'struct' IDENTIFIER structBody
+    : 'pub'? 'struct' IDENTIFIER structBody
     ;
 
 enumDeclaration
-    : 'enum' IDENTIFIER enumBody
+    : 'pub'? 'enum' IDENTIFIER enumBody
     ;
 
 enumBody
@@ -117,7 +117,7 @@ implBlock
     ;
 
 methodDeclaration
-    : 'fn' IDENTIFIER '(' parameterList? ')' (':' returnType)? functionBody
+    : 'pub'? 'fn' IDENTIFIER '(' parameterList? ')' (':' returnType)? functionBody
     ;
 
 // Control Flow
@@ -328,6 +328,7 @@ CATCH       : 'catch';
 THROW       : 'throw';
 IMPORT      : 'import';
 FROM        : 'from';
+PUB         : 'pub';
 END         : 'end';
 SELF        : 'self';
 NULL        : 'null';
