@@ -7,6 +7,7 @@ using Brash.Compiler.Ast;
 using Brash.Compiler.CodeGen;
 using Brash.Compiler.Diagnostics;
 using Brash.Compiler.Frontend;
+using Brash.Compiler.Preprocessor;
 using Brash.Compiler.Semantic;
 
 public static class Program
@@ -46,6 +47,15 @@ public static class Program
         }
 
         var diagnostics = new DiagnosticBag();
+        var preprocessor = new BrashPreprocessor();
+        source = preprocessor.Process(source, diagnostics);
+
+        if (diagnostics.HasErrors)
+        {
+            diagnostics.PrintToConsole();
+            return 1;
+        }
+
         var input = new AntlrInputStream(source);
         var lexer = new BrashLexer(input);
         var tokens = new CommonTokenStream(lexer);
