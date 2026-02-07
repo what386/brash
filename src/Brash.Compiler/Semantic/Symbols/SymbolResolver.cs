@@ -177,6 +177,9 @@ public class SymbolResolver
             method.Column,
             $"method call '{method.MethodName}'");
 
+        if (typeChecker.IsStringType(objectType))
+            return ResolveStringBuiltinMethod(method);
+
         if (method.MethodName == "to_string")
         {
             if (method.Arguments.Count != 0)
@@ -232,6 +235,43 @@ public class SymbolResolver
         typeChecker.ValidateMethodCall(methodSymbol, argumentTypes, method.Line, method.Column);
 
         return methodSymbol.ReturnType;
+    }
+
+    private TypeNode ResolveStringBuiltinMethod(MethodCallExpression method)
+    {
+        if (!StringType.TryGetBuiltinMethod(method.MethodName, out var builtin))
+        {
+            diagnostics.AddError(
+                $"Type 'string' has no method '{method.MethodName}'",
+                method.Line,
+                method.Column);
+            return new UnknownType();
+        }
+
+        if (method.Arguments.Count != builtin.ParameterKinds.Length)
+        {
+            diagnostics.AddError(
+                $"Method '{builtin.Name}' expects {builtin.ParameterKinds.Length} argument{(builtin.ParameterKinds.Length == 1 ? "" : "s")}",
+                method.Line,
+                method.Column);
+            return new UnknownType();
+        }
+
+        for (int i = 0; i < builtin.ParameterKinds.Length; i++)
+        {
+            var actualType = ResolveExpressionType(method.Arguments[i]);
+            var expectedType = new PrimitiveType { PrimitiveKind = builtin.ParameterKinds[i] };
+            if (!typeChecker.AreTypesCompatible(expectedType, actualType))
+            {
+                diagnostics.AddError(
+                    $"Method '{builtin.Name}' expects argument {i + 1} to be of type '{builtin.ParameterKinds[i].ToString().ToLowerInvariant()}'",
+                    method.Line,
+                    method.Column);
+                return new UnknownType();
+            }
+        }
+
+        return new PrimitiveType { PrimitiveKind = builtin.ReturnKind };
     }
 
     private TypeNode ResolveMemberAccess(MemberAccessExpression member)

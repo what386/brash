@@ -333,6 +333,30 @@ public class BashGeneratorE2ETests
         Assert.Equal("<<prefix value=14>>", result.StdOut.Trim());
     }
 
+    [Fact]
+    public void E2E_StringBuiltinMethods_WorkOnPrimitives()
+    {
+        const string source =
+            """
+            let raw = "  Abc Def  "
+            let len = raw.length()
+            let trimmed = raw.trim()
+            let upper = trimmed.to_upper()
+            let lower = upper.to_lower()
+            let has = lower.contains("abc")
+            let starts = lower.starts_with("abc")
+            let ends = lower.ends_with("def")
+            let empty = "".is_empty()
+
+            exec("printf", "%s|%s|%s|%s|%s|%s|%s|%s\n", len, trimmed, upper, lower, has, starts, ends, empty)
+            """;
+
+        var result = CompileAndRun(source);
+
+        Assert.Equal(0, result.ExitCode);
+        Assert.Equal("11|Abc Def|ABC DEF|abc def|1|1|1|1", result.StdOut.Trim());
+    }
+
     private static (int ExitCode, string StdOut, string StdErr) CompileAndRun(string source)
     {
         var parserDiagnostics = new DiagnosticBag();

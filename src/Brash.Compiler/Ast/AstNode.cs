@@ -1,6 +1,7 @@
 namespace Brash.Compiler.Ast;
 
 using Brash.Compiler.Ast.Statements;
+using Brash.Compiler.Ast.Types;
 
 // ============================================
 // Base AST Node

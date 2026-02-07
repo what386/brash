@@ -279,6 +279,9 @@ public partial class BashGenerator
                 : $"$({call.StaticTypeName}__{call.MethodName})";
         }
 
+        if (TryGenerateStringBuiltinMethodCall(call, out var stringBuiltin))
+            return stringBuiltin;
+
         if (call.MethodName == "to_string")
         {
             if (call.Arguments.Count != 0)
@@ -298,6 +301,21 @@ public partial class BashGenerator
             return $"$(brash_call_method {receiverHandle} \"{call.MethodName}\")";
 
         return $"$(brash_call_method {receiverHandle} \"{call.MethodName}\" {args})";
+    }
+
+    private bool TryGenerateStringBuiltinMethodCall(MethodCallExpression call, out string generated)
+    {
+        generated = string.Empty;
+        if (!StringType.TryGetBuiltinMethod(call.MethodName, out var builtin))
+            return false;
+
+        if (call.Arguments.Count != builtin.ParameterKinds.Length)
+            return false;
+
+        var receiver = GenerateFunctionCallArg(call.Object);
+        var args = call.Arguments.Select(GenerateFunctionCallArg).ToList();
+        generated = builtin.EmitBash(receiver, args);
+        return true;
     }
 
     private string GenerateMemberAccess(MemberAccessExpression member)

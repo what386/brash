@@ -143,3 +143,46 @@ impl Path
     end
 end
 
+pub fn path(value: string): Path
+    return Path.new(value)
+end
+
+pub fn cwd(): Path
+    return Path.cwd()
+end
+
+pub fn join(left: string, right: string): string
+    return Path.join(left, right)
+end
+
+pub fn basename(path_value: string): string
+    return Path.basename(path_value)
+end
+
+pub fn dirname(path_value: string): string
+    return Path.dirname(path_value)
+end
+
+pub fn extension(path_value: string): string
+    return Path.extension(path_value)
+end
+
+pub fn stem(path_value: string): string
+    return Path.stem(path_value)
+end
+
+pub fn with_extension(path_value: string, ext: string): string
+    return Path.with_extension(path_value, ext)
+end
+
+pub fn exists(file_path: string): bool
+    return path(file_path).exists()
+end
+
+pub fn is_file(file_path: string): bool
+    return path(file_path).is_file()
+end
+
+pub fn is_dir(file_path: string): bool
+    return path(file_path).is_dir()
+end

@@ -532,7 +532,7 @@ public partial class BashGenerator
     {
         var raw = GenerateRawMethodCall(call);
         if (raw == null)
-            return UnsupportedExpression(call);
+            return $": {GenerateExpression(call)}";
         return raw;
     }
 

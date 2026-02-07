@@ -192,6 +192,19 @@ public class ModuleImportTests
     }
 
     [Fact]
+    public void SemanticAnalyzer_ValidatesStringBuiltinMethodArguments()
+    {
+        var diagnostics = Analyze(
+            """
+            let x = "abc".contains(5)
+            let y = "abc".length(1)
+            """);
+
+        Assert.Contains(diagnostics.GetErrors(), d => d.Message.Contains("expects argument 1 to be of type 'string'"));
+        Assert.Contains(diagnostics.GetErrors(), d => d.Message.Contains("Method 'length' expects 0 arguments"));
+    }
+
+    [Fact]
     public void ModuleLoader_ResolvesStdNamespaceModule()
     {
         using var fixture = new ModuleFixture();
