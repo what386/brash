@@ -1,0 +1,42 @@
+// ============================================
+// Brash Standard Library: paths
+// ============================================
+
+pub fn join(left: string, right: string): string
+    if left == ""
+        return right
+    end
+
+    if right == ""
+        return left
+    end
+
+    return exec("bash", "-lc", "printf '%s/%s' \"${1%/}\" \"${2#/}\"", "_", left, right)
+end
+
+pub fn basename(path: string): string
+    return exec("basename", path)
+end
+
+pub fn dirname(path: string): string
+    return exec("dirname", path)
+end
+
+pub fn extension(path: string): string
+    return exec("bash", "-lc", "name=$(basename \"$1\"); case \"$name\" in *.*) printf '%s' \"${name##*.}\" ;; *) printf '' ;; esac", "_", path)
+end
+
+pub fn stem(path: string): string
+    return exec("bash", "-lc", "name=$(basename \"$1\"); case \"$name\" in *.*) printf '%s' \"${name%.*}\" ;; *) printf '%s' \"$name\" ;; esac", "_", path)
+end
+
+pub fn with_extension(path: string, ext: string): string
+    let dir = dirname(path)
+    let file_stem = stem(path)
+
+    if ext == ""
+        return join(dir, file_stem)
+    end
+
+    return join(dir, file_stem + "." + ext)
+end

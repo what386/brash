@@ -1,0 +1,63 @@
+// ============================================
+// Brash Standard Library: fs
+// ============================================
+
+pub fn exists(path: string): bool
+    let result = (int)exec(
+        "bash",
+        "-lc",
+        "if [ -e \"$1\" ]; then printf '1'; else printf '0'; fi",
+        "_",
+        path
+    )
+
+    return result == 1
+end
+
+pub fn is_file(path: string): bool
+    let result = (int)exec(
+        "bash",
+        "-lc",
+        "if [ -f \"$1\" ]; then printf '1'; else printf '0'; fi",
+        "_",
+        path
+    )
+
+    return result == 1
+end
+
+pub fn is_dir(path: string): bool
+    let result = (int)exec(
+        "bash",
+        "-lc",
+        "if [ -d \"$1\" ]; then printf '1'; else printf '0'; fi",
+        "_",
+        path
+    )
+
+    return result == 1
+end
+
+pub fn read_text(path: string): string
+    return exec("cat", path)
+end
+
+pub fn write_text(path: string, content: string): void
+    exec("bash", "-lc", "printf '%s' \"$2\" > \"$1\"", "_", path, content)
+end
+
+pub fn append_text(path: string, content: string): void
+    exec("bash", "-lc", "printf '%s' \"$2\" >> \"$1\"", "_", path, content)
+end
+
+pub fn mkdir_p(path: string): void
+    exec("mkdir", "-p", path)
+end
+
+pub fn remove(path: string): void
+    exec("rm", "-f", path)
+end
+
+pub fn remove_dir(path: string): void
+    exec("rm", "-rf", path)
+end

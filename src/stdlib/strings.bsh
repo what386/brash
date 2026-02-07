@@ -1,0 +1,72 @@
+// ============================================
+// Brash Standard Library: strings
+// ============================================
+
+pub fn length(value: string): int
+    return (int)exec("bash", "-lc", "printf '%s' \"${#1}\"", "_", value)
+end
+
+pub fn trim(value: string): string
+    return exec(
+        "bash",
+        "-lc",
+        "printf '%s' \"$1\" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//'",
+        "_",
+        value
+    )
+end
+
+pub fn to_upper(value: string): string
+    return exec("bash", "-lc", "printf '%s' \"$1\" | tr '[:lower:]' '[:upper:]'", "_", value)
+end
+
+pub fn to_lower(value: string): string
+    return exec("bash", "-lc", "printf '%s' \"$1\" | tr '[:upper:]' '[:lower:]'", "_", value)
+end
+
+pub fn contains(value: string, needle: string): bool
+    if needle == ""
+        return true
+    end
+
+    let matched = (int)exec(
+        "bash",
+        "-lc",
+        "if printf '%s' \"$1\" | grep -Fq -- \"$2\"; then printf '1'; else printf '0'; fi",
+        "_",
+        value,
+        needle
+    )
+
+    return matched == 1
+end
+
+pub fn starts_with(value: string, prefix: string): bool
+    let matched = (int)exec(
+        "bash",
+        "-lc",
+        "if [ \"${1#\"$2\"}\" != \"$1\" ]; then printf '1'; else printf '0'; fi",
+        "_",
+        value,
+        prefix
+    )
+
+    return matched == 1
+end
+
+pub fn ends_with(value: string, suffix: string): bool
+    let matched = (int)exec(
+        "bash",
+        "-lc",
+        "if [ \"${1%\"$2\"}\" != \"$1\" ]; then printf '1'; else printf '0'; fi",
+        "_",
+        value,
+        suffix
+    )
+
+    return matched == 1
+end
+
+pub fn is_empty(value: string): bool
+    return length(value) == 0
+end

@@ -1,0 +1,27 @@
+// ============================================
+// Brash Standard Library: console
+// ============================================
+
+pub fn write(text: string): void
+    exec("printf", "%s", text)
+end
+
+pub fn write_line(text: string): void
+    exec("printf", "%s\n", text)
+end
+
+pub fn print(text: string): void
+    write_line(text)
+end
+
+pub fn write_error(text: string): void
+    exec("bash", "-lc", "printf '%s\\n' \"$1\" >&2", "_", text)
+end
+
+pub fn print_colored(color_code: string, text: string): void
+    exec("bash", "-lc", "printf '\\033[%sm%s\\033[0m\\n' \"$1\" \"$2\"", "_", color_code, text)
+end
+
+pub fn divider(): void
+    write_line("--------------------")
+end

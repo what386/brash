@@ -1,0 +1,11 @@
+// ============================================
+// Brash Standard Library: std
+// ============================================
+// Keep this module intentionally small.
+// Import specific modules via `std/*` to avoid namespace pollution.
+
+pub const STD_VERSION = "0.1.0"
+
+pub fn std_version(): string
+    return STD_VERSION
+end
