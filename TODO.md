@@ -11,13 +11,10 @@
 - [ ] Semantic: complete type inference and nullability flow analysis across variables, calls, collections, and control-flow branches (high) #semantic #types #feature
       @created 2026-02-06 23:08
 
-- [ ] Semantic: enforce mutability, scope, and self/impl method rules (including record immutability and loop/function context checks) (high) #semantic #scope #feature
+- [ ] Semantic: enforce mutability, scope, and self/impl method rules (including strict variable/parameter mutability and loop/function context checks) (high) #semantic #scope #feature
       @created 2026-02-06 23:08
 
 - [ ] Modules: implement import resolution and multi-file symbol linking for module, named, and default imports (high) #modules #frontend #feature
-      @created 2026-02-06 23:08
-
-- [ ] Codegen: generate Bash for structs/records/enums, method dispatch, and field/member access semantics (high) #codegen #bash #feature
       @created 2026-02-06 23:08
 
 - [ ] Codegen: implement command execution, pipe operator lowering, async/await flow, and error handling constructs (high) #codegen #bash #shell #feature
@@ -55,4 +52,8 @@
 - [x] Parser: fix expression precedence so function calls like f(x) resolve as FunctionCallExpression instead of IdentifierExpression (high) #parser #ast #bug
       @created 2026-02-07 00:53
       @completed 2026-02-07 00:59
+
+- [x] Codegen: generate Bash for structs/enums, method dispatch, and field/member access semantics (high) #codegen #bash #feature
+      @created 2026-02-06 23:08
+      @completed 2026-02-07 02:06
 
