@@ -137,6 +137,39 @@ public class SymbolResolver
 
     private TypeNode ResolveMethodCall(MethodCallExpression method)
     {
+        method.IsStaticDispatch = false;
+        method.StaticTypeName = null;
+
+        if (method.Object is IdentifierExpression typeIdent
+            && symbolTable.LookupVariable(typeIdent.Name) == null
+            && symbolTable.LookupType(typeIdent.Name) != null)
+        {
+            var staticMethod = symbolTable.LookupMethod(typeIdent.Name, method.MethodName);
+            if (staticMethod == null)
+            {
+                diagnostics.AddError(
+                    $"Type '{typeIdent.Name}' has no method '{method.MethodName}'",
+                    method.Line,
+                    method.Column);
+                return new UnknownType();
+            }
+
+            if (!staticMethod.IsStatic)
+            {
+                diagnostics.AddError(
+                    $"Method '{typeIdent.Name}.{method.MethodName}' is an instance method and must be called on a value",
+                    method.Line,
+                    method.Column);
+                return new UnknownType();
+            }
+
+            var staticArgumentTypes = method.Arguments.Select(ResolveExpressionType).ToList();
+            typeChecker.ValidateMethodCall(staticMethod, staticArgumentTypes, method.Line, method.Column);
+            method.IsStaticDispatch = true;
+            method.StaticTypeName = typeIdent.Name;
+            return staticMethod.ReturnType;
+        }
+
         var objectType = ResolveExpressionType(method.Object);
         objectType = nullabilityChecker.RequireNonNullable(
             objectType,
@@ -180,6 +213,15 @@ public class SymbolResolver
             diagnostics.AddError(
                 $"Type '{typeName}' has no method '{method.MethodName}'",
                 method.Line, method.Column);
+            return new UnknownType();
+        }
+
+        if (methodSymbol.IsStatic)
+        {
+            diagnostics.AddError(
+                $"Method '{typeName}.{method.MethodName}' is static and must be called as '{typeName}.{method.MethodName}(...)'",
+                method.Line,
+                method.Column);
             return new UnknownType();
         }
 
@@ -477,6 +519,37 @@ public class SymbolResolver
             return returnType;
         }
 
+        if (call.Object is IdentifierExpression typeIdent
+            && symbolTable.LookupVariable(typeIdent.Name) == null
+            && symbolTable.LookupType(typeIdent.Name) != null)
+        {
+            var staticMethod = symbolTable.LookupMethod(typeIdent.Name, call.MethodName);
+            if (staticMethod == null)
+            {
+                diagnostics.AddError(
+                    $"Type '{typeIdent.Name}' has no method '{call.MethodName}'",
+                    call.Line,
+                    call.Column);
+                return new UnknownType();
+            }
+
+            if (!staticMethod.IsStatic)
+            {
+                diagnostics.AddError(
+                    $"Method '{typeIdent.Name}.{call.MethodName}' is an instance method and cannot be used as a static pipe stage",
+                    call.Line,
+                    call.Column);
+                return new UnknownType();
+            }
+
+            var staticArgumentTypes = new List<TypeNode> { inputType };
+            staticArgumentTypes.AddRange(call.Arguments.Select(ResolveExpressionType));
+            typeChecker.ValidateMethodCall(staticMethod, staticArgumentTypes, call.Line, call.Column);
+
+            pipeChecker.ValidateValuePipeTypeInvariant(inputType, staticMethod.ReturnType, line, column);
+            return staticMethod.ReturnType;
+        }
+
         var objectType = ResolveExpressionType(call.Object);
         objectType = nullabilityChecker.RequireNonNullable(
             objectType,
@@ -495,6 +568,15 @@ public class SymbolResolver
         {
             diagnostics.AddError(
                 $"Type '{typeName}' has no method '{call.MethodName}'",
+                call.Line,
+                call.Column);
+            return new UnknownType();
+        }
+
+        if (method.IsStatic)
+        {
+            diagnostics.AddError(
+                $"Method '{typeName}.{call.MethodName}' is static and cannot be used as an instance pipe stage",
                 call.Line,
                 call.Column);
             return new UnknownType();

@@ -72,6 +72,31 @@ public class BashGeneratorE2ETests
     }
 
     [Fact]
+    public void E2E_StaticImplMethod_CanBeCalledOnType()
+    {
+        const string source =
+            """
+            struct PathTools
+                value: string
+            end
+
+            impl PathTools
+                static fn cwd(): string
+                    return "root"
+                end
+            end
+
+            let dir = PathTools.cwd()
+            exec("printf", "%s\n", dir)
+            """;
+
+        var result = CompileAndRun(source);
+
+        Assert.Equal(0, result.ExitCode);
+        Assert.Equal("root", result.StdOut.Trim());
+    }
+
+    [Fact]
     public void E2E_MemberAssignmentAndNullCoalesce_WorkForStructBinding()
     {
         const string source =

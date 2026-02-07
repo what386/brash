@@ -2,6 +2,18 @@
 // Brash Standard Library: paths
 // ============================================
 
+pub struct Path
+    value: string
+end
+
+pub fn path(value: string): Path
+    return Path { value: value }
+end
+
+pub fn cwd(): Path
+    return Path { value: exec("pwd") }
+end
+
 pub fn join(left: string, right: string): string
     if left == ""
         return right
@@ -39,4 +51,70 @@ pub fn with_extension(path: string, ext: string): string
     end
 
     return join(dir, file_stem + "." + ext)
+end
+
+impl Path
+    fn to_string(): string
+        return self.value
+    end
+
+    fn join(right: string): Path
+        return path(join(self.value, right))
+    end
+
+    fn basename(): string
+        return basename(self.value)
+    end
+
+    fn dirname(): Path
+        return path(dirname(self.value))
+    end
+
+    fn extension(): string
+        return extension(self.value)
+    end
+
+    fn stem(): string
+        return stem(self.value)
+    end
+
+    fn with_extension(ext: string): Path
+        return path(with_extension(self.value, ext))
+    end
+
+    fn exists(): bool
+        let result = (int)exec(
+            "bash",
+            "-lc",
+            "if [ -e \"$1\" ]; then printf '1'; else printf '0'; fi",
+            "_",
+            self.value
+        )
+
+        return result == 1
+    end
+
+    fn is_file(): bool
+        let result = (int)exec(
+            "bash",
+            "-lc",
+            "if [ -f \"$1\" ]; then printf '1'; else printf '0'; fi",
+            "_",
+            self.value
+        )
+
+        return result == 1
+    end
+
+    fn is_dir(): bool
+        let result = (int)exec(
+            "bash",
+            "-lc",
+            "if [ -d \"$1\" ]; then printf '1'; else printf '0'; fi",
+            "_",
+            self.value
+        )
+
+        return result == 1
+    end
 end

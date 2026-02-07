@@ -271,6 +271,14 @@ public partial class BashGenerator
 
     private string GenerateMethodCall(MethodCallExpression call)
     {
+        if (call.IsStaticDispatch && !string.IsNullOrWhiteSpace(call.StaticTypeName))
+        {
+            var staticArgs = string.Join(" ", call.Arguments.Select(GenerateFunctionCallArg));
+            return staticArgs.Length > 0
+                ? $"$({call.StaticTypeName}__{call.MethodName} {staticArgs})"
+                : $"$({call.StaticTypeName}__{call.MethodName})";
+        }
+
         if (call.MethodName == "to_string")
         {
             if (call.Arguments.Count != 0)
@@ -467,6 +475,14 @@ public partial class BashGenerator
 
     private string? GenerateRawMethodCall(MethodCallExpression call)
     {
+        if (call.IsStaticDispatch && !string.IsNullOrWhiteSpace(call.StaticTypeName))
+        {
+            var staticArgs = string.Join(" ", call.Arguments.Select(GenerateFunctionCallArg));
+            return string.IsNullOrWhiteSpace(staticArgs)
+                ? $"{call.StaticTypeName}__{call.MethodName}"
+                : $"{call.StaticTypeName}__{call.MethodName} {staticArgs}";
+        }
+
         var receiverHandle = GenerateObjectHandle(call.Object);
         if (receiverHandle == null)
             return null;

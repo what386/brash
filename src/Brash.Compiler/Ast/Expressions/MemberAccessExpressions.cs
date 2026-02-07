@@ -15,6 +15,8 @@ public class MethodCallExpression : Expression
     public Expression Object { get; set; } = null!;
     public string MethodName { get; set; } = string.Empty;
     public List<Expression> Arguments { get; set; } = new();
+    public bool IsStaticDispatch { get; set; }
+    public string? StaticTypeName { get; set; }
 }
 
 public class MemberAccessExpression : Expression

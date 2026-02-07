@@ -39,6 +39,7 @@ public class MethodSymbol
 {
     public string Name { get; set; } = string.Empty;
     public string TypeName { get; set; } = string.Empty; // The type this method belongs to
+    public bool IsStatic { get; set; }
     public List<TypeNode> ParameterTypes { get; set; } = new();
     public List<string> ParameterNames { get; set; } = new();
     public TypeNode ReturnType { get; set; } = null!;
@@ -243,6 +244,7 @@ public class SymbolTable
         {
             Name = method.Name,
             TypeName = typeName,
+            IsStatic = method.IsStatic,
             ParameterTypes = paramTypes,
             ParameterNames = paramNames,
             ReturnType = method.ReturnType ?? new PrimitiveType { PrimitiveKind = PrimitiveType.Kind.Void },

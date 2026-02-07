@@ -429,6 +429,7 @@ public class AstBuilder : BrashBaseVisitor<AstNode>
             Line = context.Start.Line,
             Column = context.Start.Column,
             IsPublic = context.PUB() != null,
+            IsStatic = context.STATIC() != null,
             Name = context.IDENTIFIER().GetText()
         };
 

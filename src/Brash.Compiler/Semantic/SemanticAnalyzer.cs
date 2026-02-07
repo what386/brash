@@ -445,8 +445,8 @@ public class SemanticAnalyzer
 
         // Set type context for 'self'
         var previousTypeName = currentTypeName;
-        currentTypeName = typeName;
-        symbolResolver.SetCurrentTypeContext(typeName);
+        currentTypeName = method.IsStatic ? null : typeName;
+        symbolResolver.SetCurrentTypeContext(method.IsStatic ? null : typeName);
 
         // Declare parameters
         foreach (var param in method.Parameters)

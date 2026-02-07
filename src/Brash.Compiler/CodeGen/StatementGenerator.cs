@@ -621,8 +621,11 @@ public partial class BashGenerator
         Emit($"{typeName}__{method.Name}() {{");
         indentLevel++;
 
-        EmitLine("local __self=\"$1\"");
-        EmitLine("shift");
+        if (!method.IsStatic)
+        {
+            EmitLine("local __self=\"$1\"");
+            EmitLine("shift");
+        }
 
         for (int i = 0; i < method.Parameters.Count; i++)
         {

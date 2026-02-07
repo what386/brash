@@ -130,6 +130,68 @@ public class ModuleImportTests
     }
 
     [Fact]
+    public void SemanticAnalyzer_RejectsCallingInstanceMethodAsStatic()
+    {
+        var diagnostics = Analyze(
+            """
+            struct PathTools
+                value: string
+            end
+
+            impl PathTools
+                fn basename(): string
+                    return self.value
+                end
+            end
+
+            let name = PathTools.basename()
+            """);
+
+        Assert.Contains(diagnostics.GetErrors(), d => d.Message.Contains("instance method"));
+    }
+
+    [Fact]
+    public void SemanticAnalyzer_RejectsCallingStaticMethodOnInstance()
+    {
+        var diagnostics = Analyze(
+            """
+            struct PathTools
+                value: string
+            end
+
+            impl PathTools
+                static fn cwd(): string
+                    return "root"
+                end
+            end
+
+            let p = PathTools { value: "x" }
+            let out = p.cwd()
+            """);
+
+        Assert.Contains(diagnostics.GetErrors(), d => d.Message.Contains("is static and must be called"));
+    }
+
+    [Fact]
+    public void SemanticAnalyzer_RejectsSelfInStaticMethod()
+    {
+        var diagnostics = Analyze(
+            """
+            struct PathTools
+                value: string
+            end
+
+            impl PathTools
+                static fn bad(): string
+                    return self.value
+                end
+            end
+            """);
+
+        Assert.Contains(diagnostics.GetErrors(), d => d.Message.Contains("Cannot use 'self' outside of an impl method"));
+    }
+
+    [Fact]
     public void ModuleLoader_ResolvesStdNamespaceModule()
     {
         using var fixture = new ModuleFixture();

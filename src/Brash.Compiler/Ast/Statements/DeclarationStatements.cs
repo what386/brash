@@ -59,6 +59,7 @@ public class ImplBlock : Statement
 public class MethodDeclaration : AstNode
 {
     public bool IsPublic { get; set; }
+    public bool IsStatic { get; set; }
     public string Name { get; set; } = string.Empty;
     public List<Parameter> Parameters { get; set; } = new();
     public TypeNode? ReturnType { get; set; }

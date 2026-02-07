@@ -117,7 +117,7 @@ implBlock
     ;
 
 methodDeclaration
-    : 'pub'? 'fn' IDENTIFIER '(' parameterList? ')' (':' returnType)? functionBody
+    : 'pub'? 'static'? 'fn' IDENTIFIER '(' parameterList? ')' (':' returnType)? functionBody
     ;
 
 // Control Flow
@@ -329,6 +329,7 @@ THROW       : 'throw';
 IMPORT      : 'import';
 FROM        : 'from';
 PUB         : 'pub';
+STATIC      : 'static';
 END         : 'end';
 SELF        : 'self';
 NULL        : 'null';
