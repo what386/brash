@@ -177,6 +177,8 @@ build_platform() {
         publish_args+=(
             -p:PublishTrimmed=True
             -p:TrimMode=CopyUsed
+            -p:EnableTrimAnalyzer=True
+            -warnaserror:IL2*
         )
     fi
 

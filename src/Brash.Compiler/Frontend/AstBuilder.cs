@@ -622,12 +622,20 @@ public class AstBuilder : BrashBaseVisitor<AstNode>
 
     public override AstNode VisitMultiplicativeExpr(BrashParser.MultiplicativeExprContext context)
     {
-        return BuildBinaryExpression(context);
+        return BuildBinaryExpression(
+            context,
+            context.expression(0),
+            context.GetChild(1).GetText(),
+            context.expression(1));
     }
 
     public override AstNode VisitAdditiveExpr(BrashParser.AdditiveExprContext context)
     {
-        return BuildBinaryExpression(context);
+        return BuildBinaryExpression(
+            context,
+            context.expression(0),
+            context.GetChild(1).GetText(),
+            context.expression(1));
     }
 
     public override AstNode VisitRangeExpr(BrashParser.RangeExprContext context)
@@ -643,12 +651,20 @@ public class AstBuilder : BrashBaseVisitor<AstNode>
 
     public override AstNode VisitComparisonExpr(BrashParser.ComparisonExprContext context)
     {
-        return BuildBinaryExpression(context);
+        return BuildBinaryExpression(
+            context,
+            context.expression(0),
+            context.GetChild(1).GetText(),
+            context.expression(1));
     }
 
     public override AstNode VisitLogicalExpr(BrashParser.LogicalExprContext context)
     {
-        return BuildBinaryExpression(context);
+        return BuildBinaryExpression(
+            context,
+            context.expression(0),
+            context.GetChild(1).GetText(),
+            context.expression(1));
     }
 
     public override AstNode VisitNullCoalesceExpr(BrashParser.NullCoalesceExprContext context)
@@ -675,27 +691,27 @@ public class AstBuilder : BrashBaseVisitor<AstNode>
 
     public override AstNode VisitCommandExpr(BrashParser.CommandExprContext context)
     {
-        return BuildCommandExpression(context, CommandKind.Cmd, isAsync: false);
+        return BuildCommandExpression(context.Start, context.argumentList(), CommandKind.Cmd, isAsync: false);
     }
 
     public override AstNode VisitExecExpr(BrashParser.ExecExprContext context)
     {
-        return BuildCommandExpression(context, CommandKind.Exec, isAsync: false);
+        return BuildCommandExpression(context.Start, context.argumentList(), CommandKind.Exec, isAsync: false);
     }
 
     public override AstNode VisitAsyncExecExpr(BrashParser.AsyncExecExprContext context)
     {
-        return BuildCommandExpression(context, CommandKind.Exec, isAsync: true);
+        return BuildCommandExpression(context.Start, context.argumentList(), CommandKind.Exec, isAsync: true);
     }
 
     public override AstNode VisitAsyncSpawnExpr(BrashParser.AsyncSpawnExprContext context)
     {
-        return BuildCommandExpression(context, CommandKind.Spawn, isAsync: true);
+        return BuildCommandExpression(context.Start, context.argumentList(), CommandKind.Spawn, isAsync: true);
     }
 
     public override AstNode VisitSpawnExpr(BrashParser.SpawnExprContext context)
     {
-        return BuildCommandExpression(context, CommandKind.Spawn, isAsync: false);
+        return BuildCommandExpression(context.Start, context.argumentList(), CommandKind.Spawn, isAsync: false);
     }
 
     public override AstNode VisitTupleExpression(BrashParser.TupleExpressionContext context)
@@ -955,34 +971,47 @@ public class AstBuilder : BrashBaseVisitor<AstNode>
         return new UnknownType();
     }
 
-    private AstNode BuildBinaryExpression(ParserRuleContext context)
+    private AstNode BuildBinaryExpression(
+        ParserRuleContext context,
+        BrashParser.ExpressionContext leftContext,
+        string op,
+        BrashParser.ExpressionContext rightContext)
     {
         return new BinaryExpression
         {
             Line = context.Start.Line,
             Column = context.Start.Column,
-            Left = Visit(((dynamic)context).expression(0)) as Expression ?? new NullLiteral(),
-            Operator = context.GetChild(1).GetText(),
-            Right = Visit(((dynamic)context).expression(1)) as Expression ?? new NullLiteral()
+            Left = Visit(leftContext) as Expression ?? new NullLiteral(),
+            Operator = op,
+            Right = Visit(rightContext) as Expression ?? new NullLiteral()
         };
     }
 
-    private CommandExpression BuildCommandExpression(ParserRuleContext context, CommandKind kind, bool isAsync)
+    private CommandExpression BuildCommandExpression(
+        IToken start,
+        BrashParser.ArgumentListContext? argumentList,
+        CommandKind kind,
+        bool isAsync)
     {
         var cmd = new CommandExpression
         {
-            Line = context.Start.Line,
-            Column = context.Start.Column,
+            Line = start.Line,
+            Column = start.Column,
             Kind = kind,
             IsAsync = isAsync
         };
 
-        var argumentList = ((dynamic)context).argumentList();
+        if (argumentList == null)
+        {
+            return cmd;
+        }
+
         foreach (var arg in argumentList.expression())
         {
-            var expr = Visit(arg) as Expression;
-            if (expr != null)
+            if (Visit(arg) is Expression expr)
+            {
                 cmd.Arguments.Add(expr);
+            }
         }
 
         return cmd;
