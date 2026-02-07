@@ -2,6 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
+    <AssemblyName>brash</AssemblyName>
     <TargetFramework>net9.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
@@ -11,11 +12,6 @@
 
   <ItemGroup>
     <PackageReference Include="System.CommandLine" Version="2.0.2" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="../Brash.Compiler/Brash.Compiler.csproj" />
-    <ProjectReference Include="../Brash.Formatter/Brash.Formatter.csproj" />
   </ItemGroup>
 
 </Project>

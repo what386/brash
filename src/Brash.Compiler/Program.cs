@@ -52,7 +52,7 @@ public static class Program
             AstPrinter.Print(program);
         }
 
-        if (options.EmitBashPath != null)
+        if (options.CheckOnly || options.EmitBashPath != null)
         {
             var semanticDiagnostics = new DiagnosticBag();
             var analyzer = new SemanticAnalyzer(semanticDiagnostics);
@@ -63,7 +63,10 @@ public static class Program
                 semanticDiagnostics.PrintToConsole();
                 return 1;
             }
+        }
 
+        if (options.EmitBashPath != null)
+        {
             var generator = new BashGenerator();
             var bash = generator.Generate(program);
 
@@ -93,12 +96,13 @@ public static class Program
     private static void PrintUsage()
     {
         Console.Error.WriteLine("Usage:");
-        Console.Error.WriteLine("  brash-compiler <input-file.bsh> [--ast] [--emit-bash <output.sh>]");
+        Console.Error.WriteLine("  brashc <input-file.bsh> [--ast] [--check] [--emit-bash <output.sh>]");
         Console.Error.WriteLine();
         Console.Error.WriteLine("Examples:");
-        Console.Error.WriteLine("  brash-compiler examples/01_the-basics.bsh --ast");
-        Console.Error.WriteLine("  brash-compiler examples/01_the-basics.bsh --emit-bash out.sh");
-        Console.Error.WriteLine("  brash-compiler examples/01_the-basics.bsh --ast --emit-bash out.sh");
+        Console.Error.WriteLine("  brashc examples/01_the-basics.bsh --ast");
+        Console.Error.WriteLine("  brashc examples/01_the-basics.bsh --check");
+        Console.Error.WriteLine("  brashc examples/01_the-basics.bsh --emit-bash out.sh");
+        Console.Error.WriteLine("  brashc examples/01_the-basics.bsh --ast --emit-bash out.sh");
     }
 
     private static Options ParseOptions(string[] args)
@@ -119,6 +123,9 @@ public static class Program
                         return Options.Invalid("Missing output path after --emit-bash.");
                     options.EmitBashPath = args[++i];
                     break;
+                case "--check":
+                    options.CheckOnly = true;
+                    break;
 
                 default:
                     if (arg.StartsWith("--", StringComparison.Ordinal))
@@ -133,7 +140,7 @@ public static class Program
         if (options.InputPath == null)
             return Options.Invalid("Missing input .bsh file path.");
 
-        if (!options.PrintAst && options.EmitBashPath == null)
+        if (!options.PrintAst && !options.CheckOnly && options.EmitBashPath == null)
             options.PrintAst = true; // default mode stays parser/AST inspection
 
         return options;
@@ -144,6 +151,7 @@ internal sealed class Options
 {
     public string? InputPath { get; set; }
     public bool PrintAst { get; set; }
+    public bool CheckOnly { get; set; }
     public string? EmitBashPath { get; set; }
     public bool IsValid { get; private set; } = true;
     public string ErrorMessage { get; private set; } = string.Empty;

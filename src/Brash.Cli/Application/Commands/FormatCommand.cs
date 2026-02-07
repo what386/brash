@@ -1,7 +1,7 @@
 namespace Brash.Cli.Application.Commands;
 
 using System.CommandLine;
-using Brash.Formatter;
+using Brash.Cli.Application;
 
 static class FormatCommand
 {
@@ -22,83 +22,18 @@ static class FormatCommand
         var command = new Command("format", "Format Brash source files")
         {
             fileArgument,
-            checkOption
+            checkOption,
+            SharedOptions.Verbose
         };
 
         command.SetAction(parseResult =>
         {
             var paths = parseResult.GetValue(fileArgument) ?? Array.Empty<string>();
             var check = parseResult.GetValue(checkOption);
-            var files = ResolveFiles(paths);
-
-            if (files.Count == 0)
-            {
-                Console.Error.WriteLine("No .bsh files found to format.");
-                return 1;
-            }
-
-            int changed = 0;
-            foreach (var file in files)
-            {
-                var original = File.ReadAllText(file);
-                var formatted = BrashFormatter.Format(original);
-
-                if (original == formatted)
-                    continue;
-
-                changed++;
-                if (check)
-                {
-                    Console.WriteLine(file);
-                }
-                else
-                {
-                    File.WriteAllText(file, formatted);
-                    Console.WriteLine($"Formatted {file}");
-                }
-            }
-
-            if (check)
-            {
-                if (changed > 0)
-                {
-                    Console.Error.WriteLine($"{changed} file(s) need formatting.");
-                    return 1;
-                }
-
-                Console.WriteLine("All files are formatted.");
-                return 0;
-            }
-
-            Console.WriteLine(changed == 0
-                ? "No formatting changes required."
-                : $"Formatted {changed} file(s).");
-            return 0;
+            var verbose = parseResult.GetValue(SharedOptions.Verbose);
+            return CompilePipeline.Format(paths, check, verbose);
         });
 
         return command;
-    }
-
-    private static List<string> ResolveFiles(IEnumerable<string> paths)
-    {
-        var files = new HashSet<string>(StringComparer.Ordinal);
-
-        foreach (var path in paths)
-        {
-            if (File.Exists(path))
-            {
-                if (path.EndsWith(".bsh", StringComparison.OrdinalIgnoreCase))
-                    files.Add(Path.GetFullPath(path));
-                continue;
-            }
-
-            if (Directory.Exists(path))
-            {
-                foreach (var file in Directory.EnumerateFiles(path, "*.bsh", SearchOption.AllDirectories))
-                    files.Add(Path.GetFullPath(file));
-            }
-        }
-
-        return files.OrderBy(x => x, StringComparer.Ordinal).ToList();
     }
 }
