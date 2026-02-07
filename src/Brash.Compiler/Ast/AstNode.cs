@@ -72,6 +72,7 @@ public abstract class Expression : AstNode { }
 
 public class Parameter : AstNode
 {
+    public bool IsMutable { get; set; }
     public string Name { get; set; } = string.Empty;
     public TypeNode Type { get; set; } = null!;
     public Expression? DefaultValue { get; set; }
