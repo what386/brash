@@ -25,6 +25,10 @@ fn increment(mut count: int): int
     return count
 end
 
+fn print(text: string)
+    exec("echo", text)
+end
+
 // Tuple returns + tuple destructuring with per-element mutability
 fn pair(): (string, string)
     return ("left", "right")
