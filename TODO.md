@@ -41,9 +41,6 @@
 - [ ] Docs: align language spec with implemented behavior and mark unsupported example features explicitly #docs #spec #project
       @created 2026-02-06 23:09
 
-- [ ] Parser: fix expression precedence so function calls like f(x) resolve as FunctionCallExpression instead of IdentifierExpression (high) #parser #ast #bug
-      @created 2026-02-07 00:53
-
 
 ## Completed
 
@@ -54,4 +51,8 @@
 - [x] Language: switch mut to modifier syntax ( + mutable parameters) and enforce parameter mutability with a dedicated MutabilityChecker (high) #language #semantic #parser #feature
       @created 2026-02-06 23:23
       @completed 2026-02-06 23:27
+
+- [x] Parser: fix expression precedence so function calls like f(x) resolve as FunctionCallExpression instead of IdentifierExpression (high) #parser #ast #bug
+      @created 2026-02-07 00:53
+      @completed 2026-02-07 00:59
 

@@ -23,5 +23,19 @@
       "completed_at": "2026-02-06T23:27:11.406574160Z"
     },
     "version": null
+  },
+  {
+    "change": {
+      "description": "Parser: fix expression precedence so function calls like f(x) resolve as FunctionCallExpression instead of IdentifierExpression",
+      "priority": "High",
+      "tags": [
+        "parser",
+        "ast",
+        "bug"
+      ],
+      "commit": null,
+      "completed_at": "2026-02-07T00:59:38.539052711Z"
+    },
+    "version": null
   }
 ]
