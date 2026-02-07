@@ -21,5 +21,6 @@
 
   <ItemGroup>
     <ProjectReference Include="../../src/Brash.Compiler/Brash.Compiler.csproj" />
+    <ProjectReference Include="../../src/Brash.Formatter/Brash.Formatter.csproj" />
   </ItemGroup>
 </Project>
