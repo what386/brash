@@ -44,7 +44,7 @@ statement
 
 // Variable Declarations
 variableDeclaration
-    : ('let' | 'mut' | 'const') IDENTIFIER (':' type)? '=' expression
+    : ('let' 'mut'? | 'const') IDENTIFIER (':' type)? '=' expression
     ;
 
 assignment
@@ -61,7 +61,7 @@ parameterList
     ;
 
 parameter
-    : IDENTIFIER ':' type ('=' expression)?
+    : 'mut'? IDENTIFIER ':' type ('=' expression)?
     ;
 
 returnType
