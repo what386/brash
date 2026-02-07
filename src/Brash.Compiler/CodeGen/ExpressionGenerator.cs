@@ -23,7 +23,7 @@ public partial class BashGenerator
             SafeNavigationExpression safeNav => GenerateSafeNavigation(safeNav),
             IndexAccessExpression index => GenerateIndexAccess(index),
             ArrayLiteral array => GenerateArrayLiteral(array),
-            MapLiteral => HandleUnsupportedExpression(expr, "map literal"),
+            MapLiteral map => GenerateMapLiteral(map),
             TupleExpression tuple => GenerateTupleExpression(tuple),
             PipeExpression pipe => GeneratePipeExpression(pipe),
             NullCoalesceExpression nullCoalesce => GenerateNullCoalesce(nullCoalesce),
@@ -336,6 +336,21 @@ public partial class BashGenerator
         return $"({elements})";
     }
 
+    private string GenerateMapLiteral(MapLiteral map)
+    {
+        if (map.Entries.Count == 0)
+            return "$(brash_map_literal)";
+
+        var args = new List<string>(map.Entries.Count * 2);
+        foreach (var (key, value) in map.Entries)
+        {
+            args.Add(GenerateMapArgument(key));
+            args.Add(GenerateMapArgument(value));
+        }
+
+        return $"$(brash_map_literal {string.Join(" ", args)})";
+    }
+
     private string GenerateNullCoalesce(NullCoalesceExpression expr)
     {
         var right = GenerateExpression(expr.Right);
@@ -397,8 +412,8 @@ public partial class BashGenerator
     {
         if (index.Array is IdentifierExpression ident)
         {
-            var idx = GenerateExpression(index.Index);
-            return $"${{{ident.Name}[{idx}]}}";
+            var key = GenerateMapArgument(index.Index);
+            return $"$(brash_index_get \"{ident.Name}\" {key})";
         }
 
         return HandleUnsupportedExpression(index, "index access receiver");
@@ -553,6 +568,14 @@ public partial class BashGenerator
 
         return (rendered[0] == '"' && rendered[^1] == '"')
                || (rendered[0] == '\'' && rendered[^1] == '\'');
+    }
+
+    private string GenerateMapArgument(Expression expression)
+    {
+        var rendered = GenerateExpression(expression);
+        if (IsAlreadyQuoted(rendered))
+            return rendered;
+        return $"\"{rendered}\"";
     }
 
     private string GenerateExecValue(CommandExpression expr)

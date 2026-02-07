@@ -124,21 +124,20 @@ public class PipeOperatorTests
     }
 
     [Fact]
-    public void SemanticAnalyzer_FailsFast_OnMapLiteral()
+    public void SemanticAnalyzer_AllowsMapLiteral()
     {
         var diagnostics = Analyze(
             """
             try
                 throw "boom"
             catch err
-                print(err)
+                let handled = err
             end
 
             let m = {"k": 1}
             """);
 
-        var errors = diagnostics.GetErrors().ToList();
-        Assert.Contains(errors, d => d.Message.Contains("Feature 'map literal code generation' is not supported"));
+        Assert.False(diagnostics.HasErrors, string.Join(Environment.NewLine, diagnostics.GetErrors()));
     }
 
     [Fact]

@@ -102,6 +102,12 @@ public partial class BashGenerator
             return;
         }
 
+        if (varDecl.Value is MapLiteral mapLiteral)
+        {
+            GenerateMapBinding(varDecl.Name, mapLiteral, varDecl.Kind);
+            return;
+        }
+
         var value = GenerateExpression(varDecl.Value);
 
         if (varDecl.Kind == VariableDeclaration.VarKind.Const)
@@ -133,6 +139,15 @@ public partial class BashGenerator
         if (assignment.Target is MemberAccessExpression memberTarget)
         {
             GenerateMemberAssignment(memberTarget, assignment.Value);
+            return;
+        }
+
+        if (assignment.Target is IndexAccessExpression indexTarget &&
+            indexTarget.Array is IdentifierExpression identifierTarget)
+        {
+            var key = GenerateMapArgument(indexTarget.Index);
+            var assignedValue = GenerateMapArgument(assignment.Value);
+            Emit($"brash_index_set \"{identifierTarget.Name}\" {key} {assignedValue}");
             return;
         }
 
@@ -462,6 +477,29 @@ public partial class BashGenerator
         }
 
         Emit($"{fieldPath}={GenerateExpression(value)}");
+    }
+
+    private void GenerateMapBinding(string variableName, MapLiteral literal, VariableDeclaration.VarKind kind)
+    {
+        if (kind == VariableDeclaration.VarKind.Const)
+        {
+            EmitComment($"Const map binding '{variableName}' is treated as mutable entries for now.");
+            ReportUnsupported("const map immutability in codegen");
+            EmitLine();
+        }
+
+        var args = new List<string>(literal.Entries.Count * 2);
+        foreach (var (key, value) in literal.Entries)
+        {
+            args.Add(GenerateMapArgument(key));
+            args.Add(GenerateMapArgument(value));
+        }
+
+        var constructor = args.Count == 0
+            ? "$(brash_map_literal)"
+            : $"$(brash_map_literal {string.Join(" ", args)})";
+
+        Emit($"{variableName}={constructor}");
     }
 
     private void GenerateExpressionStatement(Expression expression)

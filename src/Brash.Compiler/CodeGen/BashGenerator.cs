@@ -95,6 +95,72 @@ public partial class BashGenerator
         EmitLine("}");
         EmitLine();
 
+        EmitLine("brash_map_new() {");
+        EmitLine("    mktemp");
+        EmitLine("}");
+        EmitLine();
+
+        EmitLine("brash_map_set() {");
+        EmitLine("    local __map=\"$1\"");
+        EmitLine("    local __key=\"$2\"");
+        EmitLine("    local __value=\"$3\"");
+        EmitLine("    local __tmp");
+        EmitLine("    __tmp=$(mktemp)");
+        EmitLine("    if [[ -f \"${__map}\" ]]; then");
+        EmitLine("        awk -v k=\"${__key}\" -F '\\t' '$1 != k' \"${__map}\" > \"${__tmp}\" || true");
+        EmitLine("    fi");
+        EmitLine("    printf '%s\\t%s\\n' \"${__key}\" \"${__value}\" >> \"${__tmp}\"");
+        EmitLine("    mv \"${__tmp}\" \"${__map}\"");
+        EmitLine("}");
+        EmitLine();
+
+        EmitLine("brash_map_get() {");
+        EmitLine("    local __map=\"$1\"");
+        EmitLine("    local __key=\"$2\"");
+        EmitLine("    if [[ ! -f \"${__map}\" ]]; then");
+        EmitLine("        return 0");
+        EmitLine("    fi");
+        EmitLine("    awk -v k=\"${__key}\" -F '\\t' '$1 == k { v = $2 } END { printf \"%s\", v }' \"${__map}\"");
+        EmitLine("}");
+        EmitLine();
+
+        EmitLine("brash_map_literal() {");
+        EmitLine("    local __map");
+        EmitLine("    __map=$(brash_map_new)");
+        EmitLine("    : > \"${__map}\"");
+        EmitLine("    while [[ $# -ge 2 ]]; do");
+        EmitLine("        brash_map_set \"${__map}\" \"$1\" \"$2\"");
+        EmitLine("        shift 2");
+        EmitLine("    done");
+        EmitLine("    printf '%s' \"${__map}\"");
+        EmitLine("}");
+        EmitLine();
+
+        EmitLine("brash_index_get() {");
+        EmitLine("    local __name=\"$1\"");
+        EmitLine("    local __key=\"$2\"");
+        EmitLine("    local __value=\"${!__name-}\"");
+        EmitLine("    if [[ -f \"${__value}\" ]]; then");
+        EmitLine("        brash_map_get \"${__value}\" \"${__key}\"");
+        EmitLine("        return");
+        EmitLine("    fi");
+        EmitLine("    eval \"printf '%s' \\\"\\${${__name}[\\\"\\$__key\\\"]-}\\\"\"");
+        EmitLine("}");
+        EmitLine();
+
+        EmitLine("brash_index_set() {");
+        EmitLine("    local __name=\"$1\"");
+        EmitLine("    local __key=\"$2\"");
+        EmitLine("    local __item=\"$3\"");
+        EmitLine("    local __value=\"${!__name-}\"");
+        EmitLine("    if [[ -f \"${__value}\" ]]; then");
+        EmitLine("        brash_map_set \"${__value}\" \"${__key}\" \"${__item}\"");
+        EmitLine("        return");
+        EmitLine("    fi");
+        EmitLine("    eval \"${__name}[\\\"\\$__key\\\"]=\\\"\\$__item\\\"\"");
+        EmitLine("}");
+        EmitLine();
+
         EmitLine("brash_pipe_cmd() {");
         EmitLine("    local __left=\"$1\"");
         EmitLine("    local __right=\"$2\"");

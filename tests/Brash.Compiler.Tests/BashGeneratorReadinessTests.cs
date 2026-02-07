@@ -167,6 +167,96 @@ public class BashGeneratorReadinessTests
     }
 
     [Fact]
+    public void BashGenerator_EmitsMapLiteralAndIndexAccess()
+    {
+        var program = new ProgramNode
+        {
+            Statements =
+            {
+                new VariableDeclaration
+                {
+                    Kind = VariableDeclaration.VarKind.Let,
+                    Name = "m",
+                    Value = new MapLiteral
+                    {
+                        Entries =
+                        {
+                            (
+                                new LiteralExpression
+                                {
+                                    Value = "port",
+                                    Type = new PrimitiveType { PrimitiveKind = PrimitiveType.Kind.String }
+                                },
+                                new LiteralExpression
+                                {
+                                    Value = 8080,
+                                    Type = new PrimitiveType { PrimitiveKind = PrimitiveType.Kind.Int }
+                                }
+                            )
+                        }
+                    }
+                },
+                new VariableDeclaration
+                {
+                    Kind = VariableDeclaration.VarKind.Let,
+                    Name = "port",
+                    Value = new IndexAccessExpression
+                    {
+                        Array = new IdentifierExpression { Name = "m" },
+                        Index = new LiteralExpression
+                        {
+                            Value = "port",
+                            Type = new PrimitiveType { PrimitiveKind = PrimitiveType.Kind.String }
+                        }
+                    }
+                }
+            }
+        };
+
+        var bash = new BashGenerator().Generate(program);
+        Assert.Contains("m=$(brash_map_literal \"port\"", bash);
+        Assert.Contains("port=$(brash_index_get \"m\" \"port\")", bash);
+    }
+
+    [Fact]
+    public void BashGenerator_EmitsMapIndexAssignment()
+    {
+        var program = new ProgramNode
+        {
+            Statements =
+            {
+                new VariableDeclaration
+                {
+                    Kind = VariableDeclaration.VarKind.Let,
+                    Name = "m",
+                    Value = new MapLiteral()
+                },
+                new Assignment
+                {
+                    Target = new IndexAccessExpression
+                    {
+                        Array = new IdentifierExpression { Name = "m" },
+                        Index = new LiteralExpression
+                        {
+                            Value = "name",
+                            Type = new PrimitiveType { PrimitiveKind = PrimitiveType.Kind.String }
+                        }
+                    },
+                    Value = new LiteralExpression
+                    {
+                        Value = "brash",
+                        Type = new PrimitiveType { PrimitiveKind = PrimitiveType.Kind.String }
+                    }
+                }
+            }
+        };
+
+        var bash = new BashGenerator().Generate(program);
+        Assert.Contains("m=$(brash_map_literal)", bash);
+        Assert.Contains("brash_index_set \"m\" \"name\" \"brash\"", bash);
+    }
+
+    [Fact]
     public void BashGenerator_EmitsNestedMemberAccessPath()
     {
         var program = new ProgramNode

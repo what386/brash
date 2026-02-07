@@ -107,7 +107,6 @@ public class TranspileReadinessChecker
                 break;
 
             case MapLiteral mapLiteral:
-                ReportUnsupported("map literal code generation", mapLiteral.Line, mapLiteral.Column);
                 foreach (var (key, value) in mapLiteral.Entries)
                 {
                     ValidateExpression(key);

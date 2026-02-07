@@ -191,6 +191,23 @@ public class BashGeneratorE2ETests
     }
 
     [Fact]
+    public void E2E_MapLiteral_IndexReadAndWrite_Work()
+    {
+        const string source =
+            """
+            let mut m: map<string, string> = {"name": "brash"}
+            m["name"] = "Brash"
+            let name = m["name"]
+            exec("printf", "%s\n", name)
+            """;
+
+        var result = CompileAndRun(source);
+
+        Assert.Equal(0, result.ExitCode);
+        Assert.Equal("Brash", result.StdOut.Trim());
+    }
+
+    [Fact]
     public void E2E_TryCatchThrow_HandlesErrorAndContinues()
     {
         const string source =
