@@ -53,6 +53,7 @@
 (struct_declaration name: (identifier) @type)
 (enum_declaration name: (identifier) @type)
 (enum_variant name: (identifier) @constant)
+(cast_expression type: (type) @type)
 (break_statement) @keyword
 (continue_statement) @keyword
 

@@ -219,6 +219,7 @@ module.exports = grammar({
     expression: ($) =>
       choice(
         $.await_expression,
+        $.cast_expression,
         $.pipe_expression,
         $.null_coalesce_expression,
         $.logical_expression,
@@ -240,6 +241,9 @@ module.exports = grammar({
       ),
 
     await_expression: ($) => prec.right(seq("await", $.expression)),
+
+    cast_expression: ($) =>
+      prec.right(PREC.UNARY, seq("(", field("type", $.type), ")", field("value", $.expression))),
 
     pipe_expression: ($) =>
       prec.left(PREC.PIPE, seq(field("left", $.expression), "|", field("right", $.expression))),
