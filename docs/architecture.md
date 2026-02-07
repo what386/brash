@@ -25,6 +25,9 @@
 - `cmd(...)` builds command values.
 - `exec(...)` materializes stdout.
 - `spawn(...)` creates process handles.
+- `async exec(...)` is fire-and-forget background execution.
+- `async spawn(...)` creates async process handles.
+- `await process` waits and materializes captured stdout.
 - Command pipelines are lazy values until materialized with `exec(...)`.
 
 ### Runtime helpers emitted in Bash
@@ -37,5 +40,5 @@
 
 ### Failure policy
 
-- Unsupported language/runtime features should fail in semantic analysis with clear errors (for example `import`, async/await flow, and unsupported literal/value forms).
+- Unsupported language/runtime features should fail in semantic analysis with clear errors (for example `import` and unsupported literal/value forms).
 - CLI also treats remaining codegen unsupported warnings as fatal when emitting Bash.

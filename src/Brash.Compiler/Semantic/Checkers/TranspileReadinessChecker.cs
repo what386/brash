@@ -102,12 +102,10 @@ public class TranspileReadinessChecker
         switch (expression)
         {
             case AwaitExpression awaitExpr:
-                ReportUnsupported("await", awaitExpr.Line, awaitExpr.Column);
                 ValidateExpression(awaitExpr.Expression);
                 break;
 
             case CommandExpression cmd when cmd.IsAsync:
-                ReportUnsupported($"async {cmd.Kind.ToString().ToLowerInvariant()}(...)", cmd.Line, cmd.Column);
                 foreach (var arg in cmd.Arguments)
                     ValidateExpression(arg);
                 break;

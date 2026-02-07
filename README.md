@@ -92,6 +92,9 @@ Notes:
   - `cmd(...)` -> lazy `Command`
   - `exec(...)` -> blocking execution, returns stdout string
   - `spawn(...)` -> process handle value
+  - `async exec(...)` -> fire-and-forget background execution (no awaitable output)
+  - `async spawn(...)` -> background process handle (awaitable)
+  - `await process` -> waits for `Process` and returns captured stdout
   - pipelines via `|` for command and value flow
 
 Example:
@@ -117,7 +120,7 @@ Recommended order in `examples/`:
 9. `08_pipe-operator.bsh`
 10. `09_error-handling.bsh`
 11. `10_import-system.bsh` (syntax-focused; codegen still in progress)
-12. `11_async-await.bsh` (currently rejected by semantic checks)
+12. `11_async-await.bsh`
 13. `12_preprocessor-directives.bsh`
 
 ## Explicitly unsupported (fail-fast)
@@ -125,9 +128,6 @@ Recommended order in `examples/`:
 These are currently rejected during semantic/transpile-readiness checks:
 
 - `import` module system codegen
-- `await`
-- `async fn`
-- `async exec(...)` / `async spawn(...)`
 - map literal codegen
 - range value codegen (ranges are currently supported for `for ... in start..end`)
 

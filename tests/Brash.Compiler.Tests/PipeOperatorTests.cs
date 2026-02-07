@@ -88,16 +88,39 @@ public class PipeOperatorTests
     }
 
     [Fact]
-    public void SemanticAnalyzer_RejectsAsyncAndAwaitForNow()
+    public void SemanticAnalyzer_RejectsAwaitOnAsyncExecResult()
     {
         var diagnostics = Analyze(
             """
-            let proc = async exec("sleep", "0")
+            let proc = async exec("printf", "ok")
             let result = await proc
             """);
 
-        Assert.Contains(diagnostics.GetErrors(), d => d.Message.Contains("async exec(...) is not supported"));
-        Assert.Contains(diagnostics.GetErrors(), d => d.Message.Contains("await is not supported"));
+        Assert.Contains(diagnostics.GetErrors(), d => d.Message.Contains("await expects a Process handle"));
+    }
+
+    [Fact]
+    public void SemanticAnalyzer_RejectsAwaitOnNonProcess()
+    {
+        var diagnostics = Analyze(
+            """
+            let x = 1
+            let result = await x
+            """);
+
+        Assert.Contains(diagnostics.GetErrors(), d => d.Message.Contains("await expects a Process handle"));
+    }
+
+    [Fact]
+    public void SemanticAnalyzer_AllowsAsyncSpawnAndAwait()
+    {
+        var diagnostics = Analyze(
+            """
+            let proc = async spawn("printf", "ok")
+            let result = await proc
+            """);
+
+        Assert.False(diagnostics.HasErrors, string.Join(Environment.NewLine, diagnostics.GetErrors()));
     }
 
     [Fact]

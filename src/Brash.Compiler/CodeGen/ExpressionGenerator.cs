@@ -186,7 +186,14 @@ public partial class BashGenerator
     private string GenerateCommandExpression(CommandExpression expr)
     {
         if (expr.IsAsync)
-            return HandleUnsupportedExpression(expr, $"async {expr.Kind.ToString().ToLowerInvariant()}(...)");
+        {
+            return expr.Kind switch
+            {
+                CommandKind.Exec => GenerateAsyncExecValue(expr),
+                CommandKind.Spawn => GenerateAsyncSpawnValue(expr),
+                _ => HandleUnsupportedExpression(expr, $"async {expr.Kind.ToString().ToLowerInvariant()}(...)")
+            };
+        }
 
         return expr.Kind switch
         {
@@ -199,8 +206,7 @@ public partial class BashGenerator
 
     private string GenerateAwaitExpression(AwaitExpression expr)
     {
-        // Await lowering is currently a passthrough.
-        return GenerateExpression(expr.Expression);
+        return $"$(brash_await \"{GenerateExpression(expr.Expression)}\")";
     }
 
     private string GenerateTupleExpression(TupleExpression tuple)
@@ -382,6 +388,42 @@ public partial class BashGenerator
             Arguments = expr.Arguments
         });
         return $"$(brash_spawn_cmd \"{cmd}\")";
+    }
+
+    private string GenerateAsyncExecValue(CommandExpression expr)
+    {
+        if (expr.Arguments.Count == 1)
+        {
+            var cmdValue = GenerateExpression(expr.Arguments[0]);
+            return $"$(brash_async_exec_cmd \"{cmdValue}\")";
+        }
+
+        var cmd = GenerateCmdValue(new CommandExpression
+        {
+            Line = expr.Line,
+            Column = expr.Column,
+            Kind = CommandKind.Cmd,
+            Arguments = expr.Arguments
+        });
+        return $"$(brash_async_exec_cmd \"{cmd}\")";
+    }
+
+    private string GenerateAsyncSpawnValue(CommandExpression expr)
+    {
+        if (expr.Arguments.Count == 1)
+        {
+            var cmdValue = GenerateExpression(expr.Arguments[0]);
+            return $"$(brash_async_spawn_cmd \"{cmdValue}\")";
+        }
+
+        var cmd = GenerateCmdValue(new CommandExpression
+        {
+            Line = expr.Line,
+            Column = expr.Column,
+            Kind = CommandKind.Cmd,
+            Arguments = expr.Arguments
+        });
+        return $"$(brash_async_spawn_cmd \"{cmd}\")";
     }
 
     private string GenerateCommandTextExpression(Expression expression)

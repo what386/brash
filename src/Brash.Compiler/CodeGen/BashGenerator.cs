@@ -106,6 +106,58 @@ public partial class BashGenerator
         EmitLine("}");
         EmitLine();
 
+        EmitLine("brash_async_exec_cmd() {");
+        EmitLine("    local __cmd=\"$1\"");
+        EmitLine("    bash -lc \"$__cmd\" >/dev/null 2>/dev/null &");
+        EmitLine("}");
+        EmitLine();
+
+        EmitLine("brash_async_spawn_cmd() {");
+        EmitLine("    local __cmd=\"$1\"");
+        EmitLine("    local __out");
+        EmitLine("    local __err");
+        EmitLine("    local __status_file");
+        EmitLine("    __out=$(mktemp)");
+        EmitLine("    __err=$(mktemp)");
+        EmitLine("    __status_file=$(mktemp)");
+        EmitLine("    (");
+        EmitLine("        bash -lc \"$__cmd\" >\"${__out}\" 2>\"${__err}\"");
+        EmitLine("        printf '%s' \"$?\" >\"${__status_file}\"");
+        EmitLine("    ) &");
+        EmitLine("    local __pid=\"$!\"");
+        EmitLine("    printf '%s:%s:%s:%s' \"${__pid}\" \"${__out}\" \"${__err}\" \"${__status_file}\"");
+        EmitLine("}");
+        EmitLine();
+
+        EmitLine("brash_await() {");
+        EmitLine("    local __handle=\"$1\"");
+        EmitLine("    local __pid");
+        EmitLine("    local __out");
+        EmitLine("    local __err");
+        EmitLine("    local __status_file");
+        EmitLine("    IFS=':' read -r __pid __out __err __status_file <<< \"${__handle}\"");
+        EmitLine("    if [[ -z \"${__pid}\" || -z \"${__out}\" || -z \"${__err}\" || -z \"${__status_file}\" ]]; then");
+        EmitLine("        echo \"Invalid Process handle for await\" >&2");
+        EmitLine("        return 1");
+        EmitLine("    fi");
+        EmitLine("    while kill -0 \"${__pid}\" 2>/dev/null; do");
+        EmitLine("        sleep 0.01");
+        EmitLine("    done");
+        EmitLine("    local __status=\"1\"");
+        EmitLine("    if [[ -f \"${__status_file}\" ]]; then");
+        EmitLine("        __status=$(cat \"${__status_file}\")");
+        EmitLine("    fi");
+        EmitLine("    if [[ -f \"${__out}\" ]]; then");
+        EmitLine("        cat \"${__out}\"");
+        EmitLine("    fi");
+        EmitLine("    if [[ ${__status} -ne 0 && -f \"${__err}\" ]]; then");
+        EmitLine("        cat \"${__err}\" >&2");
+        EmitLine("    fi");
+        EmitLine("    rm -f \"${__out}\" \"${__err}\" \"${__status_file}\"");
+        EmitLine("    return ${__status}");
+        EmitLine("}");
+        EmitLine();
+
         EmitLine("brash_throw() {");
         EmitLine("    local __msg=\"$1\"");
         EmitLine("    printf '%s\\n' \"$__msg\" >&2");

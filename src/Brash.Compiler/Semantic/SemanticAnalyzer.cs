@@ -317,13 +317,6 @@ public class SemanticAnalyzer
 
     private void AnalyzeFunctionDeclaration(FunctionDeclaration funcDecl)
     {
-        if (funcDecl.IsAsync)
-        {
-            diagnostics.AddError(
-                "async fn is not supported in this compiler version",
-                funcDecl.Line, funcDecl.Column);
-        }
-
         symbolTable.EnterScope();
 
         // Declare parameters

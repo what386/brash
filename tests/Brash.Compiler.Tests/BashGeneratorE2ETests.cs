@@ -183,6 +183,37 @@ public class BashGeneratorE2ETests
         Assert.Equal("caught:boom", result.StdOut.Trim());
     }
 
+    [Fact]
+    public void E2E_AsyncExec_IsFireAndForget()
+    {
+        const string source =
+            """
+            async exec("printf", "async-ignored")
+            exec("printf", "done\n")
+            """;
+
+        var result = CompileAndRun(source);
+
+        Assert.Equal(0, result.ExitCode);
+        Assert.Equal("done", result.StdOut.Trim());
+    }
+
+    [Fact]
+    public void E2E_AsyncSpawnAndAwait_ReturnsCapturedOutput()
+    {
+        const string source =
+            """
+            let proc = async spawn("printf", "spawn-ok")
+            let output = await proc
+            exec("printf", "%s\n", output)
+            """;
+
+        var result = CompileAndRun(source);
+
+        Assert.Equal(0, result.ExitCode);
+        Assert.Equal("spawn-ok", result.StdOut.Trim());
+    }
+
     private static (int ExitCode, string StdOut, string StdErr) CompileAndRun(string source)
     {
         var parserDiagnostics = new DiagnosticBag();

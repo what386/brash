@@ -10,7 +10,7 @@ This document describes the behavior currently implemented by the compiler and B
   - `const name = expr`
 - Functions:
   - `fn name(args...): ReturnType ... end`
-  - `async fn` is parsed but currently rejected by semantic analysis.
+  - `async fn` currently parses and transpiles with the same runtime behavior as `fn`.
 - Types:
   - `struct Name ... end`
   - `enum Name ... end`
@@ -21,8 +21,9 @@ This document describes the behavior currently implemented by the compiler and B
 - `cmd(...)` returns a lazy `Command` value.
 - `exec(...)` executes synchronously and returns `string` stdout.
 - `spawn(...)` starts a background command and returns a `Process` handle.
-- `async exec(...)` and `async spawn(...)` syntax is supported but currently rejected with explicit errors.
-- `await expr` is currently rejected with an explicit error.
+- `async exec(...)` starts command execution asynchronously in fire-and-forget mode.
+- `async spawn(...)` starts background execution and returns a `Process` handle.
+- `await expr` waits for a `Process` handle and returns captured stdout.
 
 ### Pipe operator
 
@@ -64,7 +65,6 @@ The semantic phase intentionally rejects features not ready for stable transpila
 - `import ...`
 - map literal code generation
 - range value code generation
-- async execution and await flow
 
 These errors are emitted as hard errors so unsupported behavior does not silently transpile.
 

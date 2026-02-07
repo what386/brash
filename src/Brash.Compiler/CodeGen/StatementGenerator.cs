@@ -434,6 +434,10 @@ public partial class BashGenerator
             case PipeExpression pipeExpression:
                 Emit(GeneratePipeStatement(pipeExpression));
                 return;
+
+            case AwaitExpression awaitExpression:
+                Emit($"brash_await \"{GenerateExpression(awaitExpression.Expression)}\" >/dev/null");
+                return;
         }
 
         Emit(GenerateExpression(expression));
@@ -459,7 +463,14 @@ public partial class BashGenerator
     private string GenerateCommandStatement(CommandExpression expr)
     {
         if (expr.IsAsync)
-            return UnsupportedExpression(expr);
+        {
+            return expr.Kind switch
+            {
+                CommandKind.Exec => $"{GenerateAsyncExecStatement(expr)} >/dev/null",
+                CommandKind.Spawn => $"{GenerateAsyncSpawnStatement(expr)} >/dev/null",
+                _ => UnsupportedExpression(expr)
+            };
+        }
 
         return expr.Kind switch
         {
@@ -490,6 +501,22 @@ public partial class BashGenerator
             return $"brash_spawn_cmd \"{GenerateExpression(expr.Arguments[0])}\" >/dev/null";
 
         return $"brash_spawn_cmd \"{GenerateExpression(new CommandExpression { Kind = CommandKind.Cmd, Arguments = expr.Arguments })}\" >/dev/null";
+    }
+
+    private string GenerateAsyncExecStatement(CommandExpression expr)
+    {
+        if (expr.Arguments.Count == 1)
+            return $"brash_async_exec_cmd \"{GenerateExpression(expr.Arguments[0])}\"";
+
+        return $"brash_async_exec_cmd \"{GenerateExpression(new CommandExpression { Kind = CommandKind.Cmd, Arguments = expr.Arguments })}\"";
+    }
+
+    private string GenerateAsyncSpawnStatement(CommandExpression expr)
+    {
+        if (expr.Arguments.Count == 1)
+            return $"brash_async_spawn_cmd \"{GenerateExpression(expr.Arguments[0])}\"";
+
+        return $"brash_async_spawn_cmd \"{GenerateExpression(new CommandExpression { Kind = CommandKind.Cmd, Arguments = expr.Arguments })}\"";
     }
 
     private void GenerateEnumDeclaration(EnumDeclaration enumDecl)

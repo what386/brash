@@ -1,21 +1,17 @@
 // ============================================
 // File: examples/11_async-await.bsh
-// Async / Await for shell commands and functions
+// Async / Await for process handles
 // ============================================
-
-// NOTE:
-// async/await syntax is accepted by the parser but currently rejected
-// by semantic/transpile readiness checks in this compiler version.
 
 
 // ---------------
 // Basic Async Execution
 // ---------------
 
-// async runs a command in the background and returns a Process handle
-let sleep_proc = async spawn("sleep", "5")
+// async spawn runs in the background and returns a Process handle.
+let sleep_proc = async spawn("sleep", "1")
 
-// Process handle values are opaque in the current implementation.
+// Process handle values are opaque.
 print($"Launched sleep process handle: {sleep_proc}")
 print("Process launched")
 
@@ -24,43 +20,31 @@ print("Process launched")
 // Awaiting a Process
 // ---------------
 
-// await blocks until the process finishes, then returns output
+// await blocks until the process finishes, then returns captured stdout.
 let result = await sleep_proc
 print(result)
 
 
- // ---------------
-// Async Functions
+// ---------------
+// Async Exec (fire-and-forget)
 // ---------------
 
-// Functions can be marked async and awaited
-async fn long_task(name: string): string
-    // ....
-    return $"Task {name} done"
-end
-
-// Launch async function
-let task_proc = long_task("Demo Task")
-
-// Do other work here while task runs...
-print("Doing other stuff while task runs...")
-
-// Await completion
-let task_result = await task_proc
-print(task_result)   // -> "Task Demo Task done"
+// async exec starts work in the background and does not return awaitable output.
+async exec("printf", "hello from async exec")
+print("launched async exec")
 
 
- // ---------------
+// ---------------
 // Multiple Async Tasks
 // ---------------
 
-let proc1 = async spawn("sleep", "2")
-let proc2 = async spawn("sleep", "4")
-let proc3 = async spawn("sleep", "1")
+let proc1 = async spawn("printf", "one")
+let proc2 = async spawn("printf", "two")
+let proc3 = async spawn("printf", "three")
 
-// Await all
+// Await all (sequentially here)
 let res1 = await proc1
 let res2 = await proc2
 let res3 = await proc3
 
-print($"All processes done: {res1}, {res2}, {res3}")
+print($"All processes done: {res1}-{res2}-{res3}")

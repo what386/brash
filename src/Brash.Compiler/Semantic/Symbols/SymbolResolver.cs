@@ -560,10 +560,12 @@ public class SymbolResolver
 
         if (cmd.IsAsync)
         {
-            diagnostics.AddError(
-                $"async {cmd.Kind.ToString().ToLowerInvariant()}(...) is not supported in this compiler version",
-                cmd.Line, cmd.Column);
-            return new UnknownType();
+            return cmd.Kind switch
+            {
+                CommandKind.Exec => ResolveAsyncExecExpression(argTypes, cmd),
+                CommandKind.Spawn => ResolveAsyncSpawnExpression(argTypes, cmd),
+                _ => ReportUnsupportedAsyncCommand(cmd)
+            };
         }
 
         return cmd.Kind switch
@@ -577,10 +579,13 @@ public class SymbolResolver
 
     private TypeNode ResolveAwait(AwaitExpression await)
     {
+        var awaitedType = ResolveExpressionType(await.Expression);
+        if (awaitedType is NamedType { Name: "Process" })
+            return new PrimitiveType { PrimitiveKind = PrimitiveType.Kind.String };
+
         diagnostics.AddError(
-            "await is not supported in this compiler version",
+            $"await expects a Process handle, got '{awaitedType}'",
             await.Line, await.Column);
-        ResolveExpressionType(await.Expression);
         return new UnknownType();
     }
 
@@ -630,6 +635,46 @@ public class SymbolResolver
         }
 
         return new NamedType { Name = "Process" };
+    }
+
+    private TypeNode ResolveAsyncExecExpression(List<TypeNode> argTypes, CommandExpression cmd)
+    {
+        if (argTypes.Count == 1 && argTypes[0] is NamedType { Name: "Command" })
+            return new PrimitiveType { PrimitiveKind = PrimitiveType.Kind.Void };
+
+        if (argTypes.Any(t => t is NamedType { Name: "Command" }))
+        {
+            diagnostics.AddError(
+                "async exec(...) accepts either a single Command value or raw command arguments",
+                cmd.Line, cmd.Column);
+            return new UnknownType();
+        }
+
+        return new PrimitiveType { PrimitiveKind = PrimitiveType.Kind.Void };
+    }
+
+    private TypeNode ResolveAsyncSpawnExpression(List<TypeNode> argTypes, CommandExpression cmd)
+    {
+        if (argTypes.Count == 1 && argTypes[0] is NamedType { Name: "Command" })
+            return new NamedType { Name = "Process" };
+
+        if (argTypes.Any(t => t is NamedType { Name: "Command" }))
+        {
+            diagnostics.AddError(
+                "async spawn(...) accepts either a single Command value or raw command arguments",
+                cmd.Line, cmd.Column);
+            return new UnknownType();
+        }
+
+        return new NamedType { Name = "Process" };
+    }
+
+    private TypeNode ReportUnsupportedAsyncCommand(CommandExpression cmd)
+    {
+        diagnostics.AddError(
+            $"async {cmd.Kind.ToString().ToLowerInvariant()}(...) is not supported in this compiler version",
+            cmd.Line, cmd.Column);
+        return new UnknownType();
     }
 
     private TypeNode ResolveSelf()
