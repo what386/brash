@@ -48,6 +48,10 @@ dotnet run --project src/Brash.Cli/Brash.Cli.csproj -- --help
 # Validate source (no output file)
 dotnet run --project src/Brash.Cli/Brash.Cli.csproj -- check app.bsh
 
+# Format source files
+dotnet run --project src/Brash.Cli/Brash.Cli.csproj -- format app.bsh
+dotnet run --project src/Brash.Cli/Brash.Cli.csproj -- format . --check
+
 # Compile source to Bash
 dotnet run --project src/Brash.Cli/Brash.Cli.csproj -- compile app.bsh -o app.sh
 
@@ -57,7 +61,7 @@ dotnet run --project src/Brash.Cli/Brash.Cli.csproj -- run app.bsh -- arg1 arg2
 
 Notes:
 
-- `format` exists but is intentionally unimplemented in beta.
+- `format --check` exits non-zero when files need formatting.
 - `run` generates a temporary Bash script under `/tmp` and executes it with `bash`.
 
 ## Language highlights (implemented)
