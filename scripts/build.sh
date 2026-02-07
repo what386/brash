@@ -2,6 +2,7 @@
 set -euo pipefail
 
 PROJECT_NAME="Brash"
+PROJECT_PATH="./src/Brash.Cli/Brash.Cli.csproj"
 OUTPUT_DIR="./target/release"
 
 # Build defaults
@@ -155,7 +156,8 @@ build_platform() {
 
     # Build publish arguments
     local publish_args=(
-        ./src/$PROJECT_NAME/$PROJECT_NAME.csproj
+        "$PROJECT_PATH"
+        -c "$CONFIGURATION"
         -r "$rid"
         --self-contained
         -p:UseAppHost=true
@@ -181,28 +183,49 @@ build_platform() {
     dotnet publish "${publish_args[@]}"
 
     if [ $? -eq 0 ]; then
-        # Get source and destination filenames
+        # Find the published entry executable from output (works for both single-file and multi-file publish).
+        local src_file=""
+        local project_stem
+        project_stem="$(basename "$PROJECT_PATH" .csproj)"
+
         if [[ "$rid" == win-* ]]; then
-            src_file="$temp_dir/${PROJECT_NAME}.exe"
+            if [ -f "$temp_dir/$project_stem.exe" ]; then
+                src_file="$temp_dir/$project_stem.exe"
+            else
+                src_file="$(find "$temp_dir" -maxdepth 1 -type f -name '*.exe' ! -name 'createdump.exe' | head -n 1 || true)"
+            fi
         else
-            src_file="$temp_dir/${PROJECT_NAME}"
+            if [ -f "$temp_dir/$project_stem" ]; then
+                src_file="$temp_dir/$project_stem"
+            else
+                src_file="$(find "$temp_dir" -maxdepth 1 -type f -executable | head -n 1 || true)"
+            fi
         fi
 
-        dest_file="$OUTPUT_DIR/$(get_output_filename "$rid")"
+        local dest_file="$OUTPUT_DIR/$(get_output_filename "$rid")"
+        local dest_dir="${dest_file%.exe}"
 
-        if [ -f "$src_file" ]; then
-            # Move and rename the executable
-            mv "$src_file" "$dest_file"
+        if [ "$ENABLE_SINGLE_FILE" = true ]; then
+            if [ -n "$src_file" ] && [ -f "$src_file" ]; then
+                # Move and rename the executable.
+                mv "$src_file" "$dest_file"
 
-            # Remove temporary directory
-            rm -rf "$temp_dir"
+                # Remove temporary directory.
+                rm -rf "$temp_dir"
 
-            # Get file size
-            size=$(du -h "$dest_file" | cut -f1)
-            echo -e "${GREEN}✓ Built successfully ($size) -> $(basename "$dest_file")${NC}"
+                # Get file size.
+                size=$(du -h "$dest_file" | cut -f1)
+                echo -e "${GREEN}✓ Built successfully ($size) -> $(basename "$dest_file")${NC}"
+            else
+                echo -e "${RED}✗ Build completed but executable not found${NC}"
+                rm -rf "$temp_dir"
+            fi
         else
-            echo -e "${RED}✗ Build completed but executable not found${NC}"
-            rm -rf "$temp_dir"
+            # Preserve all publish artifacts for non-single-file builds.
+            rm -rf "$dest_dir"
+            mv "$temp_dir" "$dest_dir"
+            size=$(du -sh "$dest_dir" | cut -f1)
+            echo -e "${GREEN}✓ Built successfully ($size) -> $(basename "$dest_dir")/${NC}"
         fi
     else
         echo -e "${RED}✗ Build failed${NC}"
