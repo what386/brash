@@ -5,12 +5,10 @@ using Brash.Compiler.Ast;
 using Brash.Compiler.Ast.Statements;
 using Brash.Compiler.Diagnostics;
 using Brash.Compiler.Preprocessor;
+using Brash.StandardLibrary;
 
 public static class ModuleLoader
 {
-    private const string StdModulePrefix = "std/";
-    private const string StdModuleRootName = "std";
-
     public static bool TryLoadProgram(string entryPath, DiagnosticBag diagnostics, out ProgramNode? program)
     {
         program = null;
@@ -238,102 +236,10 @@ public static class ModuleLoader
 
     private static string ResolveImportPath(string importRoot, string moduleSpec)
     {
-        if (TryResolveStdImportPath(importRoot, moduleSpec, out var stdPath))
+        if (StandardLibraryLoader.TryResolveImportPath(importRoot, moduleSpec, out var stdPath))
             return stdPath;
 
         return Path.GetFullPath(Path.Combine(importRoot, moduleSpec));
-    }
-
-    private static bool TryResolveStdImportPath(string importRoot, string moduleSpec, out string resolvedPath)
-    {
-        resolvedPath = string.Empty;
-
-        var isStdRoot = string.Equals(moduleSpec, StdModuleRootName, StringComparison.Ordinal);
-        var isStdModule = moduleSpec.StartsWith(StdModulePrefix, StringComparison.Ordinal);
-        if (!isStdRoot && !isStdModule)
-            return false;
-
-        var relative = isStdRoot
-            ? "std.bsh"
-            : moduleSpec.Substring(StdModulePrefix.Length);
-
-        if (!relative.EndsWith(".bsh", StringComparison.Ordinal))
-            relative += ".bsh";
-
-        foreach (var stdRoot in EnumerateStdLibRoots(importRoot))
-        {
-            var candidate = Path.GetFullPath(Path.Combine(stdRoot, relative));
-            if (File.Exists(candidate))
-            {
-                resolvedPath = candidate;
-                return true;
-            }
-        }
-
-        var fallbackRoot = EnumerateStdLibRoots(importRoot).FirstOrDefault();
-        if (!string.IsNullOrWhiteSpace(fallbackRoot))
-        {
-            resolvedPath = Path.GetFullPath(Path.Combine(fallbackRoot, relative));
-            return true;
-        }
-
-        resolvedPath = Path.GetFullPath(Path.Combine(importRoot, moduleSpec));
-        return true;
-    }
-
-    private static IEnumerable<string> EnumerateStdLibRoots(string importRoot)
-    {
-        var pathComparer = OperatingSystem.IsWindows() ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal;
-        var seen = new HashSet<string>(pathComparer);
-
-        var explicitStdPath = Environment.GetEnvironmentVariable("BRASH_STDLIB_PATH");
-        if (!string.IsNullOrWhiteSpace(explicitStdPath))
-        {
-            var full = Path.GetFullPath(explicitStdPath);
-            if (seen.Add(full))
-                yield return full;
-        }
-
-        foreach (var candidate in EnumerateAncestorCandidates(importRoot))
-        {
-            if (seen.Add(candidate))
-                yield return candidate;
-        }
-
-        foreach (var candidate in EnumerateBaseDirectoryCandidates())
-        {
-            if (seen.Add(candidate))
-                yield return candidate;
-        }
-    }
-
-    private static IEnumerable<string> EnumerateAncestorCandidates(string importRoot)
-    {
-        var current = new DirectoryInfo(Path.GetFullPath(importRoot));
-        while (current != null)
-        {
-            var srcStd = Path.Combine(current.FullName, "src", "stdlib");
-            if (Directory.Exists(srcStd))
-                yield return srcStd;
-
-            var directStd = Path.Combine(current.FullName, "stdlib");
-            if (Directory.Exists(directStd))
-                yield return directStd;
-
-            current = current.Parent;
-        }
-    }
-
-    private static IEnumerable<string> EnumerateBaseDirectoryCandidates()
-    {
-        var baseDirectory = AppContext.BaseDirectory;
-        var directStd = Path.Combine(baseDirectory, "stdlib");
-        if (Directory.Exists(directStd))
-            yield return directStd;
-
-        var srcStd = Path.Combine(baseDirectory, "src", "stdlib");
-        if (Directory.Exists(srcStd))
-            yield return srcStd;
     }
 
     private static bool TryParseSingleFile(string path, DiagnosticBag diagnostics, out ProgramNode? program)

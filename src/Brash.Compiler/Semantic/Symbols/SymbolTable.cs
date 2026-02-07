@@ -23,6 +23,7 @@ public class FunctionSymbol
     public List<string> ParameterNames { get; set; } = new();
     public TypeNode ReturnType { get; set; } = null!;
     public FunctionDeclaration Declaration { get; set; } = null!;
+    public bool IsBuiltin { get; set; }
 }
 
 public class TypeSymbol
@@ -60,6 +61,7 @@ public class SymbolTable
     {
         // Start with global scope
         EnterScope();
+        RegisterBuiltins();
     }
 
     // ============================================
@@ -148,6 +150,11 @@ public class SymbolTable
         };
 
         return true;
+    }
+
+    public bool IsBuiltinFunction(string name)
+    {
+        return functions.TryGetValue(name, out var symbol) && symbol.IsBuiltin;
     }
 
     public FunctionSymbol? LookupFunction(string name)
@@ -275,5 +282,21 @@ public class SymbolTable
         methods.Clear();
         currentScopeLevel = 0;
         EnterScope(); // Re-enter global scope
+        RegisterBuiltins();
+    }
+
+    private void RegisterBuiltins()
+    {
+        functions["panic"] = new FunctionSymbol
+        {
+            Name = "panic",
+            ParameterTypes = new List<TypeNode>
+            {
+                new PrimitiveType { PrimitiveKind = PrimitiveType.Kind.String }
+            },
+            ParameterNames = new List<string> { "message" },
+            ReturnType = new PrimitiveType { PrimitiveKind = PrimitiveType.Kind.Void },
+            IsBuiltin = true
+        };
     }
 }

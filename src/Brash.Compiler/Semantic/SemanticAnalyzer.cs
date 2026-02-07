@@ -141,6 +141,14 @@ public class SemanticAnalyzer
 
     private void CollectFunctionDeclaration(FunctionDeclaration funcDecl)
     {
+        if (symbolTable.IsBuiltinFunction(funcDecl.Name))
+        {
+            diagnostics.AddError(
+                $"Function '{funcDecl.Name}' is reserved as a builtin and cannot be redefined",
+                funcDecl.Line, funcDecl.Column);
+            return;
+        }
+
         if (!symbolTable.DeclareFunction(funcDecl.Name, funcDecl))
         {
             diagnostics.AddError(

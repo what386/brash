@@ -494,6 +494,12 @@ public partial class BashGenerator
 
     private string GenerateFunctionCallStatement(FunctionCallExpression call)
     {
+        if (call.FunctionName == "panic")
+        {
+            var panicArgs = string.Join(" ", call.Arguments.Select(GenerateSingleShellArg));
+            return panicArgs.Length > 0 ? $"brash_panic {panicArgs}" : "brash_panic";
+        }
+
         if (call.FunctionName == "print")
         {
             var printArgs = string.Join(" ", call.Arguments.Select(GenerateSingleShellArg));

@@ -172,6 +172,16 @@ public partial class BashGenerator
         EmitLine("    printf '%s\\n' \"$__msg\" >&2");
         EmitLine("    return 1 2>/dev/null || exit 1");
         EmitLine("}");
+        EmitLine();
+
+        EmitLine("brash_panic() {");
+        EmitLine("    local __msg=\"$*\"");
+        EmitLine("    if [[ -z \"$__msg\" ]]; then");
+        EmitLine("        __msg=\"panic\"");
+        EmitLine("    fi");
+        EmitLine("    printf '%s\\n' \"$__msg\" >&2");
+        EmitLine("    exit 1");
+        EmitLine("}");
     }
 
     private void Emit(string code)
