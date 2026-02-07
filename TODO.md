@@ -35,9 +35,6 @@
 - [ ] Testing: add golden snapshot tests for generated Bash across selected examples/* (high) #testing #e2e #examples #quality
       @created 2026-02-07 02:06
 
-- [ ] Docs: document cmd/exec/spawn and pipe semantics for 0.1.0 (async exec/spawn reserved/unsupported) (high) #docs #spec #release
-      @created 2026-02-07 02:06
-
 - [ ] Semantic: resolve nullable warnings and tighten method/self nullability/type checks in SymbolResolver #semantic #types #quality
       @created 2026-02-07 02:06
 
@@ -83,5 +80,9 @@
 
 - [x] Docs: align language spec with implemented behavior and mark unsupported example features explicitly #docs #spec #project
       @created 2026-02-06 23:09
+      @completed 2026-02-07 06:43
+
+- [x] Docs: document cmd/exec/spawn and pipe semantics for 0.1.0 (async exec/spawn reserved/unsupported) (high) #docs #spec #release
+      @created 2026-02-07 02:06
       @completed 2026-02-07 06:43
 

@@ -250,5 +250,19 @@
       "completed_at": "2026-02-07T06:43:29.647284150Z"
     },
     "version": null
+  },
+  {
+    "change": {
+      "description": "Docs: document cmd/exec/spawn and pipe semantics for 0.1.0 (async exec/spawn reserved/unsupported)",
+      "priority": "High",
+      "tags": [
+        "docs",
+        "spec",
+        "release"
+      ],
+      "commit": null,
+      "completed_at": "2026-02-07T06:43:29.673078797Z"
+    },
+    "version": null
   }
 ]
