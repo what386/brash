@@ -2,8 +2,12 @@
 set -euo pipefail
 
 PROJECT_NAME="Brash"
-PROJECT_PATH="./src/Brash.Cli/Brash.Cli.csproj"
 OUTPUT_DIR="./target/debug"
+PROJECTS=(
+    "brash:./src/Brash.Cli/Brash.Cli.csproj"
+    "brashc:./src/Brash.Compiler/Brash.Compiler.csproj"
+    "brashfmt:./src/Brash.Formatter/Brash.Formatter.csproj"
+)
 
 # Build defaults
 CONFIGURATION="Debug"
@@ -22,9 +26,9 @@ show_help() {
     echo "Usage: $0 [OPTIONS] <platform1> [platform2] ..."
     echo ""
     echo "Options:"
-    echo "  --no-trim          Disable trimming (faster builds, larger binaries)"
-    echo "  --no-single-file   Publish as multiple files (faster builds, easier debugging)"
-    echo "  --no-ready2run     Disable ReadyToRun compilation (faster builds, slower startup)"
+    echo "  --trim             Enable trimming"
+    echo "  --single-file      Publish as a single file"
+    echo "  --ready2run        Enable ReadyToRun compilation"
     echo "  -h, --help         Show this help message"
     echo ""
     echo "Arguments:"
@@ -34,33 +38,25 @@ show_help() {
     echo "  win-x64, win-x86, win-arm64"
     echo "  linux-x64, linux-arm64, linux-arm"
     echo "  osx-x64, osx-arm64"
-    echo ""
-    echo "Examples:"
-    echo "  $0 win-x64                           # Build only Windows 64-bit"
-    echo "  $0 --no-trim win-x64                 # Build Windows 64-bit without trimming"
-    echo "  $0 --no-single-file --no-trim win-x64  # Fast dev build"
-    echo "  $0 win-x64 linux-x64                 # Build Windows and Linux 64-bit"
-    echo "  $0 osx-x64 osx-arm64                 # Build both macOS versions"
     exit 0
 }
 
-# Parse options
 BUILD_PLATFORMS=()
 while [[ $# -gt 0 ]]; do
     case $1 in
     -h | --help)
         show_help
         ;;
-    --no-trim)
-        ENABLE_TRIMMING=false
+    --trim)
+        ENABLE_TRIMMING=true
         shift
         ;;
-    --no-single-file)
-        ENABLE_SINGLE_FILE=false
+    --single-file)
+        ENABLE_SINGLE_FILE=true
         shift
         ;;
-    --no-ready2run)
-        ENABLE_READY_TO_RUN=false
+    --ready2run)
+        ENABLE_READY_TO_RUN=true
         shift
         ;;
     *)
@@ -70,7 +66,6 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-# Check if any platforms specified
 if [ ${#BUILD_PLATFORMS[@]} -eq 0 ]; then
     echo -e "${RED}Error: No platforms specified${NC}"
     echo ""
@@ -83,80 +78,62 @@ echo -e "  Trimming:     $([ "$ENABLE_TRIMMING" = true ] && echo "${GREEN}Enable
 echo -e "  Single File:  $([ "$ENABLE_SINGLE_FILE" = true ] && echo "${GREEN}Enabled${NC}" || echo "${YELLOW}Disabled${NC}")"
 echo -e "  ReadyToRun:   $([ "$ENABLE_READY_TO_RUN" = true ] && echo "${GREEN}Enabled${NC}" || echo "${YELLOW}Disabled${NC}")"
 
-# Clean output directory
 if [ -d "$OUTPUT_DIR" ]; then
     echo -e "${YELLOW}Cleaning output directory...${NC}"
     rm -rf "$OUTPUT_DIR"
 fi
 mkdir -p "$OUTPUT_DIR"
 
-get_output_filename() {
+get_output_dirname() {
     local rid=$1
     local platform=""
     local arch=""
     local bits=""
-    local extension=""
 
     case $rid in
-    win-x64)
-        platform="win"
-        arch="x86"
-        bits="64"
-        extension=".exe"
-        ;;
-    win-x86)
-        platform="win"
-        arch="x86"
-        bits="32"
-        extension=".exe"
-        ;;
-    win-arm64)
-        platform="win"
-        arch="arm"
-        bits="64"
-        extension=".exe"
-        ;;
-    linux-x64)
-        platform="linux"
-        arch="x86"
-        bits="64"
-        ;;
-    linux-arm64)
-        platform="linux"
-        arch="arm"
-        bits="64"
-        ;;
-    linux-arm)
-        platform="linux"
-        arch="arm"
-        bits="32"
-        ;;
-    osx-x64)
-        platform="osx"
-        arch="x86"
-        bits="64"
-        ;;
-    osx-arm64)
-        platform="osx"
-        arch="arm"
-        bits="64"
-        ;;
+    win-x64) platform="win"; arch="x86"; bits="64" ;;
+    win-x86) platform="win"; arch="x86"; bits="32" ;;
+    win-arm64) platform="win"; arch="arm"; bits="64" ;;
+    linux-x64) platform="linux"; arch="x86"; bits="64" ;;
+    linux-arm64) platform="linux"; arch="arm"; bits="64" ;;
+    linux-arm) platform="linux"; arch="arm"; bits="32" ;;
+    osx-x64) platform="osx"; arch="x86"; bits="64" ;;
+    osx-arm64) platform="osx"; arch="arm"; bits="64" ;;
     esac
 
-    echo "${PROJECT_NAME}-${platform}_${arch}-${bits}${extension}"
+    echo "${PROJECT_NAME}-${platform}_${arch}-${bits}"
 }
 
-build_platform() {
-    local rid=$1
-    local description=$2
-    local temp_dir="$OUTPUT_DIR/temp_$rid"
+find_published_executable() {
+    local temp_dir=$1
+    local rid=$2
+    local project_stem=$3
 
-    echo ""
-    echo -e "${YELLOW}Building for $description ($rid)...${NC}"
+    if [[ "$rid" == win-* ]]; then
+        if [ -f "$temp_dir/$project_stem.exe" ]; then
+            echo "$temp_dir/$project_stem.exe"
+            return
+        fi
+        find "$temp_dir" -maxdepth 1 -type f -name '*.exe' ! -name 'createdump.exe' -print -quit
+        return
+    fi
 
-    # Build publish arguments
+    if [ -f "$temp_dir/$project_stem" ]; then
+        echo "$temp_dir/$project_stem"
+        return
+    fi
+    find "$temp_dir" -maxdepth 1 -type f -executable -print -quit
+}
+
+build_tool_for_platform() {
+    local tool_name=$1
+    local project_path=$2
+    local rid=$3
+    local bundle_dir=$4
+    local temp_dir="$OUTPUT_DIR/temp_${tool_name}_${rid}"
+
     local publish_args=(
-        "$PROJECT_PATH"
+        "$project_path"
         -c "$CONFIGURATION"
         -r "$rid"
         --self-contained
@@ -164,15 +141,12 @@ build_platform() {
         -o "$temp_dir"
     )
 
-    # Add optional features
     if [ "$ENABLE_SINGLE_FILE" = true ]; then
         publish_args+=(-p:PublishSingleFile=True)
     fi
-
     if [ "$ENABLE_READY_TO_RUN" = true ]; then
         publish_args+=(-p:PublishReadyToRun=True)
     fi
-
     if [ "$ENABLE_TRIMMING" = true ]; then
         publish_args+=(
             -p:PublishTrimmed=True
@@ -184,56 +158,57 @@ build_platform() {
 
     dotnet publish "${publish_args[@]}"
 
-    if [ $? -eq 0 ]; then
-        # Find the published entry executable from output (works for both single-file and multi-file publish).
-        local src_file=""
-        local project_stem
-        project_stem="$(basename "$PROJECT_PATH" .csproj)"
+    local project_stem
+    project_stem="$(basename "$project_path" .csproj)"
+    local src_file
+    src_file="$(find_published_executable "$temp_dir" "$rid" "$project_stem")"
 
-        if [[ "$rid" == win-* ]]; then
-            if [ -f "$temp_dir/$project_stem.exe" ]; then
-                src_file="$temp_dir/$project_stem.exe"
-            else
-                src_file="$(find "$temp_dir" -maxdepth 1 -type f -name '*.exe' ! -name 'createdump.exe' | head -n 1 || true)"
-            fi
-        else
-            if [ -f "$temp_dir/$project_stem" ]; then
-                src_file="$temp_dir/$project_stem"
-            else
-                src_file="$(find "$temp_dir" -maxdepth 1 -type f -executable | head -n 1 || true)"
-            fi
-        fi
-
-        local dest_file="$OUTPUT_DIR/$(get_output_filename "$rid")"
-        local dest_dir="${dest_file%.exe}"
-
-        if [ "$ENABLE_SINGLE_FILE" = true ]; then
-            if [ -n "$src_file" ] && [ -f "$src_file" ]; then
-                # Move and rename the executable.
-                mv "$src_file" "$dest_file"
-
-                # Remove temporary directory.
-                rm -rf "$temp_dir"
-
-                # Get file size.
-                size=$(du -h "$dest_file" | cut -f1)
-                echo -e "${GREEN}✓ Built successfully ($size) -> $(basename "$dest_file")${NC}"
-            else
-                echo -e "${RED}✗ Build completed but executable not found${NC}"
-                rm -rf "$temp_dir"
-            fi
-        else
-            # Preserve all publish artifacts for non-single-file builds.
-            rm -rf "$dest_dir"
-            mv "$temp_dir" "$dest_dir"
-            size=$(du -sh "$dest_dir" | cut -f1)
-            echo -e "${GREEN}✓ Built successfully ($size) -> $(basename "$dest_dir")/${NC}"
-        fi
-    else
-        echo -e "${RED}✗ Build failed${NC}"
+    if [ -z "$src_file" ] || [ ! -f "$src_file" ]; then
+        echo -e "${RED}✗ Build completed but executable not found for ${tool_name}${NC}"
         rm -rf "$temp_dir"
         return 1
     fi
+
+    local extension=""
+    if [[ "$rid" == win-* ]]; then
+        extension=".exe"
+    fi
+    local dest_file="$bundle_dir/${tool_name}${extension}"
+
+    mv "$src_file" "$dest_file"
+    rm -rf "$temp_dir"
+
+    if [[ "$rid" != win-* ]]; then
+        chmod +x "$dest_file"
+    fi
+
+    local size
+    size=$(du -h "$dest_file" | cut -f1)
+    echo -e "${GREEN}✓ Built ${tool_name} (${size}) -> ${dest_file}${NC}"
+}
+
+build_platform() {
+    local rid=$1
+    local description=$2
+    local bundle_dir="$OUTPUT_DIR/$(get_output_dirname "$rid")"
+
+    echo ""
+    echo -e "${YELLOW}Building for $description ($rid)...${NC}"
+
+    rm -rf "$bundle_dir"
+    mkdir -p "$bundle_dir"
+
+    for entry in "${PROJECTS[@]}"; do
+        local tool_name
+        local project_path
+        IFS=':' read -r tool_name project_path <<< "$entry"
+        build_tool_for_platform "$tool_name" "$project_path" "$rid" "$bundle_dir"
+    done
+
+    local bundle_size
+    bundle_size=$(du -sh "$bundle_dir" | cut -f1)
+    echo -e "${GREEN}✓ Bundle ready (${bundle_size}) -> ${bundle_dir}${NC}"
+    ls -lah "$bundle_dir"
 }
 
 get_platform_description() {
@@ -251,7 +226,6 @@ get_platform_description() {
     esac
 }
 
-# Build selected platforms
 echo -e "${BLUE}Building platforms: ${BUILD_PLATFORMS[*]}${NC}"
 
 for rid in "${BUILD_PLATFORMS[@]}"; do
@@ -264,8 +238,6 @@ echo -e "${GREEN}========================================${NC}"
 echo -e "${GREEN}  Build Complete!${NC}"
 echo -e "${GREEN}========================================${NC}"
 echo ""
-echo "Executables are located in:"
+echo "Bundles are located in:"
 echo ""
-
-# Show output files
-ls -lh "$OUTPUT_DIR"/${PROJECT_NAME}-* 2>/dev/null || echo "No executables found"
+find "$OUTPUT_DIR" -maxdepth 1 -mindepth 1 -type d -name "${PROJECT_NAME}-*" | sort
