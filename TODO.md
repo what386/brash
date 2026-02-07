@@ -1,7 +1,7 @@
 # TODO — brash v0.1.0
 
 @created: 2026-02-06
-@modified: 2026-02-06
+@modified: 2026-02-07
 
 ## Tasks
 
@@ -40,6 +40,9 @@
 
 - [ ] Docs: align language spec with implemented behavior and mark unsupported example features explicitly #docs #spec #project
       @created 2026-02-06 23:09
+
+- [ ] Parser: fix expression precedence so function calls like f(x) resolve as FunctionCallExpression instead of IdentifierExpression (high) #parser #ast #bug
+      @created 2026-02-07 00:53
 
 
 ## Completed
