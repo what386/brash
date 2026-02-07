@@ -35,6 +35,7 @@ internal static class FormatterEngine
             }
 
             var line = SpacingRules.Normalize(trimmed);
+            line = SignatureRules.NormalizeFunctionDeclarationSpacing(line);
             indentLevel = Math.Max(0, indentLevel - IndentationRules.GetLeadingDeductions(line));
 
             var prefix = new string(' ', indentLevel * options.SpacesPerIndent);
@@ -47,7 +48,9 @@ internal static class FormatterEngine
                 indentLevel = 0;
         }
 
-        var result = string.Join('\n', output);
+        var sortedImports = ImportRules.SortTopLevelImports(output);
+        var normalizedLayout = LayoutRules.NormalizeTopLevelLayout(sortedImports);
+        var result = string.Join('\n', normalizedLayout);
         return options.EnsureTrailingNewline ? result + '\n' : result;
     }
 }

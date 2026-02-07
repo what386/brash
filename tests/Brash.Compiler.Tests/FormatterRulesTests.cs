@@ -171,4 +171,132 @@ public class FormatterRulesTests
         var formatted = BrashFormatter.Format(input);
         Assert.Equal(expected.Replace("\r\n", "\n") + "\n", formatted);
     }
+
+    [Fact]
+    public void Formatter_InsertsBlankLineBetweenTopLevelMajorDeclarations()
+    {
+        const string input =
+            """
+            fn a()
+            end
+            struct Person
+                name: string
+            end
+            impl Person
+                fn greet(): string
+                    return "hi"
+                end
+            end
+            """;
+
+        const string expected =
+            """
+            fn a()
+            end
+
+            struct Person
+                name: string
+            end
+
+            impl Person
+                fn greet(): string
+                    return "hi"
+                end
+            end
+            """;
+
+        var formatted = BrashFormatter.Format(input);
+        Assert.Equal(expected.Replace("\r\n", "\n") + "\n", formatted);
+    }
+
+    [Fact]
+    public void Formatter_GroupsConsecutiveImports_AndSeparatesFromDeclarations()
+    {
+        const string input =
+            """
+            import "a"
+            import "b"
+            fn main()
+            end
+            """;
+
+        const string expected =
+            """
+            import "a"
+            import "b"
+
+            fn main()
+            end
+            """;
+
+        var formatted = BrashFormatter.Format(input);
+        Assert.Equal(expected.Replace("\r\n", "\n") + "\n", formatted);
+    }
+
+    [Fact]
+    public void Formatter_IsIdempotent_ForSafeStyleRules()
+    {
+        const string input =
+            """
+            import "a"
+            fn main()
+            let x=1
+            if x>0
+            print("ok")
+            end
+            end
+            """;
+
+        var once = BrashFormatter.Format(input);
+        var twice = BrashFormatter.Format(once);
+
+        Assert.Equal(once, twice);
+    }
+
+    [Fact]
+    public void Formatter_SortsTopLevelImportsDeterministically()
+    {
+        const string input =
+            """
+            import User from "models/user.bsh"
+            import "core/io.bsh"
+            import { helper_fn, CONFIG } from "lib/tools.bsh"
+            fn main()
+            end
+            """;
+
+        const string expected =
+            """
+            import "core/io.bsh"
+            import User from "models/user.bsh"
+            import { helper_fn, CONFIG } from "lib/tools.bsh"
+
+            fn main()
+            end
+            """;
+
+        var formatted = BrashFormatter.Format(input);
+        Assert.Equal(expected.Replace("\r\n", "\n") + "\n", formatted);
+    }
+
+    [Fact]
+    public void Formatter_NormalizesFunctionDeclarationSpacing()
+    {
+        const string input =
+            """
+            async fn  greet  ( name : string , greeting : string = "Hello" ) : string
+                return greeting + ", " + name
+            end
+            """;
+
+        const string expected =
+            """
+            async fn greet(name: string, greeting: string = "Hello"): string
+                return greeting + ", " + name
+            end
+            """;
+
+        var formatted = BrashFormatter.Format(input);
+        Assert.Equal(expected.Replace("\r\n", "\n") + "\n", formatted);
+    }
 }
