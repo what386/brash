@@ -35,6 +35,9 @@
 - [ ] Docs: align language spec with implemented behavior and mark unsupported example features explicitly #docs #spec #project
       @created 2026-02-06 23:09
 
+- [ ] Release 0.1.0: define supported language surface and fail-fast diagnostics for unsupported features (high) #release #spec #quality
+      @created 2026-02-07 02:06
+
 
 ## Completed
 
