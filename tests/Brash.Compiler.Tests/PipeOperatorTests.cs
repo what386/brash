@@ -170,7 +170,7 @@ public class PipeOperatorTests
             end
             """);
 
-        Assert.DoesNotContain(diagnostics.GetErrors(), d => d.Message.Contains("Feature 'range value code generation' is not supported"));
+        Assert.DoesNotContain(diagnostics.GetErrors(), d => d.Message.Contains("Range expressions are supported in 'for ... in start..end' loops"));
     }
 
     [Fact]
@@ -181,7 +181,7 @@ public class PipeOperatorTests
             let values = 0..5
             """);
 
-        Assert.Contains(diagnostics.GetErrors(), d => d.Message.Contains("Feature 'range value code generation' is not supported"));
+        Assert.Contains(diagnostics.GetErrors(), d => d.Message.Contains("Range expressions are supported in 'for ... in start..end' loops"));
     }
 
     [Fact]

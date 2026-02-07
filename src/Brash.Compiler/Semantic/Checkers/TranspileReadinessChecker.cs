@@ -120,7 +120,7 @@ public class TranspileReadinessChecker
                 break;
 
             case RangeExpression range:
-                ReportUnsupported("range value code generation", range.Line, range.Column);
+                ReportRangeValueUnsupported(range.Line, range.Column);
                 ValidateExpression(range.Start);
                 ValidateExpression(range.End);
                 break;
@@ -196,6 +196,14 @@ public class TranspileReadinessChecker
     {
         diagnostics.AddError(
             $"Feature '{feature}' is not supported in transpilation yet",
+            line,
+            column);
+    }
+
+    private void ReportRangeValueUnsupported(int line, int column)
+    {
+        diagnostics.AddError(
+            "Range expressions are supported in 'for ... in start..end' loops, but not as standalone values yet",
             line,
             column);
     }
