@@ -233,6 +233,60 @@ public class BashGeneratorE2ETests
         Assert.Equal("vals:one-two", result.StdOut.Trim());
     }
 
+    [Fact]
+    public void E2E_CommandArgs_PreserveConcatenatedStringAsSingleArgument()
+    {
+        const string source =
+            """
+            let text = "Building " + "Brash"
+            exec("printf", "%s\n", text)
+            """;
+
+        var result = CompileAndRun(source);
+
+        Assert.Equal(0, result.ExitCode);
+        Assert.Equal("Building Brash", result.StdOut.Trim());
+    }
+
+    [Fact]
+    public void E2E_PrintBuiltin_PreservesSpacesInConcatenatedString()
+    {
+        const string source =
+            """
+            fn print(text: string)
+                exec("printf", "%s\n", text)
+            end
+
+            let text = "Building " + "Brash"
+            print(text)
+            """;
+
+        var result = CompileAndRun(source);
+
+        Assert.Equal(0, result.ExitCode);
+        Assert.Equal("Building Brash", result.StdOut.Trim());
+    }
+
+    [Fact]
+    public void E2E_FunctionCallArgument_PreservesSpacesInNestedExpression()
+    {
+        const string source =
+            """
+            fn wrap(msg: string): string
+                return "<<" + msg + ">>"
+            end
+
+            let text = "value=" + (string)14
+            let wrapped = wrap("prefix " + text)
+            exec("printf", "%s\n", wrapped)
+            """;
+
+        var result = CompileAndRun(source);
+
+        Assert.Equal(0, result.ExitCode);
+        Assert.Equal("<<prefix value=14>>", result.StdOut.Trim());
+    }
+
     private static (int ExitCode, string StdOut, string StdErr) CompileAndRun(string source)
     {
         var parserDiagnostics = new DiagnosticBag();

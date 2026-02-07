@@ -35,18 +35,20 @@ static class CompileCommand
         var command = new Command("compile", "Compile a .bsh file to Bash")
         {
             fileArgument,
-            outputOption
+            outputOption,
+            SharedOptions.Verbose
         };
 
         command.SetAction(parseResult =>
         {
             var file = parseResult.GetValue(fileArgument)!;
             var output = parseResult.GetValue(outputOption);
+            var verbose = parseResult.GetValue(SharedOptions.Verbose);
             output ??= Path.Combine(
                 Path.GetDirectoryName(file) ?? ".",
                 $"{Path.GetFileNameWithoutExtension(file)}.sh");
 
-            return CompilePipeline.Compile(file, output);
+            return CompilePipeline.Compile(file, output, verbose);
         });
 
         return command;

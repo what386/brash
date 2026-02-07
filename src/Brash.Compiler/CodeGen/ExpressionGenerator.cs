@@ -242,15 +242,31 @@ public partial class BashGenerator
 
     private string GenerateFunctionCall(FunctionCallExpression call)
     {
-        var args = string.Join(" ", call.Arguments.Select(GenerateExpression));
-
         // Handle built-in functions
         if (call.FunctionName == "print")
         {
-            return $"printf '%s\\n' {args}";
+            var printArgs = string.Join(" ", call.Arguments.Select(GenerateSinglePrintArg));
+            return $"printf '%s\\n' {printArgs}";
         }
 
+        var args = string.Join(" ", call.Arguments.Select(GenerateFunctionCallArg));
         return args.Length > 0 ? $"$({call.FunctionName} {args})" : $"$({call.FunctionName})";
+    }
+
+    private string GenerateSinglePrintArg(Expression expression)
+    {
+        var rendered = GenerateExpression(expression);
+        if (IsAlreadyQuoted(rendered))
+            return rendered;
+        return $"\"{rendered}\"";
+    }
+
+    private string GenerateFunctionCallArg(Expression expression)
+    {
+        var rendered = GenerateExpression(expression);
+        if (IsAlreadyQuoted(rendered))
+            return rendered;
+        return $"\"{rendered}\"";
     }
 
     private string GenerateMethodCall(MethodCallExpression call)
@@ -482,8 +498,27 @@ public partial class BashGenerator
         if (expr.Arguments.Count == 0)
             return "\"\"";
 
-        var args = string.Join(" ", expr.Arguments.Select(GenerateExpression));
+        var args = string.Join(" ", expr.Arguments.Select(GenerateCommandBuilderArg));
         return $"$(brash_build_cmd {args})";
+    }
+
+    private string GenerateCommandBuilderArg(Expression expression)
+    {
+        // Force each evaluated expression to become a single shell argument
+        // before brash_build_cmd applies shell-quoting.
+        var rendered = GenerateExpression(expression);
+        if (IsAlreadyQuoted(rendered))
+            return rendered;
+        return $"\"{rendered}\"";
+    }
+
+    private static bool IsAlreadyQuoted(string rendered)
+    {
+        if (rendered.Length < 2)
+            return false;
+
+        return (rendered[0] == '"' && rendered[^1] == '"')
+               || (rendered[0] == '\'' && rendered[^1] == '\'');
     }
 
     private string GenerateExecValue(CommandExpression expr)
@@ -604,8 +639,15 @@ public partial class BashGenerator
     private string GenerateFunctionPipeInvocation(string pipedInput, FunctionCallExpression call)
     {
         // Pipe semantics: pass the left value as the implicit first argument.
-        var args = new List<string> { pipedInput };
-        args.AddRange(call.Arguments.Select(GenerateExpression));
+        var args = new List<string> { QuoteRenderedArg(pipedInput) };
+        args.AddRange(call.Arguments.Select(GenerateFunctionCallArg));
         return $"$({call.FunctionName} {string.Join(" ", args)})";
+    }
+
+    private static string QuoteRenderedArg(string rendered)
+    {
+        if (IsAlreadyQuoted(rendered))
+            return rendered;
+        return $"\"{rendered}\"";
     }
 }

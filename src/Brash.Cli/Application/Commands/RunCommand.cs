@@ -42,7 +42,8 @@ static class RunCommand
         {
             fileArgument,
             keepTempOption,
-            argsArgument
+            argsArgument,
+            SharedOptions.Verbose
         };
 
         command.SetAction(parseResult =>
@@ -50,7 +51,8 @@ static class RunCommand
             var file = parseResult.GetValue(fileArgument)!;
             var keepTemp = parseResult.GetValue(keepTempOption);
             var args = parseResult.GetValue(argsArgument) ?? Array.Empty<string>();
-            return CompilePipeline.Run(file, keepTemp, args);
+            var verbose = parseResult.GetValue(SharedOptions.Verbose);
+            return CompilePipeline.Run(file, keepTemp, args, verbose);
         });
 
         return command;

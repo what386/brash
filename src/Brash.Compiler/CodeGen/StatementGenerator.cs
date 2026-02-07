@@ -146,14 +146,26 @@ public partial class BashGenerator
 
     private void GenerateFunctionDeclaration(FunctionDeclaration func)
     {
+        var previousFunctionName = currentFunctionName;
+        var previousFunctionReturnType = currentFunctionReturnType;
+        currentFunctionName = func.Name;
+        currentFunctionReturnType = func.ReturnType ?? new PrimitiveType { PrimitiveKind = PrimitiveType.Kind.Void };
+
         Emit($"{func.Name}() {{");
         indentLevel++;
 
-        // Generate parameter assignments
-        for (int i = 0; i < func.Parameters.Count; i++)
+        if (HasMainStringArrayArgsSignature(func))
         {
-            var param = func.Parameters[i];
-            EmitLine($"local {param.Name}=\"${{{i + 1}}}\"");
+            EmitLine($"local -a {func.Parameters[0].Name}=(\"$@\")");
+        }
+        else
+        {
+            // Generate parameter assignments
+            for (int i = 0; i < func.Parameters.Count; i++)
+            {
+                var param = func.Parameters[i];
+                EmitLine($"local {param.Name}=\"${{{i + 1}}}\"");
+            }
         }
 
         if (func.Parameters.Count > 0)
@@ -168,6 +180,19 @@ public partial class BashGenerator
 
         indentLevel--;
         Emit("}");
+
+        currentFunctionName = previousFunctionName;
+        currentFunctionReturnType = previousFunctionReturnType;
+    }
+
+    private static bool HasMainStringArrayArgsSignature(FunctionDeclaration func)
+    {
+        return string.Equals(func.Name, "main", StringComparison.Ordinal)
+               && func.Parameters.Count == 1
+               && func.Parameters[0].Type is ArrayType
+               {
+                   ElementType: PrimitiveType { PrimitiveKind: PrimitiveType.Kind.String }
+               };
     }
 
     private void GenerateIfStatement(IfStatement ifStmt)
@@ -277,6 +302,21 @@ public partial class BashGenerator
 
     private void GenerateReturnStatement(ReturnStatement returnStmt)
     {
+        if (IsMainIntReturn())
+        {
+            if (returnStmt.Value != null)
+            {
+                var exitCode = GenerateExpression(returnStmt.Value);
+                Emit($"return $(( {exitCode} ))");
+            }
+            else
+            {
+                Emit("return 0");
+            }
+
+            return;
+        }
+
         if (returnStmt.Value != null)
         {
             var value = GenerateExpression(returnStmt.Value);
@@ -288,6 +328,15 @@ public partial class BashGenerator
         {
             Emit("return 0");
         }
+    }
+
+    private bool IsMainIntReturn()
+    {
+        return string.Equals(currentFunctionName, "main", StringComparison.Ordinal)
+               && currentFunctionReturnType is PrimitiveType
+               {
+                   PrimitiveKind: PrimitiveType.Kind.Int
+               };
     }
 
     private void GenerateTryStatement(TryStatement tryStmt)
@@ -445,11 +494,32 @@ public partial class BashGenerator
 
     private string GenerateFunctionCallStatement(FunctionCallExpression call)
     {
-        var args = string.Join(" ", call.Arguments.Select(GenerateExpression));
         if (call.FunctionName == "print")
-            return $"printf '%s\\n' {args}";
+        {
+            var printArgs = string.Join(" ", call.Arguments.Select(GenerateSingleShellArg));
+            return $"printf '%s\\n' {printArgs}";
+        }
+
+        var args = string.Join(" ", call.Arguments.Select(GenerateSingleShellArg));
 
         return args.Length > 0 ? $"{call.FunctionName} {args}" : call.FunctionName;
+    }
+
+    private string GenerateSingleShellArg(Expression expression)
+    {
+        var rendered = GenerateExpression(expression);
+        if (IsAlreadyQuotedArg(rendered))
+            return rendered;
+        return $"\"{rendered}\"";
+    }
+
+    private static bool IsAlreadyQuotedArg(string rendered)
+    {
+        if (rendered.Length < 2)
+            return false;
+
+        return (rendered[0] == '"' && rendered[^1] == '"')
+               || (rendered[0] == '\'' && rendered[^1] == '\'');
     }
 
     private string GenerateMethodCallStatement(MethodCallExpression call)

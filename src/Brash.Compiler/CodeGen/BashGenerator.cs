@@ -13,6 +13,8 @@ public partial class BashGenerator
     private int tempVariableCounter = 0;
     private const string IndentString = "    ";
     private string currentContext = "<unknown>";
+    private string? currentFunctionName;
+    private TypeNode? currentFunctionReturnType;
 
     public IReadOnlyList<string> Warnings => warnings;
 
@@ -36,6 +38,13 @@ public partial class BashGenerator
         {
             GenerateStatement(stmt);
             EmitLine();
+        }
+
+        if (program.Statements.OfType<FunctionDeclaration>()
+            .Any(f => string.Equals(f.Name, "main", StringComparison.Ordinal)))
+        {
+            EmitLine("main \"$@\"");
+            EmitLine("exit $?");
         }
 
         return output.ToString();

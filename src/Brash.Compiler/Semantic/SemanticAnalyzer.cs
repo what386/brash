@@ -43,6 +43,7 @@ public class SemanticAnalyzer
     {
         // Phase 1: Collect all type and function declarations
         CollectDeclarations(program);
+        ValidateMainSignature(program);
 
         // Phase 2: Analyze implementations
         AnalyzeImplementations(program);
@@ -77,6 +78,55 @@ public class SemanticAnalyzer
                     break;
             }
         }
+    }
+
+    private void ValidateMainSignature(ProgramNode program)
+    {
+        var mains = program.Statements
+            .OfType<FunctionDeclaration>()
+            .Where(f => string.Equals(f.Name, "main", StringComparison.Ordinal))
+            .ToList();
+
+        if (mains.Count == 0)
+            return;
+
+        // Duplicate name diagnostics are already handled in declaration collection.
+        var main = mains[0];
+        if (main.Parameters.Count != 0
+            && (main.Parameters.Count != 1 || !IsStringArray(main.Parameters[0].Type)))
+        {
+            diagnostics.AddError(
+                "Function 'main' must have signature 'fn main()' or 'fn main(args: string[])'",
+                main.Line,
+                main.Column);
+        }
+
+        if (!IsValidMainReturnType(main.ReturnType))
+        {
+            diagnostics.AddError(
+                "Function 'main' may only return 'int' or 'void'",
+                main.Line,
+                main.Column);
+        }
+    }
+
+    private static bool IsStringArray(TypeNode type)
+    {
+        return type is ArrayType
+        {
+            ElementType: PrimitiveType { PrimitiveKind: PrimitiveType.Kind.String }
+        };
+    }
+
+    private static bool IsValidMainReturnType(TypeNode? returnType)
+    {
+        if (returnType == null)
+            return true; // implicit void
+
+        if (returnType is PrimitiveType { PrimitiveKind: PrimitiveType.Kind.Void })
+            return true;
+
+        return returnType is PrimitiveType { PrimitiveKind: PrimitiveType.Kind.Int };
     }
 
     private void CollectStructDeclaration(StructDeclaration structDecl)

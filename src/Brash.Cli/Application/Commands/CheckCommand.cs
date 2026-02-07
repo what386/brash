@@ -28,13 +28,15 @@ static class CheckCommand
 
         var command = new Command("check", "Validate a .bsh file without emitting output")
         {
-            fileArgument
+            fileArgument,
+            SharedOptions.Verbose
         };
 
         command.SetAction(parseResult =>
         {
             var file = parseResult.GetValue(fileArgument);
-            return CompilePipeline.Check(file!);
+            var verbose = parseResult.GetValue(SharedOptions.Verbose);
+            return CompilePipeline.Check(file!, verbose);
         });
 
         return command;

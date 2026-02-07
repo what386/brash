@@ -62,7 +62,7 @@ public class BashGeneratorReadinessTests
         };
 
         var bash = new BashGenerator().Generate(program);
-        Assert.Contains("y=$(inc ${x})", bash);
+        Assert.Contains("y=$(inc \"${x}\")", bash);
     }
 
     [Fact]
