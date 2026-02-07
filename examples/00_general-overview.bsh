@@ -169,8 +169,8 @@ struct Person
     balance: float
 end
 
-// Record (immutable)
-record Config
+// Struct
+struct Config
     host: string
     port: int
     ssl_enabled: bool
@@ -222,7 +222,7 @@ print(listing.stdout)
 print($"Exit code: {listing.code}")
 
 // Background execution
-let proc = async("sleep", "10")
+let proc = async spawn("sleep", "10")
 print($"PID: {proc.pid}")
 
 // Process control
@@ -342,7 +342,7 @@ let task = long_task("Process Data")
 let output = await task
 
 // Multiple async tasks
-let p1 = async("task1")
-let p2 = async("task2")
+let p1 = async spawn("task1")
+let p2 = async spawn("task2")
 let r1 = await p1
 let r2 = await p2

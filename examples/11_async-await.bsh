@@ -55,9 +55,9 @@ print(task_result)   // -> "Task Demo Task done"
 // Multiple Async Tasks
 // ---------------
 
-let proc1 = async("sleep", "2")
-let proc2 = async("sleep", "4")
-let proc3 = async("sleep", "1")
+let proc1 = async spawn("sleep", "2")
+let proc2 = async spawn("sleep", "4")
+let proc3 = async spawn("sleep", "1")
 
 // Await all
 let res1 = await proc1

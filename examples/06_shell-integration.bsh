@@ -29,7 +29,7 @@ exec("git", "status")
 
 // sugar for cmd(...).exec_async()
 // more info in file 11
-async("sleep", "100")
+async spawn("sleep", "100")
 
 
 // ---------------

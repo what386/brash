@@ -4,7 +4,7 @@
 // ============================================
 
 // --------------------------------------------
-// Structs and Records (data only)
+// Structs (data only)
 // --------------------------------------------
 
 // mutable
@@ -15,8 +15,7 @@ struct Person
     balance: float
 end
 
-// immutable
-record Config
+struct Config
     host: string
     port: int
     ssl_enabled: bool
