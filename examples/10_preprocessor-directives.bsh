@@ -1,3 +1,9 @@
+#!/bin/env brash run
+// Shebang directive:
+// - Must be the first line in the file.
+// - Ignored by Brash parsing, but lets the LINUX run this file via `brash run`.
+// - Example: `chmod +x 10_preprocessor-directives.bsh && ./10_preprocessor-directives.bsh`
+
 // ============================================
 // File: examples/10_preprocessor-directives.bsh
 // Preprocessor directives (text-based substitution)
@@ -22,7 +28,7 @@ print(GREETING)       // -> replaced with "Hello, world!"
 // ---------------
 
 // #if allows boolean expressions (numeric or constant-based)
-#define DEBUG 1
+#define DEBUG true
 
 #if DEBUG
     print("Debug mode is ON")
@@ -57,14 +63,14 @@ print(TEMP)   // -> 123
 // Nested and Sequential Directives
 // ---------------
 
-#define OS "linux"
-#ifdef OS
+#define LINUX "linux"
+#ifdef LINUX
     #define PATH_SEPARATOR "/"
 #else
     #define PATH_SEPARATOR "\\"
 #endif
 
-print(OS)               // -> "linux"
+print(LINUX)               // -> "linux"
 print(PATH_SEPARATOR)   // -> "/"
 
 
@@ -77,4 +83,4 @@ print(PATH_SEPARATOR)   // -> "/"
 // - #define / #if / #ifdef / #ifndef / #undef only affect subsequent lines
 // - They do not respect language scope or types
 // - Useful for debugging, conditional imports, or simplifying repetitive commands
-
+// - These work like they do in C/C++: it gives you the power to do evil things
