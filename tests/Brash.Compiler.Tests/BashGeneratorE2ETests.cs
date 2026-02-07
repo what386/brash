@@ -110,6 +110,37 @@ public class BashGeneratorE2ETests
         Assert.Equal("AXC", result.StdOut.Trim());
     }
 
+    [Fact]
+    public void E2E_ExecCanMaterializeCommandVariable()
+    {
+        const string source =
+            """
+            let pipeline = cmd("printf", "abc\n") | cmd("tr", "a-z", "A-Z")
+            let output = exec(pipeline)
+            exec("printf", "%s\n", output)
+            """;
+
+        var result = CompileAndRun(source);
+
+        Assert.Equal(0, result.ExitCode);
+        Assert.Equal("ABC", result.StdOut.Trim());
+    }
+
+    [Fact]
+    public void E2E_CmdSingleStringArgumentWorksAsRawCommandText()
+    {
+        const string source =
+            """
+            let output = exec(cmd("printf 'ok\n'"))
+            exec("printf", "%s\n", output)
+            """;
+
+        var result = CompileAndRun(source);
+
+        Assert.Equal(0, result.ExitCode);
+        Assert.Equal("ok", result.StdOut.Trim());
+    }
+
     private static (int ExitCode, string StdOut, string StdErr) CompileAndRun(string source)
     {
         var parserDiagnostics = new DiagnosticBag();

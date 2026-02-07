@@ -65,6 +65,29 @@ public class PipeOperatorTests
     }
 
     [Fact]
+    public void SemanticAnalyzer_FailsFast_OnTryThrowImportAndMapLiteral()
+    {
+        var diagnostics = Analyze(
+            """
+            import "utils.bsh"
+
+            try
+                throw "boom"
+            catch err
+                print(err)
+            end
+
+            let m = {"k": 1}
+            """);
+
+        var errors = diagnostics.GetErrors().ToList();
+        Assert.Contains(errors, d => d.Message.Contains("Feature 'import' is not supported"));
+        Assert.Contains(errors, d => d.Message.Contains("Feature 'try/catch' is not supported"));
+        Assert.Contains(errors, d => d.Message.Contains("Feature 'throw' is not supported"));
+        Assert.Contains(errors, d => d.Message.Contains("Feature 'map literal code generation' is not supported"));
+    }
+
+    [Fact]
     public void SemanticAnalyzer_AllowsSpawnAssignedToProcessType()
     {
         var diagnostics = Analyze(
