@@ -73,6 +73,7 @@ module.exports = grammar({
     variable_declaration: ($) =>
       choice(
         seq(
+          optional("pub"),
           choice(seq("let", optional("mut")), "const"),
           field("name", $.identifier),
           optional(seq(":", field("type", $.type))),
@@ -97,6 +98,7 @@ module.exports = grammar({
 
     function_declaration: ($) =>
       seq(
+        optional("pub"),
         optional("async"),
         "fn",
         field("name", $.identifier),
@@ -126,10 +128,10 @@ module.exports = grammar({
     function_body: ($) => seq(repeat($.statement), "end"),
 
     struct_declaration: ($) =>
-      seq("struct", field("name", $.identifier), repeat($.field_declaration), "end"),
+      seq(optional("pub"), "struct", field("name", $.identifier), repeat($.field_declaration), "end"),
 
     enum_declaration: ($) =>
-      seq("enum", field("name", $.identifier), $.enum_body),
+      seq(optional("pub"), "enum", field("name", $.identifier), $.enum_body),
 
     enum_body: ($) =>
       seq(
@@ -147,6 +149,7 @@ module.exports = grammar({
 
     method_declaration: ($) =>
       seq(
+        optional("pub"),
         "fn",
         field("name", $.identifier),
         "(",

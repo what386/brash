@@ -2,6 +2,7 @@
 [
   "let"
   "mut"
+  "pub"
   "const"
   "fn"
   "async"
