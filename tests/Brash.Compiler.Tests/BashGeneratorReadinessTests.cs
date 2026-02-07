@@ -1,0 +1,143 @@
+using Brash.Compiler.Ast;
+using Brash.Compiler.Ast.Expressions;
+using Brash.Compiler.Ast.Statements;
+using Brash.Compiler.CodeGen;
+using Xunit;
+
+namespace Brash.Compiler.Tests;
+
+public class BashGeneratorReadinessTests
+{
+    [Fact]
+    public void BashGenerator_UsesPlainVariableNameForAssignmentTarget()
+    {
+        var program = new ProgramNode
+        {
+            Statements =
+            {
+                new VariableDeclaration
+                {
+                    Kind = VariableDeclaration.VarKind.Mut,
+                    Name = "x",
+                    Value = IntLiteral(1)
+                },
+                new Assignment
+                {
+                    Target = new IdentifierExpression { Name = "x" },
+                    Value = new BinaryExpression
+                    {
+                        Left = new IdentifierExpression { Name = "x" },
+                        Operator = "+",
+                        Right = IntLiteral(1)
+                    }
+                }
+            }
+        };
+
+        var bash = new BashGenerator().Generate(program);
+
+        Assert.Contains("x=1", bash);
+        Assert.Contains("x=$((${x} + 1))", bash);
+        Assert.DoesNotContain("${x}=", bash);
+    }
+
+    [Fact]
+    public void BashGenerator_EmitsFunctionCallExpression()
+    {
+        var program = new ProgramNode
+        {
+            Statements =
+            {
+                new VariableDeclaration
+                {
+                    Kind = VariableDeclaration.VarKind.Let,
+                    Name = "y",
+                    Value = new FunctionCallExpression
+                    {
+                        FunctionName = "inc",
+                        Arguments = { new IdentifierExpression { Name = "x" } }
+                    }
+                }
+            }
+        };
+
+        var bash = new BashGenerator().Generate(program);
+        Assert.Contains("y=$(inc ${x})", bash);
+    }
+
+    [Fact]
+    public void BashGenerator_EmitsMemberAccessAndMemberAssignment()
+    {
+        var program = new ProgramNode
+        {
+            Statements =
+            {
+                new VariableDeclaration
+                {
+                    Kind = VariableDeclaration.VarKind.Let,
+                    Name = "name",
+                    Value = new MemberAccessExpression
+                    {
+                        Object = new IdentifierExpression { Name = "user" },
+                        MemberName = "name"
+                    }
+                },
+                new Assignment
+                {
+                    Target = new MemberAccessExpression
+                    {
+                        Object = new IdentifierExpression { Name = "user" },
+                        MemberName = "name"
+                    },
+                    Value = new LiteralExpression
+                    {
+                        Value = "Alice",
+                        Type = new PrimitiveType { PrimitiveKind = PrimitiveType.Kind.String }
+                    }
+                }
+            }
+        };
+
+        var bash = new BashGenerator().Generate(program);
+
+        Assert.Contains("name=${user_name}", bash);
+        Assert.Contains("user_name=\"Alice\"", bash);
+    }
+
+    [Fact]
+    public void BashGenerator_EmitsNullCoalesceForIdentifiers()
+    {
+        var program = new ProgramNode
+        {
+            Statements =
+            {
+                new VariableDeclaration
+                {
+                    Kind = VariableDeclaration.VarKind.Let,
+                    Name = "display",
+                    Value = new NullCoalesceExpression
+                    {
+                        Left = new IdentifierExpression { Name = "name" },
+                        Right = new LiteralExpression
+                        {
+                            Value = "unknown",
+                            Type = new PrimitiveType { PrimitiveKind = PrimitiveType.Kind.String }
+                        }
+                    }
+                }
+            }
+        };
+
+        var bash = new BashGenerator().Generate(program);
+        Assert.Contains("display=${name:-\"unknown\"}", bash);
+    }
+
+    private static LiteralExpression IntLiteral(int value)
+    {
+        return new LiteralExpression
+        {
+            Value = value,
+            Type = new PrimitiveType { PrimitiveKind = PrimitiveType.Kind.Int }
+        };
+    }
+}
