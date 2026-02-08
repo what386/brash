@@ -186,6 +186,9 @@ public partial class BashGenerator
 
     private string GenerateBinaryExpression(BinaryExpression bin)
     {
+        if (TryFoldBinaryExpression(bin, out var folded))
+            return folded;
+
         var left = GenerateExpression(bin.Left);
         var right = GenerateExpression(bin.Right);
 
@@ -210,6 +213,9 @@ public partial class BashGenerator
 
     private string GenerateUnaryExpression(UnaryExpression unary)
     {
+        if (TryFoldUnaryExpression(unary, out var folded))
+            return folded;
+
         var operand = GenerateExpression(unary.Operand);
         return unary.Operator switch
         {
@@ -242,10 +248,6 @@ public partial class BashGenerator
 
     private string GenerateFunctionCall(FunctionCallExpression call)
     {
-        // Handle built-in functions
-        if (call.FunctionName == "bash")
-            return HandleUnsupportedExpression(call, "bash(...) in expression context");
-
         if (call.FunctionName == "print")
         {
             var printArgs = string.Join(" ", call.Arguments.Select(GenerateSinglePrintArg));
@@ -370,7 +372,7 @@ public partial class BashGenerator
         var left = GenerateCommandValue(expr.Left);
         var right = GenerateCommandValue(expr.Right);
         if (left != null && right != null)
-            return $"$(brash_pipe_cmd \"{left}\" \"{right}\")";
+            return $"$(printf '%s | %s' \"{left}\" \"{right}\")";
 
         return GenerateValuePipeExpression(expr);
     }
@@ -550,8 +552,9 @@ public partial class BashGenerator
         if (expr.Arguments.Count == 0)
             return "\"\"";
 
+        var format = string.Join(" ", Enumerable.Repeat("%q", expr.Arguments.Count));
         var args = string.Join(" ", expr.Arguments.Select(GenerateCommandBuilderArg));
-        return $"$(brash_build_cmd {args})";
+        return $"$(printf '{format}' {args})";
     }
 
     private string GenerateCommandBuilderArg(Expression expression)
@@ -586,16 +589,17 @@ public partial class BashGenerator
         if (expr.Arguments.Count == 1)
         {
             var cmdValue = GenerateExpression(expr.Arguments[0]);
+            if (expr.Arguments[0] is LiteralExpression
+                {
+                    Type: PrimitiveType { PrimitiveKind: PrimitiveType.Kind.String }
+                })
+            {
+                return $"$(bash -lc \"{cmdValue}\")";
+            }
             return $"$(brash_exec_cmd \"{cmdValue}\")";
         }
 
-        var cmd = GenerateCmdValue(new CommandExpression
-        {
-            Line = expr.Line,
-            Column = expr.Column,
-            Kind = CommandKind.Cmd,
-            Arguments = expr.Arguments
-        });
+        var cmd = GenerateCmdValueFromArgs(expr.Arguments);
         return $"$(brash_exec_cmd \"{cmd}\")";
     }
 
@@ -604,17 +608,11 @@ public partial class BashGenerator
         if (expr.Arguments.Count == 1)
         {
             var cmdValue = GenerateExpression(expr.Arguments[0]);
-            return $"$(brash_spawn_cmd \"{cmdValue}\")";
+            return $"$(bash -lc \"{cmdValue}\" & printf '%s' \"$!\")";
         }
 
-        var cmd = GenerateCmdValue(new CommandExpression
-        {
-            Line = expr.Line,
-            Column = expr.Column,
-            Kind = CommandKind.Cmd,
-            Arguments = expr.Arguments
-        });
-        return $"$(brash_spawn_cmd \"{cmd}\")";
+        var cmd = GenerateCmdValueFromArgs(expr.Arguments);
+        return $"$(bash -lc \"{cmd}\" & printf '%s' \"$!\")";
     }
 
     private string GenerateAsyncExecValue(CommandExpression expr)
@@ -622,17 +620,11 @@ public partial class BashGenerator
         if (expr.Arguments.Count == 1)
         {
             var cmdValue = GenerateExpression(expr.Arguments[0]);
-            return $"$(brash_async_exec_cmd \"{cmdValue}\")";
+            return $"$(bash -lc \"{cmdValue}\" >/dev/null 2>/dev/null &)";
         }
 
-        var cmd = GenerateCmdValue(new CommandExpression
-        {
-            Line = expr.Line,
-            Column = expr.Column,
-            Kind = CommandKind.Cmd,
-            Arguments = expr.Arguments
-        });
-        return $"$(brash_async_exec_cmd \"{cmd}\")";
+        var cmd = GenerateCmdValueFromArgs(expr.Arguments);
+        return $"$(bash -lc \"{cmd}\" >/dev/null 2>/dev/null &)";
     }
 
     private string GenerateAsyncSpawnValue(CommandExpression expr)
@@ -643,14 +635,120 @@ public partial class BashGenerator
             return $"$(brash_async_spawn_cmd \"{cmdValue}\")";
         }
 
-        var cmd = GenerateCmdValue(new CommandExpression
-        {
-            Line = expr.Line,
-            Column = expr.Column,
-            Kind = CommandKind.Cmd,
-            Arguments = expr.Arguments
-        });
+        var cmd = GenerateCmdValueFromArgs(expr.Arguments);
         return $"$(brash_async_spawn_cmd \"{cmd}\")";
+    }
+
+    private string GenerateCmdValueFromArgs(IReadOnlyList<Expression> arguments)
+    {
+        return GenerateCmdValue(new CommandExpression
+        {
+            Kind = CommandKind.Cmd,
+            Arguments = arguments.ToList()
+        });
+    }
+
+    private bool TryFoldUnaryExpression(UnaryExpression unary, out string folded)
+    {
+        folded = string.Empty;
+        if (!TryGetNumericLiteral(unary.Operand, out var number))
+            return false;
+
+        folded = unary.Operator switch
+        {
+            "+" => FormatNumber(number),
+            "-" => FormatNumber(-number),
+            "!" => number == 0 ? "1" : "0",
+            _ => string.Empty
+        };
+
+        return folded.Length > 0;
+    }
+
+    private bool TryFoldBinaryExpression(BinaryExpression bin, out string folded)
+    {
+        folded = string.Empty;
+
+        if (bin.Operator == "+" && TryGetLiteralString(bin.Left, out var leftString) && TryGetLiteralString(bin.Right, out var rightString))
+        {
+            folded = $"\"{EscapeString(leftString + rightString)}\"";
+            return true;
+        }
+
+        if (!TryGetNumericLiteral(bin.Left, out var left) || !TryGetNumericLiteral(bin.Right, out var right))
+            return false;
+
+        folded = bin.Operator switch
+        {
+            "+" => FormatNumber(left + right),
+            "-" => FormatNumber(left - right),
+            "*" => FormatNumber(left * right),
+            "/" when right != 0 => FormatNumber(left / right),
+            "%" when right != 0 => FormatNumber(left % right),
+            "==" => left == right ? "1" : "0",
+            "!=" => left != right ? "1" : "0",
+            "<" => left < right ? "1" : "0",
+            ">" => left > right ? "1" : "0",
+            "<=" => left <= right ? "1" : "0",
+            ">=" => left >= right ? "1" : "0",
+            "&&" => (left != 0 && right != 0) ? "1" : "0",
+            "||" => (left != 0 || right != 0) ? "1" : "0",
+            _ => string.Empty
+        };
+
+        return folded.Length > 0;
+    }
+
+    private bool TryGetLiteralString(Expression expression, out string value)
+    {
+        value = string.Empty;
+        if (expression is not LiteralExpression literal || literal.Value is null || literal.Type is not PrimitiveType prim)
+            return false;
+
+        if (prim.PrimitiveKind is PrimitiveType.Kind.String or PrimitiveType.Kind.Char)
+        {
+            value = literal.Value.ToString() ?? string.Empty;
+            return true;
+        }
+
+        return false;
+    }
+
+    private static bool TryGetNumericLiteral(Expression expression, out double value)
+    {
+        value = 0;
+        if (expression is not LiteralExpression literal || literal.Value is null || literal.Type is not PrimitiveType prim)
+            return false;
+
+        switch (prim.PrimitiveKind)
+        {
+            case PrimitiveType.Kind.Int:
+            case PrimitiveType.Kind.Float:
+                if (double.TryParse(Convert.ToString(literal.Value, CultureInfo.InvariantCulture), NumberStyles.Float, CultureInfo.InvariantCulture, out var parsed))
+                {
+                    value = parsed;
+                    return true;
+                }
+
+                return false;
+            case PrimitiveType.Kind.Bool:
+                if (bool.TryParse(literal.Value.ToString(), out var boolVal))
+                {
+                    value = boolVal ? 1 : 0;
+                    return true;
+                }
+
+                return false;
+            default:
+                return false;
+        }
+    }
+
+    private static string FormatNumber(double value)
+    {
+        if (Math.Abs(value % 1) < double.Epsilon)
+            return ((long)value).ToString(CultureInfo.InvariantCulture);
+        return value.ToString(CultureInfo.InvariantCulture);
     }
 
     private string GenerateCommandTextExpression(Expression expression)

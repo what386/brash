@@ -56,6 +56,10 @@ public partial class BashGenerator
                 GenerateExpressionStatement(exprStmt.Expression);
                 break;
 
+            case ShStatement shStmt:
+                Emit(shStmt.Script);
+                break;
+
             case StructDeclaration structDecl:
                 EmitComment($"Struct '{structDecl.Name}' declaration");
                 break;
@@ -399,7 +403,7 @@ public partial class BashGenerator
     private void GenerateThrowStatement(ThrowStatement throwStmt)
     {
         var value = GenerateExpression(throwStmt.Value);
-        Emit($"brash_throw {value}");
+        Emit($"printf '%s\\n' {value} >&2; false");
     }
 
     private string? GenerateAssignmentTarget(Expression target)
@@ -441,7 +445,29 @@ public partial class BashGenerator
     private string GenerateCondition(Expression condition)
     {
         var expr = GenerateExpression(condition);
+        if (TrySimplifyBooleanCondition(expr, out var simplified))
+            return simplified;
         return $"[ {expr} -ne 0 ]";
+    }
+
+    private static bool TrySimplifyBooleanCondition(string renderedExpression, out string condition)
+    {
+        condition = string.Empty;
+        if (renderedExpression.StartsWith("$((", StringComparison.Ordinal) &&
+            renderedExpression.EndsWith("))", StringComparison.Ordinal))
+        {
+            var inner = renderedExpression[3..^2].Trim();
+            condition = $"(( {inner} ))";
+            return true;
+        }
+
+        if (int.TryParse(renderedExpression, out _))
+        {
+            condition = $"(( {renderedExpression} != 0 ))";
+            return true;
+        }
+
+        return false;
     }
 
     private bool IsConditionOperator(string op)
@@ -538,12 +564,13 @@ public partial class BashGenerator
     {
         if (call.FunctionName == "panic")
         {
-            var panicArgs = string.Join(" ", call.Arguments.Select(GenerateSingleShellArg));
-            return panicArgs.Length > 0 ? $"brash_panic {panicArgs}" : "brash_panic";
-        }
+            if (call.Arguments.Count == 0)
+                return "printf '%s\\n' \"panic\" >&2; exit 1";
 
-        if (call.FunctionName == "bash")
-            return GenerateInlineBashStatement(call);
+            var panicArgs = string.Join(" ", call.Arguments.Select(GenerateSingleShellArg));
+            var format = string.Join(" ", Enumerable.Repeat("%s", call.Arguments.Count));
+            return $"printf '{format}\\n' {panicArgs} >&2; exit 1";
+        }
 
         if (call.FunctionName == "print")
         {
@@ -562,22 +589,6 @@ public partial class BashGenerator
         if (IsAlreadyQuotedArg(rendered))
             return rendered;
         return $"\"{rendered}\"";
-    }
-
-    private string GenerateInlineBashStatement(FunctionCallExpression call)
-    {
-        if (call.Arguments.Count == 0)
-            return ":";
-
-        if (call.Arguments[0] is LiteralExpression literal &&
-            literal.Type is PrimitiveType { PrimitiveKind: PrimitiveType.Kind.String } &&
-            literal.Value is string raw)
-        {
-            return raw;
-        }
-
-        var script = GenerateSingleShellArg(call.Arguments[0]);
-        return $"eval {script}";
     }
 
     private static bool IsAlreadyQuotedArg(string rendered)
@@ -603,7 +614,7 @@ public partial class BashGenerator
         {
             return expr.Kind switch
             {
-                CommandKind.Exec => $"{GenerateAsyncExecStatement(expr)} >/dev/null",
+                CommandKind.Exec => GenerateAsyncExecStatement(expr),
                 CommandKind.Spawn => $"{GenerateAsyncSpawnStatement(expr)} >/dev/null",
                 _ => UnsupportedExpression(expr)
             };
@@ -627,25 +638,36 @@ public partial class BashGenerator
     private string GenerateExecStatement(CommandExpression expr)
     {
         if (expr.Arguments.Count == 1)
-            return $"brash_exec_cmd \"{GenerateExpression(expr.Arguments[0])}\"";
+        {
+            var value = GenerateExpression(expr.Arguments[0]);
+            if (expr.Arguments[0] is LiteralExpression
+                {
+                    Type: PrimitiveType { PrimitiveKind: PrimitiveType.Kind.String }
+                })
+            {
+                return $"bash -lc \"{value}\"";
+            }
 
-        return $"brash_exec_cmd \"{GenerateExpression(new CommandExpression { Kind = CommandKind.Cmd, Arguments = expr.Arguments })}\"";
+            return $"brash_exec_cmd \"{value}\"";
+        }
+
+        return $"brash_exec_cmd \"{GenerateCommandTextFromArgs(expr.Arguments)}\"";
     }
 
     private string GenerateSpawnStatement(CommandExpression expr)
     {
         if (expr.Arguments.Count == 1)
-            return $"brash_spawn_cmd \"{GenerateExpression(expr.Arguments[0])}\" >/dev/null";
+            return $"bash -lc \"{GenerateExpression(expr.Arguments[0])}\" >/dev/null 2>/dev/null &";
 
-        return $"brash_spawn_cmd \"{GenerateExpression(new CommandExpression { Kind = CommandKind.Cmd, Arguments = expr.Arguments })}\" >/dev/null";
+        return $"bash -lc \"{GenerateCommandTextFromArgs(expr.Arguments)}\" >/dev/null 2>/dev/null &";
     }
 
     private string GenerateAsyncExecStatement(CommandExpression expr)
     {
         if (expr.Arguments.Count == 1)
-            return $"brash_async_exec_cmd \"{GenerateExpression(expr.Arguments[0])}\"";
+            return $"bash -lc \"{GenerateExpression(expr.Arguments[0])}\" >/dev/null 2>/dev/null &";
 
-        return $"brash_async_exec_cmd \"{GenerateExpression(new CommandExpression { Kind = CommandKind.Cmd, Arguments = expr.Arguments })}\"";
+        return $"bash -lc \"{GenerateCommandTextFromArgs(expr.Arguments)}\" >/dev/null 2>/dev/null &";
     }
 
     private string GenerateAsyncSpawnStatement(CommandExpression expr)
@@ -653,7 +675,16 @@ public partial class BashGenerator
         if (expr.Arguments.Count == 1)
             return $"brash_async_spawn_cmd \"{GenerateExpression(expr.Arguments[0])}\"";
 
-        return $"brash_async_spawn_cmd \"{GenerateExpression(new CommandExpression { Kind = CommandKind.Cmd, Arguments = expr.Arguments })}\"";
+        return $"brash_async_spawn_cmd \"{GenerateCommandTextFromArgs(expr.Arguments)}\"";
+    }
+
+    private string GenerateCommandTextFromArgs(IReadOnlyList<Expression> arguments)
+    {
+        return GenerateExpression(new CommandExpression
+        {
+            Kind = CommandKind.Cmd,
+            Arguments = arguments.ToList()
+        });
     }
 
     private void GenerateEnumDeclaration(EnumDeclaration enumDecl)

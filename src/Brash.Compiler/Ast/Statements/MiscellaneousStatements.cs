@@ -21,3 +21,8 @@ public class ExpressionStatement : Statement
 {
     public Expression Expression { get; set; } = null!;
 }
+
+public class ShStatement : Statement
+{
+    public string Script { get; set; } = string.Empty;
+}

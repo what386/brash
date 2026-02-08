@@ -34,11 +34,16 @@ statement
     | whileLoop
     | tryStatement
     | importStatement
+    | shStatement
     | returnStatement
     | throwStatement
     | breakStatement
     | continueStatement
     | expressionStatement
+    ;
+
+shStatement
+    : SH_STATEMENT
     ;
 
 // Variable Declarations
@@ -421,6 +426,9 @@ RBRACK      : ']';
 
 // Preprocessor
 HASH        : '#';
+SH_STATEMENT
+    : 'sh' [ \t]+ ~[\r\n]+
+    ;
 
 // Whitespace and Comments
 WS

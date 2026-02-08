@@ -16,6 +16,7 @@ public class SemanticAnalyzer
     private readonly NullabilityChecker nullabilityChecker;
     private readonly SymbolResolver symbolResolver;
     private readonly MutabilityChecker mutabilityChecker;
+    private readonly ShStatementChecker shStatementChecker;
 
     private TypeNode? currentFunctionReturnType;
     private string? currentTypeName; // For 'self' in methods
@@ -29,6 +30,7 @@ public class SemanticAnalyzer
         this.nullabilityChecker = new NullabilityChecker(diagnostics, typeChecker);
         this.symbolResolver = new SymbolResolver(diagnostics, symbolTable, typeChecker, nullabilityChecker);
         this.mutabilityChecker = new MutabilityChecker(diagnostics, symbolTable);
+        this.shStatementChecker = new ShStatementChecker(diagnostics);
     }
 
     public SymbolTable SymbolTable => symbolTable;
@@ -283,6 +285,10 @@ public class SemanticAnalyzer
 
             case ExpressionStatement exprStmt:
                 symbolResolver.ResolveExpressionType(exprStmt.Expression);
+                break;
+
+            case ShStatement shStatement:
+                shStatementChecker.Analyze(shStatement);
                 break;
 
             case StructDeclaration structDecl:

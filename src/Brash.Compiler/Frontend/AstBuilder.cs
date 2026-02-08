@@ -328,6 +328,19 @@ public class AstBuilder : BrashBaseVisitor<AstNode>
         };
     }
 
+    public override AstNode VisitShStatement(BrashParser.ShStatementContext context)
+    {
+        var raw = context.SH_STATEMENT().GetText();
+        var script = raw.Length <= 2 ? string.Empty : raw[2..].TrimStart();
+
+        return new ShStatement
+        {
+            Line = context.Start.Line,
+            Column = context.Start.Column,
+            Script = script
+        };
+    }
+
     public override AstNode VisitThrowStatement(BrashParser.ThrowStatementContext context)
     {
         return new ThrowStatement

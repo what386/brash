@@ -89,6 +89,7 @@ public static class DiagnosticCodes
     public const string UnreachableCode = "W200";
     public const string MissingReturnPath = "W201";
     public const string ShadowedVariable = "W300";
+    public const string SuspiciousShInterpolation = "W400";
 
     // ============================================
     // Info (I001-I999)
