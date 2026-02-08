@@ -365,7 +365,7 @@ public class BashGeneratorE2ETests
                 return "<<" + msg + ">>"
             end
 
-            let text = "value=" + (string)14
+            let text = "value=" + (14 as string)
             let wrapped = wrap("prefix " + text)
             exec("printf", "%s\n", wrapped)
             """;

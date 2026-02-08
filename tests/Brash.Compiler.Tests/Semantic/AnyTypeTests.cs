@@ -39,7 +39,7 @@ public class AnyTypeTests
         var diagnostics = Analyze(
             """
             let value: any = 5
-            print((string)value)
+            print(value as string)
             """);
 
         Assert.False(diagnostics.HasErrors, string.Join(Environment.NewLine, diagnostics.GetErrors()));

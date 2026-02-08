@@ -14,7 +14,7 @@ public class CastAndConcatTests
     [Fact]
     public void Parser_BuildsCastExpressionAstNode()
     {
-        const string source = "let text = (string)5";
+        const string source = "let text = 5 as string";
 
         var program = ParseProgram(source);
         var declaration = Assert.IsType<Brash.Compiler.Ast.Statements.VariableDeclaration>(program.Statements[0]);
@@ -29,8 +29,8 @@ public class CastAndConcatTests
     {
         var diagnostics = Analyze(
             """
-            let text = (string)5
-            let n = (int)3.14
+            let text = 5 as string
+            let n = 3.14 as int
             """);
 
         Assert.False(diagnostics.HasErrors, string.Join(Environment.NewLine, diagnostics.GetErrors()));
@@ -46,7 +46,7 @@ public class CastAndConcatTests
             end
 
             let person = Person { name: "Alice" }
-            let bad = (int)person
+            let bad = person as int
             """);
 
         Assert.Contains(diagnostics.GetErrors(), d => d.Message.Contains("Cannot cast value of type 'Person' to 'int'"));
@@ -69,6 +69,60 @@ public class CastAndConcatTests
 
         Assert.Equal(0, result.ExitCode);
         Assert.Equal("Hello_Brash", result.StdOut.Trim());
+    }
+
+    [Fact]
+    public void Semantic_AllowsStringSplitReturningStringArrayLikeValue()
+    {
+        var diagnostics = Analyze(
+            """
+            let parts = "a,b,c".split(",")
+            let first = parts[0]
+            print(first)
+            """);
+
+        Assert.False(diagnostics.HasErrors, string.Join(Environment.NewLine, diagnostics.GetErrors()));
+    }
+
+    [Fact]
+    public void CodeGen_SupportsStringSplitAndIndexAccess()
+    {
+        const string source =
+            """
+            let parts = "alpha,beta,gamma".split(",")
+            print(parts[1])
+            """;
+
+        var result = CompileAndRun(source);
+
+        Assert.Equal(0, result.ExitCode);
+        Assert.Equal("beta", result.StdOut.Trim());
+    }
+
+    [Fact]
+    public void Semantic_AllowsStringSubstring()
+    {
+        var diagnostics = Analyze(
+            """
+            let text = "abcdef".substring(1, 4)
+            print(text)
+            """);
+
+        Assert.False(diagnostics.HasErrors, string.Join(Environment.NewLine, diagnostics.GetErrors()));
+    }
+
+    [Fact]
+    public void CodeGen_SupportsStringSubstring()
+    {
+        const string source =
+            """
+            print("abcdef".substring(1, 4))
+            """;
+
+        var result = CompileAndRun(source);
+
+        Assert.Equal(0, result.ExitCode);
+        Assert.Equal("bcd", result.StdOut.Trim());
     }
 
     private static DiagnosticBag Analyze(string source)
