@@ -27,7 +27,7 @@
 - `async spawn(...)` creates async process handles.
 - `await process` waits and materializes captured stdout.
 - Command pipelines are lazy values until materialized with `exec(...)`.
-- `bash(...)` executes raw shell text in statement context.
+- `sh ...` executes raw shell text in statement context.
 
 ### Runtime helpers emitted in Bash
 
