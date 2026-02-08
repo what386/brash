@@ -126,6 +126,59 @@ public partial class BashGenerator
             EmitLine();
         }
 
+        if (usage.NeedsStringSplit)
+        {
+            EmitLine("brash_string_split() {");
+            EmitLine("    local __input=\"$1\"");
+            EmitLine("    local __delim=\"$2\"");
+            EmitLine("    local __map");
+            EmitLine("    local __index=0");
+            EmitLine("    __map=$(brash_map_new)");
+            EmitLine("    : > \"${__map}\"");
+            EmitLine("    if [[ -z \"${__delim}\" ]]; then");
+            EmitLine("        local __len=\"${#__input}\"");
+            EmitLine("        local __i=0");
+            EmitLine("        while [[ ${__i} -lt ${__len} ]]; do");
+            EmitLine("            brash_map_set \"${__map}\" \"${__index}\" \"${__input:${__i}:1}\"");
+            EmitLine("            __i=$((__i + 1))");
+            EmitLine("            __index=$((__index + 1))");
+            EmitLine("        done");
+            EmitLine("        printf '%s' \"${__map}\"");
+            EmitLine("        return");
+            EmitLine("    fi");
+            EmitLine("    while [[ \"${__input}\" == *\"${__delim}\"* ]]; do");
+            EmitLine("        local __part=\"${__input%%\"${__delim}\"*}\"");
+            EmitLine("        brash_map_set \"${__map}\" \"${__index}\" \"${__part}\"");
+            EmitLine("        __input=\"${__input#*\"${__delim}\"}\"");
+            EmitLine("        __index=$((__index + 1))");
+            EmitLine("    done");
+            EmitLine("    brash_map_set \"${__map}\" \"${__index}\" \"${__input}\"");
+            EmitLine("    printf '%s' \"${__map}\"");
+            EmitLine("}");
+            EmitLine();
+        }
+
+        if (usage.NeedsStringSubstring)
+        {
+            EmitLine("brash_string_substring() {");
+            EmitLine("    local __input=\"$1\"");
+            EmitLine("    local __start=\"${2:-0}\"");
+            EmitLine("    local __end=\"${3:-0}\"");
+            EmitLine("    local __len=\"${#__input}\"");
+            EmitLine("    if (( __start < 0 )); then __start=0; fi");
+            EmitLine("    if (( __end < 0 )); then __end=0; fi");
+            EmitLine("    if (( __start > __len )); then __start=__len; fi");
+            EmitLine("    if (( __end > __len )); then __end=__len; fi");
+            EmitLine("    if (( __end < __start )); then");
+            EmitLine("        printf ''");
+            EmitLine("        return");
+            EmitLine("    fi");
+            EmitLine("    local __count=$((__end - __start))");
+            EmitLine("    printf '%s' \"${__input:__start:__count}\"");
+            EmitLine("}");
+            EmitLine();
+        }
+
         if (usage.NeedsMapGet)
         {
             EmitLine("brash_map_get() {");

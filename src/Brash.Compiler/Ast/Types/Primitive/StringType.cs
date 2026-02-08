@@ -5,7 +5,7 @@ public sealed class StringType : PrimitiveType
     public sealed class BuiltinMethod
     {
         public required string Name { get; init; }
-        public required Kind ReturnKind { get; init; }
+        public required TypeNode ReturnType { get; init; }
         public required Kind[] ParameterKinds { get; init; }
         public required Func<string, IReadOnlyList<string>, string> EmitBash { get; init; }
     }
@@ -15,7 +15,7 @@ public sealed class StringType : PrimitiveType
         ["length"] = new BuiltinMethod
         {
             Name = "length",
-            ReturnKind = Kind.Int,
+            ReturnType = new PrimitiveType { PrimitiveKind = Kind.Int },
             ParameterKinds = Array.Empty<Kind>(),
             EmitBash = (receiver, _) =>
                 $"$(bash -lc \"printf '%s' \\\"\\${{#1}}\\\"\" _ {receiver})"
@@ -23,7 +23,7 @@ public sealed class StringType : PrimitiveType
         ["trim"] = new BuiltinMethod
         {
             Name = "trim",
-            ReturnKind = Kind.String,
+            ReturnType = new PrimitiveType { PrimitiveKind = Kind.String },
             ParameterKinds = Array.Empty<Kind>(),
             EmitBash = (receiver, _) =>
                 $"$(bash -lc \"printf '%s' \\\"\\$1\\\" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//'\" _ {receiver})"
@@ -31,7 +31,7 @@ public sealed class StringType : PrimitiveType
         ["to_upper"] = new BuiltinMethod
         {
             Name = "to_upper",
-            ReturnKind = Kind.String,
+            ReturnType = new PrimitiveType { PrimitiveKind = Kind.String },
             ParameterKinds = Array.Empty<Kind>(),
             EmitBash = (receiver, _) =>
                 $"$(bash -lc \"printf '%s' \\\"\\$1\\\" | tr '[:lower:]' '[:upper:]'\" _ {receiver})"
@@ -39,7 +39,7 @@ public sealed class StringType : PrimitiveType
         ["to_lower"] = new BuiltinMethod
         {
             Name = "to_lower",
-            ReturnKind = Kind.String,
+            ReturnType = new PrimitiveType { PrimitiveKind = Kind.String },
             ParameterKinds = Array.Empty<Kind>(),
             EmitBash = (receiver, _) =>
                 $"$(bash -lc \"printf '%s' \\\"\\$1\\\" | tr '[:upper:]' '[:lower:]'\" _ {receiver})"
@@ -47,7 +47,7 @@ public sealed class StringType : PrimitiveType
         ["contains"] = new BuiltinMethod
         {
             Name = "contains",
-            ReturnKind = Kind.Bool,
+            ReturnType = new PrimitiveType { PrimitiveKind = Kind.Bool },
             ParameterKinds = new[] { Kind.String },
             EmitBash = (receiver, args) =>
                 $"$(bash -lc \"if printf '%s' \\\"\\$1\\\" | grep -Fq -- \\\"\\$2\\\"; then printf '1'; else printf '0'; fi\" _ {receiver} {args[0]})"
@@ -55,7 +55,7 @@ public sealed class StringType : PrimitiveType
         ["starts_with"] = new BuiltinMethod
         {
             Name = "starts_with",
-            ReturnKind = Kind.Bool,
+            ReturnType = new PrimitiveType { PrimitiveKind = Kind.Bool },
             ParameterKinds = new[] { Kind.String },
             EmitBash = (receiver, args) =>
                 $"$(bash -lc \"if [[ \\\"\\$1\\\" == \\\"\\$2\\\"* ]]; then printf '1'; else printf '0'; fi\" _ {receiver} {args[0]})"
@@ -63,7 +63,7 @@ public sealed class StringType : PrimitiveType
         ["ends_with"] = new BuiltinMethod
         {
             Name = "ends_with",
-            ReturnKind = Kind.Bool,
+            ReturnType = new PrimitiveType { PrimitiveKind = Kind.Bool },
             ParameterKinds = new[] { Kind.String },
             EmitBash = (receiver, args) =>
                 $"$(bash -lc \"if [[ \\\"\\$1\\\" == *\\\"\\$2\\\" ]]; then printf '1'; else printf '0'; fi\" _ {receiver} {args[0]})"
@@ -71,10 +71,29 @@ public sealed class StringType : PrimitiveType
         ["is_empty"] = new BuiltinMethod
         {
             Name = "is_empty",
-            ReturnKind = Kind.Bool,
+            ReturnType = new PrimitiveType { PrimitiveKind = Kind.Bool },
             ParameterKinds = Array.Empty<Kind>(),
             EmitBash = (receiver, _) =>
                 $"$(bash -lc \"if [ -z \\\"\\$1\\\" ]; then printf '1'; else printf '0'; fi\" _ {receiver})"
+        },
+        ["split"] = new BuiltinMethod
+        {
+            Name = "split",
+            ReturnType = new ArrayType
+            {
+                ElementType = new PrimitiveType { PrimitiveKind = Kind.String }
+            },
+            ParameterKinds = new[] { Kind.String },
+            EmitBash = (receiver, args) =>
+                $"$(brash_string_split {receiver} {args[0]})"
+        },
+        ["substring"] = new BuiltinMethod
+        {
+            Name = "substring",
+            ReturnType = new PrimitiveType { PrimitiveKind = Kind.String },
+            ParameterKinds = new[] { Kind.Int, Kind.Int },
+            EmitBash = (receiver, args) =>
+                $"$(brash_string_substring {receiver} {args[0]} {args[1]})"
         }
     };
 

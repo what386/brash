@@ -186,7 +186,6 @@ expressionStatement
 expression
     : primaryExpression                                          # PrimaryExpr
     | 'await' expression                                         # AwaitExpr
-    | '(' type ')' expression                                    # CastExpr
     | expression '|' expression                                  # PipeExpr
     | expression ('.' IDENTIFIER '(' argumentList? ')')          # MethodCallExpr
     | expression '.' IDENTIFIER                                  # MemberAccessExpr
@@ -202,6 +201,7 @@ expression
     | expression ('..' ) expression                              # RangeExpr
     | expression ('==' | '!=' | '<' | '>' | '<=' | '>=') expression # ComparisonExpr
     | expression ('&&' | '||') expression                        # LogicalExpr
+    | expression 'as' type                                       # CastExpr
     | expression '??' expression                                 # NullCoalesceExpr
     | expression '?.' IDENTIFIER                                 # SafeNavigationExpr
     ;
@@ -333,6 +333,7 @@ CATCH       : 'catch';
 THROW       : 'throw';
 IMPORT      : 'import';
 FROM        : 'from';
+AS          : 'as';
 PUB         : 'pub';
 STATIC      : 'static';
 END         : 'end';

@@ -271,7 +271,7 @@ public class SymbolResolver
             }
         }
 
-        return new PrimitiveType { PrimitiveKind = builtin.ReturnKind };
+        return builtin.ReturnType;
     }
 
     private TypeNode ResolveMemberAccess(MemberAccessExpression member)

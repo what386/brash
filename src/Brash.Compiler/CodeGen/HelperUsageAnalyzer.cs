@@ -25,6 +25,12 @@ internal static class HelperUsageAnalyzer
         if (usage.NeedsIndexSet)
             usage.NeedsMapSet = true;
 
+        if (usage.NeedsStringSplit)
+        {
+            usage.NeedsMapNew = true;
+            usage.NeedsMapSet = true;
+        }
+
         return usage;
     }
 
@@ -129,6 +135,10 @@ internal static class HelperUsageAnalyzer
                 VisitExpression(methodCall.Object, usage);
                 foreach (var arg in methodCall.Arguments)
                     VisitExpression(arg, usage);
+                if (string.Equals(methodCall.MethodName, "split", StringComparison.Ordinal))
+                    usage.NeedsStringSplit = true;
+                if (string.Equals(methodCall.MethodName, "substring", StringComparison.Ordinal))
+                    usage.NeedsStringSubstring = true;
                 break;
             case MemberAccessExpression member:
                 usage.NeedsGetField = true;
