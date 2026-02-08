@@ -24,6 +24,9 @@ public class FunctionSymbol
     public TypeNode ReturnType { get; set; } = null!;
     public FunctionDeclaration Declaration { get; set; } = null!;
     public bool IsBuiltin { get; set; }
+    public bool IsVariadic { get; set; }
+    public TypeNode? VariadicParameterType { get; set; }
+    public int? MaxArgumentCount { get; set; }
 }
 
 public class TypeSymbol
@@ -289,6 +292,28 @@ public class SymbolTable
 
     private void RegisterBuiltins()
     {
+        functions["print"] = new FunctionSymbol
+        {
+            Name = "print",
+            ParameterTypes = new List<TypeNode>(),
+            ParameterNames = new List<string>(),
+            ReturnType = new PrimitiveType { PrimitiveKind = PrimitiveType.Kind.Void },
+            IsBuiltin = true,
+            IsVariadic = true,
+            VariadicParameterType = new PrimitiveType { PrimitiveKind = PrimitiveType.Kind.String }
+        };
+
+        functions["println"] = new FunctionSymbol
+        {
+            Name = "println",
+            ParameterTypes = new List<TypeNode>(),
+            ParameterNames = new List<string>(),
+            ReturnType = new PrimitiveType { PrimitiveKind = PrimitiveType.Kind.Void },
+            IsBuiltin = true,
+            IsVariadic = true,
+            VariadicParameterType = new PrimitiveType { PrimitiveKind = PrimitiveType.Kind.String }
+        };
+
         functions["panic"] = new FunctionSymbol
         {
             Name = "panic",
@@ -299,6 +324,18 @@ public class SymbolTable
             ParameterNames = new List<string> { "message" },
             ReturnType = new PrimitiveType { PrimitiveKind = PrimitiveType.Kind.Void },
             IsBuiltin = true
+        };
+
+        functions["readln"] = new FunctionSymbol
+        {
+            Name = "readln",
+            ParameterTypes = new List<TypeNode>(),
+            ParameterNames = new List<string>(),
+            ReturnType = new PrimitiveType { PrimitiveKind = PrimitiveType.Kind.String },
+            IsBuiltin = true,
+            IsVariadic = true,
+            VariadicParameterType = new PrimitiveType { PrimitiveKind = PrimitiveType.Kind.String },
+            MaxArgumentCount = 1
         };
 
     }

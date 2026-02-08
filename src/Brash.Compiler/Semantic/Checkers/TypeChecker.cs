@@ -301,6 +301,40 @@ public class TypeChecker
 
     public void ValidateFunctionCall(FunctionSymbol function, List<TypeNode> argumentTypes, int line, int column)
     {
+        if (function.IsVariadic)
+        {
+            if (function.MaxArgumentCount.HasValue && argumentTypes.Count > function.MaxArgumentCount.Value)
+            {
+                diagnostics.AddError(
+                    $"Function '{function.Name}' expects at most {function.MaxArgumentCount.Value} arguments, got {argumentTypes.Count}",
+                    line, column);
+                return;
+            }
+
+            if (argumentTypes.Count < function.ParameterTypes.Count)
+            {
+                diagnostics.AddError(
+                    $"Function '{function.Name}' expects at least {function.ParameterTypes.Count} arguments, got {argumentTypes.Count}",
+                    line, column);
+                return;
+            }
+
+            for (int i = 0; i < function.ParameterTypes.Count; i++)
+            {
+                ValidateFunctionArgument(function.Name, function.ParameterTypes[i], argumentTypes[i], i, line, column);
+            }
+
+            if (function.VariadicParameterType != null)
+            {
+                for (int i = function.ParameterTypes.Count; i < argumentTypes.Count; i++)
+                {
+                    ValidateFunctionArgument(function.Name, function.VariadicParameterType, argumentTypes[i], i, line, column);
+                }
+            }
+
+            return;
+        }
+
         if (argumentTypes.Count != function.ParameterTypes.Count)
         {
             diagnostics.AddError(
@@ -311,19 +345,27 @@ public class TypeChecker
 
         for (int i = 0; i < argumentTypes.Count; i++)
         {
-            var expectedType = function.ParameterTypes[i];
-            var actualType = argumentTypes[i];
+            ValidateFunctionArgument(function.Name, function.ParameterTypes[i], argumentTypes[i], i, line, column);
+        }
+    }
 
-            var isStringCoercion =
-                IsStringType(expectedType) &&
-                IsStringConvertible(actualType);
+    private void ValidateFunctionArgument(
+        string functionName,
+        TypeNode expectedType,
+        TypeNode actualType,
+        int argumentIndexZeroBased,
+        int line,
+        int column)
+    {
+        var isStringCoercion =
+            IsStringType(expectedType) &&
+            IsStringConvertible(actualType);
 
-            if (!isStringCoercion && !AreTypesCompatible(expectedType, actualType))
-            {
-                diagnostics.AddError(
-                    $"Argument {i + 1} to '{function.Name}': expected '{expectedType}', got '{actualType}'",
-                    line, column);
-            }
+        if (!isStringCoercion && !AreTypesCompatible(expectedType, actualType))
+        {
+            diagnostics.AddError(
+                $"Argument {argumentIndexZeroBased + 1} to '{functionName}': expected '{expectedType}', got '{actualType}'",
+                line, column);
         }
     }
 

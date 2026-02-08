@@ -14,4 +14,5 @@ internal sealed class HelperUsage
     public bool NeedsExecCmd { get; set; }
     public bool NeedsAsyncSpawnCmd { get; set; }
     public bool NeedsAwait { get; set; }
+    public bool NeedsReadLn { get; set; }
 }

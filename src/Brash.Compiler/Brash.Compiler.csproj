@@ -16,10 +16,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../Brash.StandardLibrary/Brash.StandardLibrary.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
     <Antlr4 Include="Brash.g4">
     </Antlr4>
   </ItemGroup>

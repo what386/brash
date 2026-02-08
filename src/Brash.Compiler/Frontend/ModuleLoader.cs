@@ -5,7 +5,6 @@ using Brash.Compiler.Ast;
 using Brash.Compiler.Ast.Statements;
 using Brash.Compiler.Diagnostics;
 using Brash.Compiler.Preprocessor;
-using Brash.StandardLibrary;
 
 public static class ModuleLoader
 {
@@ -236,9 +235,6 @@ public static class ModuleLoader
 
     private static string ResolveImportPath(string importRoot, string moduleSpec)
     {
-        if (StandardLibraryLoader.TryResolveImportPath(importRoot, moduleSpec, out var stdPath))
-            return stdPath;
-
         return Path.GetFullPath(Path.Combine(importRoot, moduleSpec));
     }
 

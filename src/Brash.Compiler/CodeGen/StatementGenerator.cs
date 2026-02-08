@@ -572,10 +572,32 @@ public partial class BashGenerator
             return $"printf '{format}\\n' {panicArgs} >&2; exit 1";
         }
 
+        if (call.FunctionName == "readln")
+        {
+            if (call.Arguments.Count == 0)
+                return "brash_readln >/dev/null";
+
+            return $"brash_readln {GenerateSingleShellArg(call.Arguments[0])} >/dev/null";
+        }
+
         if (call.FunctionName == "print")
         {
+            if (call.Arguments.Count == 0)
+                return "printf ''";
+
             var printArgs = string.Join(" ", call.Arguments.Select(GenerateSingleShellArg));
-            return $"printf '%s\\n' {printArgs}";
+            var format = string.Join(" ", Enumerable.Repeat("%s", call.Arguments.Count));
+            return $"printf '{format}' {printArgs}";
+        }
+
+        if (call.FunctionName == "println")
+        {
+            if (call.Arguments.Count == 0)
+                return "printf '\\n'";
+
+            var printArgs = string.Join(" ", call.Arguments.Select(GenerateSingleShellArg));
+            var format = string.Join(" ", Enumerable.Repeat("%s", call.Arguments.Count));
+            return $"printf '{format}\\n' {printArgs}";
         }
 
         var args = string.Join(" ", call.Arguments.Select(GenerateSingleShellArg));
