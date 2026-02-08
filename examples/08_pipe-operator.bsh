@@ -11,7 +11,7 @@
 // Pipes compose Command values.
 // To execute a pipe, wrap it with exec(...).
 let result = exec(cmd("ls") | cmd("grep", ".bsh") | cmd("wc", "-l"))
-print($"Number of .bsh files: {result}")
+println($"Number of .bsh files: {result}")
 
 
 // ---------------
@@ -24,7 +24,7 @@ let log_errors = exec(
     | cmd("grep", "ERROR")
     | cmd("sort")
     | cmd("uniq"))
-print(log_errors)
+println(log_errors)
 
 // Pipe type rule:
 // Both sides of `|` must be Command.

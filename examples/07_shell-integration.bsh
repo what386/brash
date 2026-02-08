@@ -17,7 +17,7 @@ exec("git", "status")
 
 // cmd() builds a lazy command value; exec(...) materializes stdout
 let listing = exec(cmd("ls", "-la"))
-print(listing)
+println(listing)
 
 
 // ---------------
@@ -26,9 +26,9 @@ print(listing)
 
 let status = exec("test", "-f", "myfile.txt")
 if status == ""
-    print("File exists")
+    println("File exists")
 else
-    print("File not found")
+    println("File not found")
 end
 
 // ---------------
@@ -37,14 +37,14 @@ end
 
 // spawn(...) starts a background process and returns a Process handle (PID as string)
 let pid: Process = spawn("sleep", "10")
-print($"Spawned process id: {pid}")
+println($"Spawned process id: {pid}")
 
 // Kill a running process
 exec("kill", pid)
 
 // Get environment variable
 let home = exec("bash", "-lc", "echo $HOME")
-print($"Home directory: {home}")
+println($"Home directory: {home}")
 
 // ---------------
 // Raw Bash Injection

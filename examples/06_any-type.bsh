@@ -3,23 +3,19 @@
 // The `any` type and explicit casting
 // ============================================
 
-fn print(text: string)
-    exec("echo", text)
-end
-
 // `any` can hold values of different concrete types.
 let int_value: any = 5
 let string_value: any = "42"
 let bool_value: any = true
 
 // Values of type `any` must be explicitly cast before typed use.
-let parsed_int = (int)string_value
-let int_text = (string)int_value
-let bool_text = (string)bool_value
+let parsed_int = string_value as int
+let int_text = int_value as string
+let bool_text = bool_value as string
 
-print("parsed_int = " + (string)parsed_int)
-print("int_text = " + int_text)
-print("bool_text = " + bool_text)
+println("parsed_int = " + (parsed_int as string))
+println("int_text = " + int_text)
+println("bool_text = " + bool_text)
 
 // This would fail semantic checks (implicit use of `any` as string):
-// print(int_value)
+// println(int_value)

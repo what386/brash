@@ -1,0 +1,7 @@
+pub const CONFIG = {
+    "version": "0.1.0"
+}
+
+pub fn helper_fn(input: string): string
+    return "helper:" + input
+end

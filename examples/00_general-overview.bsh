@@ -14,7 +14,7 @@ let name: string = "Alice"
 let mut middle_name: string? = null
 middle_name = "Jane"
 let display_name = middle_name ?? "No middle name"
-let count_as_text = (string)5
+let count_as_text = 5 as string
 
 // Functions
 fn greet(name: string, greeting: string = "Hello"): string
@@ -24,10 +24,6 @@ end
 fn increment(mut count: int): int
     count = count + 1
     return count
-end
-
-fn print(text: string)
-    exec("echo", text)
 end
 
 // Tuple returns + tuple destructuring with per-element mutability
@@ -41,11 +37,11 @@ thing = "updated"
 
 // Control flow
 if x > 0
-    print("positive")
+    println("positive")
 end
 
 for i in 0..10 step 2
-    print((string)i)
+    println(i as string)
 end
 
 let mut counter = 0
@@ -72,28 +68,28 @@ impl Person
 end
 
 let person = Person { name: "Alice", age: 30, account: AccountType.Checking }
-print((string)(person.is_adult()))
+println(person.is_adult() as string)
 
 // Command model
 let pipeline = cmd("printf", "abc\n") | cmd("tr", "a-z", "A-Z")
 let output = exec(pipeline)
-print(output)
+println(output)
 
 let pid: Process = spawn("sleep", "1")
-print((string)pid)
+println(pid as string)
 
 // Error handling
 try
     throw "boom"
 catch err
     // catch variable currently contains textual stderr
-    print((string)err)
+    println(err as string)
 end
 
 // Preprocessor directives
 #define DEBUG 1
 #if DEBUG
-print("debug enabled")
+println("debug enabled")
 #endif
 
 // Not yet transpilation-ready (kept for future versions):

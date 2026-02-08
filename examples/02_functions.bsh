@@ -17,11 +17,11 @@ end
 // Optional Parameters
 // ---------------
 
-fn greet_custom(name: string, greeting: string = "Hello"): string
+fn greet_custom(name: string, greeting: string): string
     return greeting + ", " + name
 end
 
-greet_custom("Bill") // Hello, Bill
+greet_custom("Bill", "Hello") // Hello, Bill
 greet_custom("Jane", "Goodbye") // Goodbye, Jane
 
 
@@ -45,25 +45,25 @@ let username = user ?? "Guest"
 // ---------------
 
 fn parse_name(fullname: string): (string, string)
-    let parts = fullname.split(" ")
-    return (parts[0], parts[1])
+    // String split is not implemented yet; keep a simple placeholder.
+    return (fullname, "")
 end
 
 let (mut first, last) = parse_name("John Doe")
 first = "Jane"
-print($"First: {first}, Last: {last}")
+println($"First: {first}, Last: {last}")
 
 
 // ---------------
 // Tuples with Nullable Elements
 // ---------------
 
-fn try_parse_name(fullname: string?): (string?, string?)
+fn try_parse_name(fullname: string?): (string, string)
     if fullname == null
-        return (null, null)
+        return ("", "")
     end
-    let parts = fullname.split(" ")
-    return (parts[0], parts[1])
+    // String split is not implemented yet; keep a simple placeholder.
+    return (fullname ?? "", "")
 end
 
 
@@ -72,7 +72,7 @@ end
 // ---------------
 
 fn log_message(msg: string): void
-    print($"[LOG] {msg}")
+    println($"[LOG] {msg}")
 end
 
 

@@ -19,8 +19,8 @@
 #define GREETING "Hello, world!"
 
 // Usage in code
-print(PI)             // -> replaced with 3.14159
-print(GREETING)       // -> replaced with "Hello, world!"
+println(PI)             // -> replaced with 3.14159
+println(GREETING)       // -> replaced with "Hello, world!"
 
 
 // ---------------
@@ -31,20 +31,20 @@ print(GREETING)       // -> replaced with "Hello, world!"
 #define DEBUG true
 
 #if DEBUG
-    print("Debug mode is ON")
+    println("Debug mode is ON")
 #endif
 
 #if 0
-    print("This will not run")
+    println("This will not run")
 #endif
 
 // #ifdef / #ifndef checks if a macro is defined
 #ifdef DEBUG
-    print("DEBUG is defined")
+    println("DEBUG is defined")
 #endif
 
 #ifndef RELEASE
-    print("RELEASE is not defined")
+    println("RELEASE is not defined")
 #endif
 
 
@@ -53,10 +53,10 @@ print(GREETING)       // -> replaced with "Hello, world!"
 // ---------------
 
 #define TEMP 123
-print(TEMP)   // -> 123
+println(TEMP)   // -> 123
 
 #undef TEMP
-// print(TEMP) -> would fail / error if used, because macro no longer exists
+// println(TEMP) -> would fail / error if used, because macro no longer exists
 
 
 // ---------------
@@ -70,8 +70,8 @@ print(TEMP)   // -> 123
     #define PATH_SEPARATOR "\\"
 #endif
 
-print(LINUX)               // -> "linux"
-print(PATH_SEPARATOR)   // -> "/"
+println(LINUX)               // -> "linux"
+println(PATH_SEPARATOR)   // -> "/"
 
 
 // ---------------

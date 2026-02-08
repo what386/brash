@@ -58,8 +58,8 @@ let age_display = optional_age ?? 0
 // Explicit Casts
 // ---------------
 
-let age_as_string = (string)age
-let bool_text = (string)is_admin
+let age_as_string = age as string
+let bool_text = is_admin as string
 
 
 // ---------------
@@ -89,7 +89,19 @@ let greeting = $"Hello, {user}!"
 let math = $"5 + 3 = {5 + 3}"
 
 let concat = "User: " + user
-let tagged_age = "Age: " + (string)age
+let tagged_age = "Age: " + (age as string)
+
+
+// ---------------
+// Builtin I/O
+// ---------------
+
+print("Loading ")
+println("done")
+
+// readln() / readln(prompt) are available when interactive input is needed.
+// let username = readln("Enter username: ")
+// println("Hello, " + username)
 
 
 // ---------------

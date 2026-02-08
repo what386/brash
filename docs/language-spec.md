@@ -43,6 +43,14 @@ This document describes the behavior currently implemented by the compiler and B
 - `sh ...` executes shell text directly (statement context):
   - emitted inline in generated Bash exactly as written after `sh`
 
+### Builtin I/O
+
+- `print(...)` writes arguments without a trailing newline.
+- `println(...)` writes arguments with a trailing newline.
+- `readln()` reads one line from stdin and returns `string`.
+- `readln(prompt)` writes `prompt` (without newline), then reads one line and returns `string`.
+- `print`, `println`, `readln`, and `panic` are reserved builtin names and cannot be redefined.
+
 ### Pipe operator
 
 - Command mode:
@@ -66,8 +74,8 @@ This document describes the behavior currently implemented by the compiler and B
 
 - Cast syntax: `(type)expr`
 - Typical usage:
-  - `(string)5`
-  - `(string)(person.is_adult())`
+  - `5 as string`
+  - `person.is_adult() as string`
 - Cast validity is checked in semantic analysis.
 
 ### Error handling

@@ -31,11 +31,10 @@
 
 ### Runtime helpers emitted in Bash
 
-- `brash_build_cmd`
-- `brash_pipe_cmd`
-- `brash_exec_cmd`
-- `brash_spawn_cmd`
 - struct/method helpers (`brash_get_field`, `brash_set_field`, `brash_call_method`)
+- map/index helpers (`brash_map_new`, `brash_map_set`, `brash_map_get`, `brash_map_literal`, `brash_index_get`, `brash_index_set`)
+- command/process helpers (`brash_exec_cmd`, `brash_async_spawn_cmd`, `brash_await`)
+- console input helper (`brash_readln`)
 
 ### Failure policy
 

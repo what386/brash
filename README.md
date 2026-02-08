@@ -71,8 +71,12 @@ Notes:
 - functions and return types
 - structs, enums, `impl` methods, `self`
 - nullability + `??` + safe navigation
-- explicit casts: `(type)expr` (for example `(string)5`)
+- explicit casts: `expr as type` (for example `5 as string`)
 - string concatenation with `+` (for example `"Hello, " + name`)
+- builtin I/O:
+  - `print(...)` writes without a trailing newline
+  - `println(...)` writes with a trailing newline
+  - `readln()` / `readln(prompt)` reads one line from stdin
 - command model:
   - `cmd(...)` -> lazy `Command`
   - `exec(...)` -> blocking execution, returns stdout string
@@ -81,7 +85,7 @@ Notes:
   - `async spawn(...)` -> background process handle (awaitable)
   - `await process` -> waits for `Process` and returns captured stdout
   - pipelines via `|` for command and value flow
-  - `bash("...")` / `bash([[...]])` -> inject raw shell execution (statement context)
+  - `sh ...` -> inject raw shell execution (statement context)
 - module imports:
   - `import { item } from "path.bsh"`
   - `import Name from "path.bsh"`
@@ -119,7 +123,7 @@ Recommended order in `examples/`:
 These currently fail during transpilation/codegen:
 
 - range value codegen (ranges are supported for `for ... in start..end`)
-- `bash(...)` in expression context (use as a statement)
+- `sh ...` in expression context (it is statement-only)
 
 ## Contributing
 

@@ -1,0 +1,3 @@
+pub fn create_user(name: string, age: int): string
+    return name + ":" + (age as string)
+end
