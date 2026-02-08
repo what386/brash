@@ -2027,6 +2027,10 @@
     "named": false
   },
   {
+    "type": "as",
+    "named": false
+  },
+  {
     "type": "async",
     "named": false
   },

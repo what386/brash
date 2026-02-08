@@ -9,12 +9,13 @@ const PREC = {
   OR: 3,
   AND: 4,
   COMPARE: 5,
-  RANGE: 6,
-  ADD: 7,
-  MUL: 8,
-  UNARY: 9,
-  CALL: 10,
-  MEMBER: 11,
+  CAST: 6,
+  RANGE: 7,
+  ADD: 8,
+  MUL: 9,
+  UNARY: 10,
+  CALL: 11,
+  MEMBER: 12,
 };
 
 module.exports = grammar({
@@ -23,10 +24,6 @@ module.exports = grammar({
   extras: ($) => [/\s/, $.line_comment, $.block_comment],
 
   word: ($) => $.identifier,
-
-  conflicts: ($) => [
-    [$.primary_expression, $.base_type],
-  ],
 
   rules: {
     source_file: ($) =>
@@ -252,7 +249,7 @@ module.exports = grammar({
     await_expression: ($) => prec.right(seq("await", $.expression)),
 
     cast_expression: ($) =>
-      prec.right(PREC.UNARY, seq("(", field("type", $.type), ")", field("value", $.expression))),
+      prec.left(PREC.CAST, seq(field("value", $.expression), "as", field("type", $.type))),
 
     pipe_expression: ($) =>
       prec.left(PREC.PIPE, seq(field("left", $.expression), "|", field("right", $.expression))),

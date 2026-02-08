@@ -24,6 +24,7 @@
   "throw"
   "import"
   "from"
+  "as"
   "return"
   "end"
 ] @keyword
@@ -109,6 +110,7 @@
   "|"
   "."
   "?."
+  "as"
 ] @operator
 
 [
