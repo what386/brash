@@ -15,7 +15,6 @@ Brash is approaching a stable `0.1.0` core.
 
 - `src/Brash.Compiler`: compiler implementation (ANTLR grammar, AST, semantic, codegen)
 - `src/Brash.Cli`: user-facing CLI (`brash`)
-- `src/Brash.StandardLibrary`: Brash standard library modules (`std/*`)
 - `tests/Brash.Compiler.Tests`: unit/integration/E2E tests
 - `examples`: language examples and progress targets
 - `docs/language-spec.md`: current implemented language behavior
@@ -88,8 +87,6 @@ Notes:
   - `import Name from "path.bsh"`
   - `import "path.bsh"` for all public exports
   - import paths are resolved from the entry file directory
-  - standard library modules use the `std/` namespace (for example `import "std/fs"` or `import { join } from "std/fs"`)
-  - `std/fs` includes a `Path` struct (`path("...")` or `Path.new("...")`) with path/static helpers and methods like `.exists()`, `.is_dir()`, and `.is_file()`
 
 Example:
 
