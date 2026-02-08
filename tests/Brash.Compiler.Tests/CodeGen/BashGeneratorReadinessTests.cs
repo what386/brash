@@ -324,7 +324,7 @@ public class BashGeneratorReadinessTests
         Assert.Contains("if {", bash);
         Assert.Contains("2>\"${__brash_err_file_", bash);
         Assert.Contains("err=$(cat \"${__brash_err_file_", bash);
-        Assert.Contains("brash_throw \"boom\"", bash);
+        Assert.Contains("printf '%s\\n' \"boom\" >&2; false", bash);
     }
 
     [Fact]
@@ -346,8 +346,8 @@ public class BashGeneratorReadinessTests
         };
 
         var bash = new BashGenerator().Generate(program);
-        Assert.Contains("brash_throw() {", bash);
-        Assert.Contains("brash_throw \"fatal\"", bash);
+        Assert.DoesNotContain("brash_throw() {", bash);
+        Assert.Contains("printf '%s\\n' \"fatal\" >&2; false", bash);
     }
 
     [Fact]
@@ -386,6 +386,134 @@ public class BashGeneratorReadinessTests
 
         var bash = new BashGenerator().Generate(program);
         Assert.Contains("read -r thing otherthing <<<", bash);
+    }
+
+    [Fact]
+    public void BashGenerator_InlinesPipeSpawnAndAsyncExecHelpers()
+    {
+        var program = new ProgramNode
+        {
+            Statements =
+            {
+                new VariableDeclaration
+                {
+                    Kind = VariableDeclaration.VarKind.Let,
+                    Name = "pipeline",
+                    Value = new PipeExpression
+                    {
+                        Left = new CommandExpression
+                        {
+                            Kind = CommandKind.Cmd,
+                            Arguments = { StringLiteral("echo hi") }
+                        },
+                        Right = new CommandExpression
+                        {
+                            Kind = CommandKind.Cmd,
+                            Arguments = { StringLiteral("tr a-z A-Z") }
+                        }
+                    }
+                },
+                new VariableDeclaration
+                {
+                    Kind = VariableDeclaration.VarKind.Let,
+                    Name = "pid",
+                    Value = new CommandExpression
+                    {
+                        Kind = CommandKind.Spawn,
+                        Arguments = { new IdentifierExpression { Name = "pipeline" } }
+                    }
+                },
+                new ExpressionStatement
+                {
+                    Expression = new CommandExpression
+                    {
+                        Kind = CommandKind.Exec,
+                        IsAsync = true,
+                        Arguments = { StringLiteral("echo async") }
+                    }
+                }
+            }
+        };
+
+        var bash = new BashGenerator().Generate(program);
+
+        Assert.Contains("pipeline=$(printf '%s | %s'", bash);
+        Assert.Contains("pid=$(bash -lc", bash);
+        Assert.Contains("bash -lc", bash);
+        Assert.DoesNotContain("brash_pipe_cmd()", bash);
+        Assert.DoesNotContain("brash_spawn_cmd()", bash);
+        Assert.DoesNotContain("brash_async_exec_cmd()", bash);
+    }
+
+    [Fact]
+    public void BashGenerator_FoldsConstantArithmeticAndStringConcat()
+    {
+        var program = new ProgramNode
+        {
+            Statements =
+            {
+                new VariableDeclaration
+                {
+                    Kind = VariableDeclaration.VarKind.Let,
+                    Name = "a",
+                    Value = new BinaryExpression
+                    {
+                        Left = IntLiteral(2),
+                        Operator = "+",
+                        Right = IntLiteral(3)
+                    }
+                },
+                new VariableDeclaration
+                {
+                    Kind = VariableDeclaration.VarKind.Let,
+                    Name = "s",
+                    Value = new BinaryExpression
+                    {
+                        Left = StringLiteral("ab"),
+                        Operator = "+",
+                        Right = StringLiteral("cd")
+                    }
+                }
+            }
+        };
+
+        var bash = new BashGenerator().Generate(program);
+        Assert.Contains("a=5", bash);
+        Assert.Contains("s=\"abcd\"", bash);
+    }
+
+    [Fact]
+    public void BashGenerator_PrunesUnusedHelpers_AndUsesExecFastPathForLiteral()
+    {
+        var program = new ProgramNode
+        {
+            Statements =
+            {
+                new ExpressionStatement
+                {
+                    Expression = new CommandExpression
+                    {
+                        Kind = CommandKind.Exec,
+                        Arguments = { StringLiteral("echo hi") }
+                    }
+                }
+            }
+        };
+
+        var bash = new BashGenerator().Generate(program);
+        Assert.Contains("bash -lc", bash, StringComparison.Ordinal);
+        Assert.DoesNotContain("brash_exec_cmd()", bash, StringComparison.Ordinal);
+        Assert.DoesNotContain("brash_map_literal()", bash, StringComparison.Ordinal);
+        Assert.DoesNotContain("brash_index_get()", bash, StringComparison.Ordinal);
+    }
+
+    private static LiteralExpression StringLiteral(string value)
+    {
+        return new LiteralExpression
+        {
+            Value = value,
+            Type = new PrimitiveType { PrimitiveKind = PrimitiveType.Kind.String }
+        };
     }
 
     private static LiteralExpression IntLiteral(int value)

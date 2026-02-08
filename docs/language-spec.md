@@ -40,9 +40,8 @@ This document describes the behavior currently implemented by the compiler and B
 - `async exec(...)` starts command execution asynchronously in fire-and-forget mode.
 - `async spawn(...)` starts background execution and returns a `Process` handle.
 - `await expr` waits for a `Process` handle and returns captured stdout.
-- `bash(expr)` executes shell text directly (statement context):
-  - for string literals, emitted inline in generated Bash
-  - for dynamic strings, emitted as `eval <expr>`
+- `sh ...` executes shell text directly (statement context):
+  - emitted inline in generated Bash exactly as written after `sh`
 
 ### Pipe operator
 
@@ -82,7 +81,7 @@ This document describes the behavior currently implemented by the compiler and B
 The compiler fails fast for features not ready for stable transpilation:
 
 - range value code generation (`let r = 0..5` as a value)
-- `bash(...)` in expression context (it is statement-only)
+- `sh ...` in expression context (it is statement-only)
 
 ### Codegen behavior
 

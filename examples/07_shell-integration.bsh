@@ -50,6 +50,6 @@ print($"Home directory: {home}")
 // Raw Bash Injection
 // ---------------
 
-// Use bash(...) when you need to emit/execute shell that is easier
+// Use `sh ...` when you need to emit/execute shell that is easier
 // to express directly than with exec(...) arguments.
-bash([[printf '%s\n' "inline bash works"]])
+sh printf '%s\n' "inline bash works"

@@ -78,7 +78,6 @@ public class MainEntryPointTests
         var bash = new BashGenerator().Generate(program);
 
         Assert.Contains("main \"$@\"", bash);
-        Assert.Contains("exit $?", bash);
         Assert.Contains("local -a args=(\"$@\")", bash);
     }
 

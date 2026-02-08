@@ -111,6 +111,7 @@ public class AstBuilderCoverageTests
             """
             let arr = [1, 2, 3]
             let m = {"k": 1}
+            sh echo inline
             """);
 
         var arrDecl = Assert.IsType<VariableDeclaration>(program.Statements[0]);
@@ -121,6 +122,8 @@ public class AstBuilderCoverageTests
         var map = Assert.IsType<MapLiteral>(mapDecl.Value);
         Assert.Single(map.Entries);
 
+        var sh = Assert.IsType<ShStatement>(program.Statements[2]);
+        Assert.Equal("echo inline", sh.Script);
     }
 
     [Fact]

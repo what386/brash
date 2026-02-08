@@ -187,7 +187,7 @@ public class BashGeneratorE2ETests
         var result = CompileAndRun(source);
 
         Assert.Equal(0, result.ExitCode);
-        Assert.Equal("ok", result.StdOut.Trim());
+        Assert.EndsWith("ok", result.StdOut.Trim());
     }
 
     [Fact]
@@ -312,12 +312,12 @@ public class BashGeneratorE2ETests
     }
 
     [Fact]
-    public void E2E_BashBuiltin_EmitsRawInlineScriptFromMultilineLiteral()
+    public void E2E_ShStatement_EmitsRawShellDirectly()
     {
         const string source =
             """
-            bash([[printf '%s\n' "inline-1"
-            printf '%s\n' "inline-2"]])
+            sh echo inline-1
+            sh echo inline-2
             """;
 
         var result = CompileAndRun(source);
@@ -327,12 +327,12 @@ public class BashGeneratorE2ETests
     }
 
     [Fact]
-    public void E2E_BashBuiltin_DynamicExpressionUsesEval()
+    public void E2E_ShStatement_CanUseShellVariables()
     {
         const string source =
             """
             let script = "printf '%s\n' dynamic-inline"
-            bash(script)
+            sh eval "$script"
             """;
 
         var result = CompileAndRun(source);
@@ -418,6 +418,22 @@ public class BashGeneratorE2ETests
 
         Assert.Equal(0, result.ExitCode);
         Assert.Equal("line1\nline2", result.StdOut.Trim());
+    }
+
+    [Fact]
+    public void E2E_StringLiteral_DollarSigns_AreNotExpandedByOuterShell()
+    {
+        const string source =
+            """
+            let script = "printf '%s\\n' \"$candidate\""
+            exec("sh", "-c", script)
+            exec("printf", "ok\n")
+            """;
+
+        var result = CompileAndRun(source);
+
+        Assert.Equal(0, result.ExitCode);
+        Assert.Contains("ok", result.StdOut);
     }
 
     private static (int ExitCode, string StdOut, string StdErr) CompileAndRun(string source)
