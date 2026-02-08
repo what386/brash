@@ -172,21 +172,6 @@
     }
   },
   {
-    "type": "bash_expression",
-    "named": true,
-    "fields": {},
-    "children": {
-      "multiple": false,
-      "required": false,
-      "types": [
-        {
-          "type": "argument_list",
-          "named": true
-        }
-      ]
-    }
-  },
-  {
     "type": "block_comment",
     "named": true,
     "extra": true,
@@ -440,10 +425,6 @@
         },
         {
           "type": "await_expression",
-          "named": true
-        },
-        {
-          "type": "bash_expression",
           "named": true
         },
         {
@@ -1540,6 +1521,10 @@
           "named": true
         },
         {
+          "type": "sh_statement",
+          "named": true
+        },
+        {
           "type": "struct_declaration",
           "named": true
         },
@@ -2050,10 +2035,6 @@
     "named": false
   },
   {
-    "type": "bash",
-    "named": false
-  },
-  {
     "type": "bool",
     "named": false
   },
@@ -2197,6 +2178,10 @@
   {
     "type": "self",
     "named": false
+  },
+  {
+    "type": "sh_statement",
+    "named": true
   },
   {
     "type": "shebang_directive",

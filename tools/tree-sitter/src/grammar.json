@@ -251,6 +251,10 @@
         },
         {
           "type": "SYMBOL",
+          "name": "sh_statement"
+        },
+        {
+          "type": "SYMBOL",
           "name": "return_statement"
         },
         {
@@ -270,6 +274,26 @@
           "name": "expression_statement"
         }
       ]
+    },
+    "sh_statement": {
+      "type": "TOKEN",
+      "content": {
+        "type": "SEQ",
+        "members": [
+          {
+            "type": "STRING",
+            "value": "sh"
+          },
+          {
+            "type": "PATTERN",
+            "value": "[ \\t]+"
+          },
+          {
+            "type": "PATTERN",
+            "value": "[^\\r\\n]+"
+          }
+        ]
+      }
     },
     "variable_declaration": {
       "type": "CHOICE",
@@ -1500,10 +1524,6 @@
         },
         {
           "type": "SYMBOL",
-          "name": "bash_expression"
-        },
-        {
-          "type": "SYMBOL",
           "name": "async_exec_expression"
         },
         {
@@ -1745,35 +1765,6 @@
         {
           "type": "STRING",
           "value": "exec"
-        },
-        {
-          "type": "STRING",
-          "value": "("
-        },
-        {
-          "type": "CHOICE",
-          "members": [
-            {
-              "type": "SYMBOL",
-              "name": "argument_list"
-            },
-            {
-              "type": "BLANK"
-            }
-          ]
-        },
-        {
-          "type": "STRING",
-          "value": ")"
-        }
-      ]
-    },
-    "bash_expression": {
-      "type": "SEQ",
-      "members": [
-        {
-          "type": "STRING",
-          "value": "bash"
         },
         {
           "type": "STRING",

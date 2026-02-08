@@ -36,8 +36,13 @@
 [
   "cmd"
   "exec"
-  "bash"
 ] @function.builtin
+
+(sh_statement) @keyword
+
+((function_call
+   name: (identifier) @function.builtin)
+  (#match? @function.builtin "^(print|println|readln|panic)$"))
 
 ; Builtin types
 [
