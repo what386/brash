@@ -26,10 +26,6 @@ public class AnyTypeTests
     {
         var diagnostics = Analyze(
             """
-            fn print(text: string)
-                exec("echo", text)
-            end
-
             let value: any = 5
             print(value)
             """);
@@ -42,10 +38,6 @@ public class AnyTypeTests
     {
         var diagnostics = Analyze(
             """
-            fn print(text: string)
-                exec("echo", text)
-            end
-
             let value: any = 5
             print((string)value)
             """);

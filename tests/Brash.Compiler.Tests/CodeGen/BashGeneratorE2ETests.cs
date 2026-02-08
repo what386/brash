@@ -346,12 +346,8 @@ public class BashGeneratorE2ETests
     {
         const string source =
             """
-            fn print(text: string)
-                exec("printf", "%s\n", text)
-            end
-
             let text = "Building " + "Brash"
-            print(text)
+            println(text)
             """;
 
         var result = CompileAndRun(source);

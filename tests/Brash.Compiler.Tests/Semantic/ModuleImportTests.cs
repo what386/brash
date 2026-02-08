@@ -130,6 +130,32 @@ public class ModuleImportTests
     }
 
     [Fact]
+    public void SemanticAnalyzer_RejectsRedefiningBuiltinReadln()
+    {
+        var diagnostics = Analyze(
+            """
+            fn readln(): string
+                return ""
+            end
+            """);
+
+        Assert.Contains(diagnostics.GetErrors(), d => d.Message.Contains("reserved as a builtin"));
+    }
+
+    [Fact]
+    public void SemanticAnalyzer_ValidatesReadlnArityAndArgumentType()
+    {
+        var diagnostics = Analyze(
+            """
+            let a = readln()
+            let b = readln("Name: ")
+            let c = readln("x", "y")
+            """);
+
+        Assert.Contains(diagnostics.GetErrors(), d => d.Message.Contains("Function 'readln' expects at most 1 arguments, got 2"));
+    }
+
+    [Fact]
     public void SemanticAnalyzer_RejectsCallingInstanceMethodAsStatic()
     {
         var diagnostics = Analyze(
@@ -205,10 +231,9 @@ public class ModuleImportTests
     }
 
     [Fact]
-    public void ModuleLoader_ResolvesStdNamespaceModule()
+    public void ModuleLoader_RejectsStdNamespaceModuleImport()
     {
         using var fixture = new ModuleFixture();
-        using var stdLibScope = new StdLibPathScope(FindStdLibRoot());
 
         fixture.Write(
             "main.bsh",
@@ -219,18 +244,16 @@ public class ModuleImportTests
             """);
 
         var diagnostics = new DiagnosticBag();
-        var ok = ModuleLoader.TryLoadProgram(fixture.Path("main.bsh"), diagnostics, out var program);
+        var ok = ModuleLoader.TryLoadProgram(fixture.Path("main.bsh"), diagnostics, out _);
 
-        Assert.True(ok, string.Join(Environment.NewLine, diagnostics.GetErrors()));
-        Assert.NotNull(program);
-        Assert.Contains(program!.Statements, s => s is FunctionDeclaration { Name: "join", IsPublic: true });
+        Assert.False(ok);
+        Assert.Contains(diagnostics.GetErrors(), d => d.Message.Contains("Imported module not found"));
     }
 
     [Fact]
-    public void ModuleLoader_ResolvesStdRootModule()
+    public void ModuleLoader_RejectsStdRootModuleImport()
     {
         using var fixture = new ModuleFixture();
-        using var stdLibScope = new StdLibPathScope(FindStdLibRoot());
 
         fixture.Write(
             "main.bsh",
@@ -240,11 +263,10 @@ public class ModuleImportTests
             """);
 
         var diagnostics = new DiagnosticBag();
-        var ok = ModuleLoader.TryLoadProgram(fixture.Path("main.bsh"), diagnostics, out var program);
+        var ok = ModuleLoader.TryLoadProgram(fixture.Path("main.bsh"), diagnostics, out _);
 
-        Assert.True(ok, string.Join(Environment.NewLine, diagnostics.GetErrors()));
-        Assert.NotNull(program);
-        Assert.Contains(program!.Statements, s => s is VariableDeclaration { Name: "STD_VERSION", IsPublic: true });
+        Assert.False(ok);
+        Assert.Contains(diagnostics.GetErrors(), d => d.Message.Contains("Imported module not found"));
     }
 
     private static DiagnosticBag Analyze(string source)
@@ -307,45 +329,4 @@ public class ModuleImportTests
         }
     }
 
-    private static string FindStdLibRoot()
-    {
-        foreach (var start in new[] { Directory.GetCurrentDirectory(), AppContext.BaseDirectory })
-        {
-            var current = new DirectoryInfo(Path.GetFullPath(start));
-            while (current != null)
-            {
-                var candidate = System.IO.Path.Combine(current.FullName, "src", "Brash.StandardLibrary", "StdLib");
-                if (Directory.Exists(candidate))
-                    return candidate;
-
-                var legacyCandidate = System.IO.Path.Combine(current.FullName, "src", "stdlib");
-                if (Directory.Exists(legacyCandidate))
-                    return legacyCandidate;
-
-                candidate = System.IO.Path.Combine(current.FullName, "Brash.StandardLibrary", "StdLib");
-                if (Directory.Exists(candidate))
-                    return candidate;
-
-                current = current.Parent;
-            }
-        }
-
-        throw new InvalidOperationException("Unable to locate Brash standard library root for stdlib import tests.");
-    }
-
-    private sealed class StdLibPathScope : IDisposable
-    {
-        private readonly string? previous;
-
-        public StdLibPathScope(string path)
-        {
-            previous = Environment.GetEnvironmentVariable("BRASH_STDLIB_PATH");
-            Environment.SetEnvironmentVariable("BRASH_STDLIB_PATH", path);
-        }
-
-        public void Dispose()
-        {
-            Environment.SetEnvironmentVariable("BRASH_STDLIB_PATH", previous);
-        }
-    }
 }

@@ -507,6 +507,85 @@ public class BashGeneratorReadinessTests
         Assert.DoesNotContain("brash_index_get()", bash, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public void BashGenerator_EmitsPrintWithoutTrailingNewline()
+    {
+        var program = new ProgramNode
+        {
+            Statements =
+            {
+                new ExpressionStatement
+                {
+                    Expression = new FunctionCallExpression
+                    {
+                        FunctionName = "print",
+                        Arguments = { StringLiteral("hi"), IntLiteral(7) }
+                    }
+                }
+            }
+        };
+
+        var bash = new BashGenerator().Generate(program);
+        Assert.Contains("printf '%s %s' \"hi\" \"7\"", bash, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void BashGenerator_EmitsPrintlnWithTrailingNewline()
+    {
+        var program = new ProgramNode
+        {
+            Statements =
+            {
+                new ExpressionStatement
+                {
+                    Expression = new FunctionCallExpression
+                    {
+                        FunctionName = "println",
+                        Arguments = { StringLiteral("hi"), IntLiteral(7) }
+                    }
+                }
+            }
+        };
+
+        var bash = new BashGenerator().Generate(program);
+        Assert.Contains("printf '%s %s\\n' \"hi\" \"7\"", bash, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void BashGenerator_EmitsReadlnHelperAndCalls()
+    {
+        var program = new ProgramNode
+        {
+            Statements =
+            {
+                new VariableDeclaration
+                {
+                    Kind = VariableDeclaration.VarKind.Let,
+                    Name = "a",
+                    Value = new FunctionCallExpression
+                    {
+                        FunctionName = "readln"
+                    }
+                },
+                new VariableDeclaration
+                {
+                    Kind = VariableDeclaration.VarKind.Let,
+                    Name = "b",
+                    Value = new FunctionCallExpression
+                    {
+                        FunctionName = "readln",
+                        Arguments = { StringLiteral("Name: ") }
+                    }
+                }
+            }
+        };
+
+        var bash = new BashGenerator().Generate(program);
+        Assert.Contains("brash_readln() {", bash, StringComparison.Ordinal);
+        Assert.Contains("a=$(brash_readln)", bash, StringComparison.Ordinal);
+        Assert.Contains("b=$(brash_readln \"Name: \")", bash, StringComparison.Ordinal);
+    }
+
     private static LiteralExpression StringLiteral(string value)
     {
         return new LiteralExpression
