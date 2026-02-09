@@ -3,10 +3,11 @@ using Brash.Compiler.Ast;
 using Brash.Compiler.Ast.Statements;
 using Brash.Compiler.Diagnostics;
 using Brash.Compiler.Frontend;
+using Brash.Compiler.Preprocessor;
 using Brash.Compiler.Semantic;
 using Xunit;
 
-namespace Brash.Compiler.Tests;
+namespace Brash.Compiler.Tests.Semantic;
 
 public class ModuleImportTests
 {
@@ -130,7 +131,7 @@ public class ModuleImportTests
     }
 
     [Fact]
-    public void SemanticAnalyzer_RejectsRedefiningBuiltinReadln()
+    public void SemanticAnalyzer_AllowsDefiningReadlnFunctionName()
     {
         var diagnostics = Analyze(
             """
@@ -139,20 +140,19 @@ public class ModuleImportTests
             end
             """);
 
-        Assert.Contains(diagnostics.GetErrors(), d => d.Message.Contains("reserved as a builtin"));
+        Assert.False(diagnostics.HasErrors, string.Join(Environment.NewLine, diagnostics.GetErrors()));
     }
 
     [Fact]
-    public void SemanticAnalyzer_ValidatesReadlnArityAndArgumentType()
+    public void SemanticAnalyzer_MacroReadlnCanBeUsedWithoutCompilerBuiltin()
     {
         var diagnostics = Analyze(
             """
-            let a = readln()
-            let b = readln("Name: ")
-            let c = readln("x", "y")
+            let a = readln!()
+            let b = readln!("Name: ")
             """);
 
-        Assert.Contains(diagnostics.GetErrors(), d => d.Message.Contains("Function 'readln' expects at most 1 arguments, got 2"));
+        Assert.False(diagnostics.HasErrors, string.Join(Environment.NewLine, diagnostics.GetErrors()));
     }
 
     [Fact]
@@ -286,7 +286,8 @@ public class ModuleImportTests
 
     private static BrashParser CreateParser(string source, DiagnosticBag diagnostics)
     {
-        var input = new AntlrInputStream(source);
+        var preprocessed = new BrashPreprocessor().Process(source, diagnostics);
+        var input = new AntlrInputStream(preprocessed);
         var lexer = new BrashLexer(input);
         var tokens = new CommonTokenStream(lexer);
         var parser = new BrashParser(tokens);

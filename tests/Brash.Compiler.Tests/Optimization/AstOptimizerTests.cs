@@ -4,7 +4,7 @@ using Brash.Compiler.Ast.Statements;
 using Brash.Compiler.Optimization.Ast;
 using Xunit;
 
-namespace Brash.Compiler.Tests;
+namespace Brash.Compiler.Tests.Optimization;
 
 public class AstOptimizerTests
 {

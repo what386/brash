@@ -4,9 +4,10 @@ using Brash.Compiler.Ast.Expressions;
 using Brash.Compiler.Ast.Statements;
 using Brash.Compiler.Diagnostics;
 using Brash.Compiler.Frontend;
+using Brash.Compiler.Preprocessor;
 using Xunit;
 
-namespace Brash.Compiler.Tests;
+namespace Brash.Compiler.Tests.Frontend;
 
 public class AstBuilderCoverageTests
 {
@@ -178,7 +179,8 @@ public class AstBuilderCoverageTests
 
     private static BrashParser CreateParser(string source, DiagnosticBag diagnostics)
     {
-        var input = new AntlrInputStream(source);
+        var preprocessed = new BrashPreprocessor().Process(source, diagnostics);
+        var input = new AntlrInputStream(preprocessed);
         var lexer = new BrashLexer(input);
         var tokens = new CommonTokenStream(lexer);
         var parser = new BrashParser(tokens);

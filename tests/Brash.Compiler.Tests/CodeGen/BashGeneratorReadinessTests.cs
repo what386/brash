@@ -4,7 +4,7 @@ using Brash.Compiler.Ast.Statements;
 using Brash.Compiler.CodeGen;
 using Xunit;
 
-namespace Brash.Compiler.Tests;
+namespace Brash.Compiler.Tests.CodeGen;
 
 public class BashGeneratorReadinessTests
 {
@@ -508,7 +508,7 @@ public class BashGeneratorReadinessTests
     }
 
     [Fact]
-    public void BashGenerator_EmitsPrintWithoutTrailingNewline()
+    public void BashGenerator_EmitsGenericFunctionCallWithoutBuiltinFormatting()
     {
         var program = new ProgramNode
         {
@@ -526,11 +526,11 @@ public class BashGeneratorReadinessTests
         };
 
         var bash = new BashGenerator().Generate(program);
-        Assert.Contains("printf '%s %s' \"hi\" \"7\"", bash, StringComparison.Ordinal);
+        Assert.Contains("print \"hi\" \"7\"", bash, StringComparison.Ordinal);
     }
 
     [Fact]
-    public void BashGenerator_EmitsPrintlnWithTrailingNewline()
+    public void BashGenerator_DoesNotEmitReadlnRuntimeHelperForPlainFunctionCall()
     {
         var program = new ProgramNode
         {
@@ -539,30 +539,6 @@ public class BashGeneratorReadinessTests
                 new ExpressionStatement
                 {
                     Expression = new FunctionCallExpression
-                    {
-                        FunctionName = "println",
-                        Arguments = { StringLiteral("hi"), IntLiteral(7) }
-                    }
-                }
-            }
-        };
-
-        var bash = new BashGenerator().Generate(program);
-        Assert.Contains("printf '%s %s\\n' \"hi\" \"7\"", bash, StringComparison.Ordinal);
-    }
-
-    [Fact]
-    public void BashGenerator_EmitsReadlnHelperAndCalls()
-    {
-        var program = new ProgramNode
-        {
-            Statements =
-            {
-                new VariableDeclaration
-                {
-                    Kind = VariableDeclaration.VarKind.Let,
-                    Name = "a",
-                    Value = new FunctionCallExpression
                     {
                         FunctionName = "readln"
                     }
@@ -581,9 +557,8 @@ public class BashGeneratorReadinessTests
         };
 
         var bash = new BashGenerator().Generate(program);
-        Assert.Contains("brash_readln() {", bash, StringComparison.Ordinal);
-        Assert.Contains("a=$(brash_readln)", bash, StringComparison.Ordinal);
-        Assert.Contains("b=$(brash_readln \"Name: \")", bash, StringComparison.Ordinal);
+        Assert.DoesNotContain("brash_readln()", bash, StringComparison.Ordinal);
+        Assert.Contains("readln", bash, StringComparison.Ordinal);
     }
 
     private static LiteralExpression StringLiteral(string value)

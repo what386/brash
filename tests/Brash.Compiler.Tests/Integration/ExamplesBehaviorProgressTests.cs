@@ -4,10 +4,11 @@ using Brash.Compiler.Ast.Expressions;
 using Brash.Compiler.Ast.Statements;
 using Brash.Compiler.Diagnostics;
 using Brash.Compiler.Frontend;
+using Brash.Compiler.Preprocessor;
 using Brash.Compiler.Semantic;
 using Xunit;
 
-namespace Brash.Compiler.Tests;
+namespace Brash.Compiler.Tests.Integration;
 
 public class ExamplesBehaviorProgressTests
 {
@@ -37,11 +38,11 @@ public class ExamplesBehaviorProgressTests
             "control_flow_if_elif_else",
             """
             if score >= 90
-                print("Grade: A")
+                print!("Grade: A")
             elif score >= 80
-                print("Grade: B")
+                print!("Grade: B")
             else
-                print("Grade: F")
+                print!("Grade: F")
             end
             """
         };
@@ -51,7 +52,7 @@ public class ExamplesBehaviorProgressTests
             "control_flow_for_step_and_while",
             """
             for i in 0..10 step 2
-                print(i)
+                print!(i)
             end
 
             let mut counter = 0
@@ -114,7 +115,7 @@ public class ExamplesBehaviorProgressTests
             try
                 throw "Division by zero"
             catch err
-                print(err)
+                print!(err)
             end
             """
         };
@@ -135,7 +136,7 @@ public class ExamplesBehaviorProgressTests
             """
             #define DEBUG 1
             #if DEBUG
-                print("Debug mode")
+                print!("Debug mode")
             #endif
             """
         };
@@ -274,7 +275,8 @@ public class ExamplesBehaviorProgressTests
 
     private static BrashParser CreateParser(string source, DiagnosticBag diagnostics)
     {
-        var input = new AntlrInputStream(source);
+        var preprocessed = new BrashPreprocessor().Process(source, diagnostics);
+        var input = new AntlrInputStream(preprocessed);
         var lexer = new BrashLexer(input);
         var tokens = new CommonTokenStream(lexer);
         var parser = new BrashParser(tokens);

@@ -6,7 +6,7 @@ using Brash.Compiler.Frontend;
 using Brash.Compiler.Preprocessor;
 using Xunit;
 
-namespace Brash.Compiler.Tests;
+namespace Brash.Compiler.Tests.Frontend;
 
 public class PreprocessorTests
 {
@@ -140,6 +140,102 @@ public class PreprocessorTests
         _ = new BrashPreprocessor().Process(source, diagnostics);
 
         Assert.Contains(diagnostics.GetErrors(), d => d.Message.Contains("shebang directive must appear on the first line"));
+    }
+
+    [Fact]
+    public void Preprocessor_ExpandsBlockMacroWithoutParameters()
+    {
+        const string source =
+            """
+            #macro SAY_HELLO
+            println!("hello")
+            #endmacro
+
+            fn main()
+                SAY_HELLO!
+            end
+            """;
+
+        var diagnostics = new DiagnosticBag();
+        var preprocessed = new BrashPreprocessor().Process(source, diagnostics);
+        Assert.False(diagnostics.HasErrors, string.Join(Environment.NewLine, diagnostics.GetErrors()));
+        Assert.Contains("exec(\"printf\", \"%s\\n\", \"hello\")", preprocessed, StringComparison.Ordinal);
+        Assert.DoesNotContain("SAY_HELLO!", preprocessed, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Preprocessor_ExpandsBlockMacroWithParameters()
+    {
+        const string source =
+            """
+            #macro ASSERT_EQ(actual: any, expected: any)
+            if actual != expected
+                throw "assert failed"
+            end
+            #endmacro
+
+            fn main()
+                ASSERT_EQ!(1 + 1, 2)
+            end
+            """;
+
+        var diagnostics = new DiagnosticBag();
+        var preprocessed = new BrashPreprocessor().Process(source, diagnostics);
+        Assert.False(diagnostics.HasErrors, string.Join(Environment.NewLine, diagnostics.GetErrors()));
+        Assert.Contains("if 1 + 1 != 2", preprocessed, StringComparison.Ordinal);
+        Assert.DoesNotContain("ASSERT_EQ!(", preprocessed, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Preprocessor_DoesNotExpandBlockMacroWithoutBang()
+    {
+        const string source =
+            """
+            #macro SAY_HELLO
+            println!("hello")
+            #endmacro
+
+            fn main()
+                SAY_HELLO
+            end
+            """;
+
+        var diagnostics = new DiagnosticBag();
+        var preprocessed = new BrashPreprocessor().Process(source, diagnostics);
+        Assert.False(diagnostics.HasErrors, string.Join(Environment.NewLine, diagnostics.GetErrors()));
+        Assert.Contains("SAY_HELLO", preprocessed, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Preprocessor_LoadsPredefinedMacrosFromRegistry()
+    {
+        const string source =
+            """
+            fn main()
+                println!("hello")
+            end
+            """;
+
+        var diagnostics = new DiagnosticBag();
+        var preprocessed = new BrashPreprocessor().Process(source, diagnostics);
+        Assert.False(diagnostics.HasErrors, string.Join(Environment.NewLine, diagnostics.GetErrors()));
+        Assert.Contains("exec(\"printf\", \"%s\\n\", \"hello\")", preprocessed, StringComparison.Ordinal);
+        Assert.DoesNotContain("println!(", preprocessed, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Preprocessor_ReportsMissingEndMacro()
+    {
+        const string source =
+            """
+            #macro INCOMPLETE(name: string)
+            println!(name)
+            """;
+
+        var diagnostics = new DiagnosticBag();
+        _ = new BrashPreprocessor().Process(source, diagnostics);
+
+        Assert.Contains(diagnostics.GetErrors(), d => d.Message.Contains("missing '#endmacro'"));
     }
 
     private static ProgramNode ParseProgram(string source)

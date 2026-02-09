@@ -4,10 +4,11 @@ using Brash.Compiler.Ast;
 using Brash.Compiler.CodeGen;
 using Brash.Compiler.Diagnostics;
 using Brash.Compiler.Frontend;
+using Brash.Compiler.Preprocessor;
 using Brash.Compiler.Semantic;
 using Xunit;
 
-namespace Brash.Compiler.Tests;
+namespace Brash.Compiler.Tests.Integration;
 
 public class MainEntryPointTests
 {
@@ -180,7 +181,8 @@ public class MainEntryPointTests
 
     private static BrashParser CreateParser(string source, DiagnosticBag diagnostics)
     {
-        var input = new AntlrInputStream(source);
+        var preprocessed = new BrashPreprocessor().Process(source, diagnostics);
+        var input = new AntlrInputStream(preprocessed);
         var lexer = new BrashLexer(input);
         var tokens = new CommonTokenStream(lexer);
         var parser = new BrashParser(tokens);

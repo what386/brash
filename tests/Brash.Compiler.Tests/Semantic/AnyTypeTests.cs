@@ -2,10 +2,11 @@ using Antlr4.Runtime;
 using Brash.Compiler.Ast;
 using Brash.Compiler.Diagnostics;
 using Brash.Compiler.Frontend;
+using Brash.Compiler.Preprocessor;
 using Brash.Compiler.Semantic;
 using Xunit;
 
-namespace Brash.Compiler.Tests;
+namespace Brash.Compiler.Tests.Semantic;
 
 public class AnyTypeTests
 {
@@ -22,15 +23,15 @@ public class AnyTypeTests
     }
 
     [Fact]
-    public void Semantic_RequiresExplicitCastFromAnyToString()
+    public void Semantic_AllowsAnyThroughMacroExpandedExecArguments()
     {
         var diagnostics = Analyze(
             """
             let value: any = 5
-            print(value)
+            print!(value)
             """);
 
-        Assert.Contains(diagnostics.GetErrors(), d => d.Message.Contains("Argument 1 to 'print': expected 'string', got 'any'"));
+        Assert.False(diagnostics.HasErrors, string.Join(Environment.NewLine, diagnostics.GetErrors()));
     }
 
     [Fact]
@@ -39,7 +40,7 @@ public class AnyTypeTests
         var diagnostics = Analyze(
             """
             let value: any = 5
-            print(value as string)
+            print!(value as string)
             """);
 
         Assert.False(diagnostics.HasErrors, string.Join(Environment.NewLine, diagnostics.GetErrors()));
@@ -48,7 +49,8 @@ public class AnyTypeTests
     private static DiagnosticBag Analyze(string source)
     {
         var diagnostics = new DiagnosticBag();
-        var input = new AntlrInputStream(source);
+        var preprocessed = new BrashPreprocessor().Process(source, diagnostics);
+        var input = new AntlrInputStream(preprocessed);
         var lexer = new BrashLexer(input);
         var tokens = new CommonTokenStream(lexer);
         var parser = new BrashParser(tokens);

@@ -4,10 +4,11 @@ using Brash.Compiler.Ast.Expressions;
 using Brash.Compiler.CodeGen;
 using Brash.Compiler.Diagnostics;
 using Brash.Compiler.Frontend;
+using Brash.Compiler.Preprocessor;
 using Brash.Compiler.Semantic;
 using Xunit;
 
-namespace Brash.Compiler.Tests;
+namespace Brash.Compiler.Tests.Semantic;
 
 public class CastAndConcatTests
 {
@@ -78,7 +79,7 @@ public class CastAndConcatTests
             """
             let parts = "a,b,c".split(",")
             let first = parts[0]
-            print(first)
+            print!(first)
             """);
 
         Assert.False(diagnostics.HasErrors, string.Join(Environment.NewLine, diagnostics.GetErrors()));
@@ -90,7 +91,7 @@ public class CastAndConcatTests
         const string source =
             """
             let parts = "alpha,beta,gamma".split(",")
-            print(parts[1])
+            print!(parts[1])
             """;
 
         var result = CompileAndRun(source);
@@ -105,7 +106,7 @@ public class CastAndConcatTests
         var diagnostics = Analyze(
             """
             let text = "abcdef".substring(1, 4)
-            print(text)
+            print!(text)
             """);
 
         Assert.False(diagnostics.HasErrors, string.Join(Environment.NewLine, diagnostics.GetErrors()));
@@ -116,7 +117,7 @@ public class CastAndConcatTests
     {
         const string source =
             """
-            print("abcdef".substring(1, 4))
+            print!("abcdef".substring(1, 4))
             """;
 
         var result = CompileAndRun(source);
@@ -186,7 +187,8 @@ public class CastAndConcatTests
 
     private static BrashParser CreateParser(string source, DiagnosticBag diagnostics)
     {
-        var input = new AntlrInputStream(source);
+        var preprocessed = new BrashPreprocessor().Process(source, diagnostics);
+        var input = new AntlrInputStream(preprocessed);
         var lexer = new BrashLexer(input);
         var tokens = new CommonTokenStream(lexer);
         var parser = new BrashParser(tokens);

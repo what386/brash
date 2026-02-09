@@ -2,7 +2,7 @@ using Antlr4.Runtime;
 using Brash.Compiler.Diagnostics;
 using Xunit;
 
-namespace Brash.Compiler.Tests;
+namespace Brash.Compiler.Tests.Frontend;
 
 public class SyntaxDiagnosticFormattingTests
 {
