@@ -6,6 +6,6 @@ internal sealed class AssertMacro : IPredefinedMacro
     {
         Name = "assert",
         Parameters = new[] { "condition" },
-        Body = "if !(condition) panic(\"assertion failed\") end"
+        Body = "if !(condition)\n    exec(\"printf\", \"%s\\n\", \"assertion failed\")\n    sh exit 1\nend"
     };
 }

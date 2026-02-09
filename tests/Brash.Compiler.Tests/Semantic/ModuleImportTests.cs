@@ -118,7 +118,7 @@ public class ModuleImportTests
     }
 
     [Fact]
-    public void SemanticAnalyzer_RejectsRedefiningBuiltinPanic()
+    public void SemanticAnalyzer_AllowsDefiningPanicFunctionName()
     {
         var diagnostics = Analyze(
             """
@@ -127,7 +127,7 @@ public class ModuleImportTests
             end
             """);
 
-        Assert.Contains(diagnostics.GetErrors(), d => d.Message.Contains("reserved as a builtin"));
+        Assert.False(diagnostics.HasErrors, string.Join(Environment.NewLine, diagnostics.GetErrors()));
     }
 
     [Fact]

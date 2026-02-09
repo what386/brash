@@ -562,16 +562,6 @@ public partial class BashGenerator
 
     private string GenerateFunctionCallStatement(FunctionCallExpression call)
     {
-        if (call.FunctionName == "panic")
-        {
-            if (call.Arguments.Count == 0)
-                return "printf '%s\\n' \"panic\" >&2; exit 1";
-
-            var panicArgs = string.Join(" ", call.Arguments.Select(GenerateSingleShellArg));
-            var format = string.Join(" ", Enumerable.Repeat("%s", call.Arguments.Count));
-            return $"printf '{format}\\n' {panicArgs} >&2; exit 1";
-        }
-
         var args = string.Join(" ", call.Arguments.Select(GenerateSingleShellArg));
 
         return args.Length > 0 ? $"{call.FunctionName} {args}" : call.FunctionName;

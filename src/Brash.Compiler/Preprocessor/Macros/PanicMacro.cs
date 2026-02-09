@@ -6,6 +6,6 @@ internal sealed class PanicMacro : IPredefinedMacro
     {
         Name = "panic",
         Parameters = new[] { "message" },
-        Body = "panic(message)"
+        Body = "exec(\"printf\", \"%s\\n\", message)\nsh exit 1"
     };
 }

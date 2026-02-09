@@ -292,16 +292,5 @@ public class SymbolTable
 
     private void RegisterBuiltins()
     {
-        functions["panic"] = new FunctionSymbol
-        {
-            Name = "panic",
-            ParameterTypes = new List<TypeNode>
-            {
-                new PrimitiveType { PrimitiveKind = PrimitiveType.Kind.String }
-            },
-            ParameterNames = new List<string> { "message" },
-            ReturnType = new PrimitiveType { PrimitiveKind = PrimitiveType.Kind.Void },
-            IsBuiltin = true
-        };
     }
 }

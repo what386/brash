@@ -237,8 +237,10 @@ public class PreprocessorTests
         var diagnostics = new DiagnosticBag();
         var preprocessed = new BrashPreprocessor().Process(source, diagnostics);
         Assert.False(diagnostics.HasErrors, string.Join(Environment.NewLine, diagnostics.GetErrors()));
-        Assert.Contains("if !(1 == 1) panic(\"assertion failed\") end", preprocessed, StringComparison.Ordinal);
-        Assert.Contains("panic(\"boom\")", preprocessed, StringComparison.Ordinal);
+        Assert.Contains("if !(1 == 1)", preprocessed, StringComparison.Ordinal);
+        Assert.Contains("exec(\"printf\", \"%s\\n\", \"assertion failed\")", preprocessed, StringComparison.Ordinal);
+        Assert.Contains("exec(\"printf\", \"%s\\n\", \"boom\")", preprocessed, StringComparison.Ordinal);
+        Assert.Contains("sh exit 1", preprocessed, StringComparison.Ordinal);
         Assert.DoesNotContain("assert!(", preprocessed, StringComparison.Ordinal);
         Assert.DoesNotContain("panic!(", preprocessed, StringComparison.Ordinal);
     }

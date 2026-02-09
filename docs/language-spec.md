@@ -49,7 +49,7 @@ This document describes the behavior currently implemented by the compiler and B
 - `println!(value)` expands to command-based output with a trailing newline.
 - `readln!()` expands to command-based line input and returns `string`.
 - `readln!(prompt)` prints `prompt` (without newline), then reads one line and returns `string`.
-- `panic` remains a reserved builtin function name.
+- `panic!` and `assert!` are predefined macros.
 
 ### Pipe operator
 
