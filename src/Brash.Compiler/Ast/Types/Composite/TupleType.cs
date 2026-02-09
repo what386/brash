@@ -1,4 +1,4 @@
-namespace Brash.Compiler.Ast.Types;
+namespace Brash.Compiler.Ast.Types.Composite;
 
 public class TupleType : TypeNode
 {

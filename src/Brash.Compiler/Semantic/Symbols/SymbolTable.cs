@@ -1,4 +1,4 @@
-namespace Brash.Compiler.Semantic;
+namespace Brash.Compiler.Semantic.Symbols;
 
 using Brash.Compiler.Ast;
 using Brash.Compiler.Ast.Expressions;
@@ -292,28 +292,6 @@ public class SymbolTable
 
     private void RegisterBuiltins()
     {
-        functions["print"] = new FunctionSymbol
-        {
-            Name = "print",
-            ParameterTypes = new List<TypeNode>(),
-            ParameterNames = new List<string>(),
-            ReturnType = new PrimitiveType { PrimitiveKind = PrimitiveType.Kind.Void },
-            IsBuiltin = true,
-            IsVariadic = true,
-            VariadicParameterType = new PrimitiveType { PrimitiveKind = PrimitiveType.Kind.String }
-        };
-
-        functions["println"] = new FunctionSymbol
-        {
-            Name = "println",
-            ParameterTypes = new List<TypeNode>(),
-            ParameterNames = new List<string>(),
-            ReturnType = new PrimitiveType { PrimitiveKind = PrimitiveType.Kind.Void },
-            IsBuiltin = true,
-            IsVariadic = true,
-            VariadicParameterType = new PrimitiveType { PrimitiveKind = PrimitiveType.Kind.String }
-        };
-
         functions["panic"] = new FunctionSymbol
         {
             Name = "panic",
@@ -325,18 +303,5 @@ public class SymbolTable
             ReturnType = new PrimitiveType { PrimitiveKind = PrimitiveType.Kind.Void },
             IsBuiltin = true
         };
-
-        functions["readln"] = new FunctionSymbol
-        {
-            Name = "readln",
-            ParameterTypes = new List<TypeNode>(),
-            ParameterNames = new List<string>(),
-            ReturnType = new PrimitiveType { PrimitiveKind = PrimitiveType.Kind.String },
-            IsBuiltin = true,
-            IsVariadic = true,
-            VariadicParameterType = new PrimitiveType { PrimitiveKind = PrimitiveType.Kind.String },
-            MaxArgumentCount = 1
-        };
-
     }
 }

@@ -1,4 +1,4 @@
-namespace Brash.Compiler.Ast.Types;
+namespace Brash.Compiler.Ast.Types.Primitive;
 
 public sealed class CharType : PrimitiveType
 {

@@ -1,4 +1,4 @@
-namespace Brash.Formatter;
+namespace Brash.Formatter.Api;
 
 public static class BrashFormatter
 {

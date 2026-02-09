@@ -1,4 +1,4 @@
-namespace Brash.Compiler.Semantic;
+namespace Brash.Compiler.Semantic.Symbols;
 
 using Brash.Compiler.Ast;
 using Brash.Compiler.Ast.Expressions;

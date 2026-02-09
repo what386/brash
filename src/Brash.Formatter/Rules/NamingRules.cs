@@ -1,4 +1,4 @@
-namespace Brash.Formatter;
+namespace Brash.Formatter.Rules;
 
 using System.Text;
 using System.Text.RegularExpressions;

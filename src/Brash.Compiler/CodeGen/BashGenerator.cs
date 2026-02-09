@@ -300,23 +300,6 @@ public partial class BashGenerator
             EmitLine();
         }
 
-        if (usage.NeedsReadLn)
-        {
-            EmitLine("brash_readln() {");
-            EmitLine("    local __prompt=\"${1-}\"");
-            EmitLine("    if [[ -n \"${__prompt}\" ]]; then");
-            EmitLine("        printf '%s' \"${__prompt}\"");
-            EmitLine("    fi");
-            EmitLine("    local __line=\"\"");
-            EmitLine("    if IFS= read -r __line; then");
-            EmitLine("        printf '%s' \"${__line}\"");
-            EmitLine("        return 0");
-            EmitLine("    fi");
-            EmitLine("    printf ''");
-            EmitLine("    return 0");
-            EmitLine("}");
-            EmitLine();
-        }
     }
 
     private void Emit(string code)

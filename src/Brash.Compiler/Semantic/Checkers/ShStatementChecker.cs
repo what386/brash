@@ -1,4 +1,4 @@
-namespace Brash.Compiler.Semantic;
+namespace Brash.Compiler.Semantic.Checkers;
 
 using System.Text.RegularExpressions;
 using Brash.Compiler.Ast.Statements;

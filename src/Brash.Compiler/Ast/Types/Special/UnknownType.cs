@@ -1,4 +1,4 @@
-namespace Brash.Compiler.Ast.Types;
+namespace Brash.Compiler.Ast.Types.Special;
 
 public class UnknownType : TypeNode
 {

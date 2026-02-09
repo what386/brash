@@ -1,4 +1,4 @@
-namespace Brash.Formatter;
+namespace Brash.Formatter.Core;
 
 public sealed record FormatterOptions
 {

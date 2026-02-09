@@ -125,8 +125,6 @@ internal static class HelperUsageAnalyzer
                 VisitExpression(cast.Value, usage);
                 break;
             case FunctionCallExpression fnCall:
-                if (string.Equals(fnCall.FunctionName, "readln", StringComparison.Ordinal))
-                    usage.NeedsReadLn = true;
                 foreach (var arg in fnCall.Arguments)
                     VisitExpression(arg, usage);
                 break;

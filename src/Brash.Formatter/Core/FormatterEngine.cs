@@ -1,4 +1,4 @@
-namespace Brash.Formatter;
+namespace Brash.Formatter.Core;
 
 internal static class FormatterEngine
 {

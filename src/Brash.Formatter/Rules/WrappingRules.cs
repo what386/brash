@@ -1,4 +1,4 @@
-namespace Brash.Formatter;
+namespace Brash.Formatter.Rules;
 
 internal static class WrappingRules
 {
