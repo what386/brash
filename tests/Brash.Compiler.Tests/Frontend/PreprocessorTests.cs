@@ -224,6 +224,26 @@ public class PreprocessorTests
     }
 
     [Fact]
+    public void Preprocessor_ExpandsPanicAndAssertMacros()
+    {
+        const string source =
+            """
+            fn main()
+                assert!(1 == 1)
+                panic!("boom")
+            end
+            """;
+
+        var diagnostics = new DiagnosticBag();
+        var preprocessed = new BrashPreprocessor().Process(source, diagnostics);
+        Assert.False(diagnostics.HasErrors, string.Join(Environment.NewLine, diagnostics.GetErrors()));
+        Assert.Contains("if !(1 == 1) panic(\"assertion failed\") end", preprocessed, StringComparison.Ordinal);
+        Assert.Contains("panic(\"boom\")", preprocessed, StringComparison.Ordinal);
+        Assert.DoesNotContain("assert!(", preprocessed, StringComparison.Ordinal);
+        Assert.DoesNotContain("panic!(", preprocessed, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void Preprocessor_ReportsMissingEndMacro()
     {
         const string source =

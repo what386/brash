@@ -232,7 +232,7 @@ public class BashGeneratorE2ETests
         const string source =
             """
             try
-                panic("boom")
+                panic!("boom")
             catch err
                 exec("printf", "caught:%s\n", err)
             end

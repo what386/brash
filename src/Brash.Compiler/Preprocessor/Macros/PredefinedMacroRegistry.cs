@@ -6,6 +6,8 @@ internal static class PredefinedMacroRegistry
     {
         new PrintMacro(),
         new PrintlnMacro(),
-        new ReadlnMacro()
+        new ReadlnMacro(),
+        new PanicMacro(),
+        new AssertMacro()
     }.Select(m => m.Definition).ToArray();
 }
