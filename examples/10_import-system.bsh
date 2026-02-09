@@ -21,7 +21,7 @@ import User from "models/user.bsh"
 // ---------------
 
 let result = helper_fn("test")
-println(CONFIG["version"])
+println!(CONFIG["version"])
 
 let user = create_user("Alice", 30)
 

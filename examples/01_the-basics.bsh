@@ -96,12 +96,12 @@ let tagged_age = "Age: " + (age as string)
 // Builtin I/O
 // ---------------
 
-print("Loading ")
-println("done")
+print!("Loading ")
+println!("done")
 
-// readln() / readln(prompt) are available when interactive input is needed.
-// let username = readln("Enter username: ")
-// println("Hello, " + username)
+// readln!() / readln!(prompt) are available when interactive input is needed.
+// let username = readln!("Enter username: ")
+// println!("Hello, " + username)
 
 
 // ---------------

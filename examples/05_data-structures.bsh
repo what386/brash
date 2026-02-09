@@ -86,7 +86,7 @@ let generated_config = Config.local_default()
 // Accessing fields
 // --------------------------------------------
 
-println(person.name)
+println!(person.name)
 
 // mutable copy
 let mut mutable_person = person
@@ -96,19 +96,19 @@ mutable_person.balance = 2000.00
 // Calling methods
 // --------------------------------------------
 
-println(person.is_adult())        // true
+println!(person.is_adult())        // true
 mutable_person.deposit(250.00)
-println(mutable_person.balance)  // 2250.00
+println!(mutable_person.balance)  // 2250.00
 
-println(config.base_url())        // http://localhost:8080
-println(generated_config.base_url())  // http://localhost:8080
+println!(config.base_url())        // http://localhost:8080
+println!(generated_config.base_url())  // http://localhost:8080
 
 // --------------------------------------------
 // Using nullable fields
 // --------------------------------------------
 
 let email_display = person.email ?? "No email provided"
-println(email_display)
+println!(email_display)
 
 // --------------------------------------------
 // Nested structs
@@ -151,4 +151,4 @@ let emp = Employee {
     level: JobLevel.Senior
 }
 
-println($"{emp.person.name} lives in {emp.city()}")
+println!($"{emp.person.name} lives in {emp.city()}")

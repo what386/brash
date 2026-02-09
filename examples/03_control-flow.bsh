@@ -11,13 +11,13 @@
 let score = 85
 
 if score >= 90
-    println("Grade: A")
+    println!("Grade: A")
 elif score >= 80
-    println("Grade: B")
+    println!("Grade: B")
 elif score >= 70
-    println("Grade: C")
+    println!("Grade: C")
 else
-    println("Grade: F")
+    println!("Grade: F")
 end
 
 
@@ -28,7 +28,7 @@ end
 let name: string? = "Alice"
 
 if name != null
-    println($"Hello, {name}")
+    println!($"Hello, {name}")
 end
 
 
@@ -38,7 +38,7 @@ end
 
 let fruits = ["apple", "banana", "orange"]
 for fruit in fruits
-    println($"I like {fruit}")
+    println!($"I like {fruit}")
 end
 
 
@@ -48,22 +48,22 @@ end
 
 // Basic loop
 for i in 0..5
-    println($"Count: {i}")
+    println!($"Count: {i}")
 end
 
 // Custom step
 for i in 0..10 step 2  // 0, 2, 4, 6, 8, 10
-    println(i)
+    println!(i)
 end
 
 // Can also be negative
 for i in 5..0 step -1          // 5, 4, 3, 2, 1, 0
-    println(i)
+    println!(i)
 end
 
 // Explicit increment loop (optional, same as default for clarity)
 for+ i in 0..5
-    println(i)
+    println!(i)
 end
 
 
@@ -73,7 +73,7 @@ end
 
 let mut counter = 0
 while counter < 5
-    println($"Counter: {counter}")
+    println!($"Counter: {counter}")
     counter = counter + 1
 end
 
@@ -89,7 +89,7 @@ for i in 0..10
     if i == 7
         break
     end
-    println(i)
+    println!(i)
 end
 
 

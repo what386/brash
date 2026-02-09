@@ -51,7 +51,7 @@ end
 
 let (mut first, last) = parse_name("John Doe")
 first = "Jane"
-println($"First: {first}, Last: {last}")
+println!($"First: {first}, Last: {last}")
 
 
 // ---------------
@@ -72,7 +72,7 @@ end
 // ---------------
 
 fn log_message(msg: string): void
-    println($"[LOG] {msg}")
+    println!($"[LOG] {msg}")
 end
 
 

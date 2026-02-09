@@ -43,13 +43,13 @@ This document describes the behavior currently implemented by the compiler and B
 - `sh ...` executes shell text directly (statement context):
   - emitted inline in generated Bash exactly as written after `sh`
 
-### Builtin I/O
+### Predefined I/O macros
 
-- `print(...)` writes arguments without a trailing newline.
-- `println(...)` writes arguments with a trailing newline.
-- `readln()` reads one line from stdin and returns `string`.
-- `readln(prompt)` writes `prompt` (without newline), then reads one line and returns `string`.
-- `print`, `println`, `readln`, and `panic` are reserved builtin names and cannot be redefined.
+- `print!(value)` expands to command-based output without a trailing newline.
+- `println!(value)` expands to command-based output with a trailing newline.
+- `readln!()` expands to command-based line input and returns `string`.
+- `readln!(prompt)` prints `prompt` (without newline), then reads one line and returns `string`.
+- `panic` remains a reserved builtin function name.
 
 ### Pipe operator
 

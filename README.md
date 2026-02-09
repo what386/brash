@@ -73,10 +73,10 @@ Notes:
 - nullability + `??` + safe navigation
 - explicit casts: `expr as type` (for example `5 as string`)
 - string concatenation with `+` (for example `"Hello, " + name`)
-- builtin I/O:
-  - `print(...)` writes without a trailing newline
-  - `println(...)` writes with a trailing newline
-  - `readln()` / `readln(prompt)` reads one line from stdin
+- predefined I/O macros:
+  - `print!(value)` expands to command-based output without trailing newline
+  - `println!(value)` expands to command-based output with trailing newline
+  - `readln!()` / `readln!(prompt)` expands to command-based line input
 - command model:
   - `cmd(...)` -> lazy `Command`
   - `exec(...)` -> blocking execution, returns stdout string

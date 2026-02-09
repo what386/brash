@@ -13,9 +13,9 @@ let parsed_int = string_value as int
 let int_text = int_value as string
 let bool_text = bool_value as string
 
-println("parsed_int = " + (parsed_int as string))
-println("int_text = " + int_text)
-println("bool_text = " + bool_text)
+println!("parsed_int = " + (parsed_int as string))
+println!("int_text = " + int_text)
+println!("bool_text = " + bool_text)
 
 // This would fail semantic checks (implicit use of `any` as string):
-// println(int_value)
+// println!(int_value)

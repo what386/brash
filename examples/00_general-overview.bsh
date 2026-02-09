@@ -37,11 +37,11 @@ thing = "updated"
 
 // Control flow
 if x > 0
-    println("positive")
+    println!("positive")
 end
 
 for i in 0..10 step 2
-    println(i as string)
+    println!(i as string)
 end
 
 let mut counter = 0
@@ -68,28 +68,28 @@ impl Person
 end
 
 let person = Person { name: "Alice", age: 30, account: AccountType.Checking }
-println(person.is_adult() as string)
+println!(person.is_adult() as string)
 
 // Command model
 let pipeline = cmd("printf", "abc\n") | cmd("tr", "a-z", "A-Z")
 let output = exec(pipeline)
-println(output)
+println!(output)
 
 let pid: Process = spawn("sleep", "1")
-println(pid as string)
+println!(pid as string)
 
 // Error handling
 try
     throw "boom"
 catch err
     // catch variable currently contains textual stderr
-    println(err as string)
+    println!(err as string)
 end
 
 // Preprocessor directives
 #define DEBUG 1
 #if DEBUG
-println("debug enabled")
+println!("debug enabled")
 #endif
 
 // Not yet transpilation-ready (kept for future versions):

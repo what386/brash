@@ -12,7 +12,7 @@ try
     throw "File read failed"
 catch err
     // `err` currently contains textual stderr output
-    println($"Error: {err}")
+    println!($"Error: {err}")
 end
 
 
@@ -29,9 +29,9 @@ end
 
 try
     let result = divide(10, 0)
-    println(result)
+    println!(result)
 catch err
-    println($"Caught error: {err}")
+    println!($"Caught error: {err}")
 end
 
 
@@ -43,11 +43,11 @@ try
     try
         throw "dangerous command failed"
     catch inner_err
-        println($"Inner error: {inner_err}")
+        println!($"Inner error: {inner_err}")
         throw "Failed to recover"
     end
 catch outer_err
-    println($"Outer error: {outer_err}")
+    println!($"Outer error: {outer_err}")
 end
 
 
@@ -59,7 +59,7 @@ fn safe_read_file(path: string): string?
     try
         return exec("cat", path)
     catch err
-        println($"Failed to read {path}: {err}")
+        println!($"Failed to read {path}: {err}")
         return null
     end
 end

@@ -12,8 +12,8 @@
 let sleep_proc = async spawn("sleep", "1")
 
 // Process handle values are opaque.
-println($"Launched sleep process handle: {sleep_proc}")
-println("Process launched")
+println!($"Launched sleep process handle: {sleep_proc}")
+println!("Process launched")
 
 
 // ---------------
@@ -22,7 +22,7 @@ println("Process launched")
 
 // await blocks until the process finishes, then returns captured stdout.
 let result = await sleep_proc
-println(result)
+println!(result)
 
 
 // ---------------
@@ -31,7 +31,7 @@ println(result)
 
 // async exec starts work in the background and does not return awaitable output.
 async exec("printf", "hello from async exec")
-println("launched async exec")
+println!("launched async exec")
 
 
 // ---------------
@@ -47,4 +47,4 @@ let res1 = await proc1
 let res2 = await proc2
 let res3 = await proc3
 
-println($"All processes done: {res1}-{res2}-{res3}")
+println!($"All processes done: {res1}-{res2}-{res3}")
