@@ -257,6 +257,59 @@ public class AstOptimizerTests
         Assert.Equal(11, literal.Value);
     }
 
+    [Fact]
+    public void Optimize_DoesNotElideMutableAssignmentInsideWhileLoop()
+    {
+        var program = new ProgramNode
+        {
+            Statements =
+            {
+                new FunctionDeclaration
+                {
+                    Name = "main",
+                    Body =
+                    {
+                        new VariableDeclaration
+                        {
+                            Kind = VariableDeclaration.VarKind.Mut,
+                            Name = "counter",
+                            Value = IntLiteral(0)
+                        },
+                        new WhileLoop
+                        {
+                            Condition = new BinaryExpression
+                            {
+                                Left = new IdentifierExpression { Name = "counter" },
+                                Operator = "<",
+                                Right = IntLiteral(3)
+                            },
+                            Body =
+                            {
+                                new Assignment
+                                {
+                                    Target = new IdentifierExpression { Name = "counter" },
+                                    Value = new BinaryExpression
+                                    {
+                                        Left = new IdentifierExpression { Name = "counter" },
+                                        Operator = "+",
+                                        Right = IntLiteral(1)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        };
+
+        new AstOptimizer().Optimize(program);
+
+        var function = Assert.IsType<FunctionDeclaration>(Assert.Single(program.Statements));
+        var whileLoop = Assert.IsType<WhileLoop>(function.Body[1]);
+        Assert.Single(whileLoop.Body);
+        Assert.IsType<Assignment>(whileLoop.Body[0]);
+    }
+
     private static LiteralExpression IntLiteral(int value)
     {
         return new LiteralExpression

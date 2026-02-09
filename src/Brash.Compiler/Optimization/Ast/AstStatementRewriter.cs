@@ -147,7 +147,7 @@ internal sealed class AstStatementRewriter
                     whileLoop.Body,
                     options,
                     new Dictionary<string, LiteralExpression>(constantsInScope, StringComparer.Ordinal),
-                    allowDeadLocalElimination: true);
+                    allowDeadLocalElimination: false);
                 constantsInScope.Clear();
                 return whileLoop;
 
@@ -158,7 +158,7 @@ internal sealed class AstStatementRewriter
 
                 var forScope = new Dictionary<string, LiteralExpression>(constantsInScope, StringComparer.Ordinal);
                 forScope.Remove(forLoop.Variable);
-                forLoop.Body = RewriteStatementList(forLoop.Body, options, forScope, allowDeadLocalElimination: true);
+                forLoop.Body = RewriteStatementList(forLoop.Body, options, forScope, allowDeadLocalElimination: false);
                 constantsInScope.Clear();
                 return forLoop;
 
