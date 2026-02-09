@@ -1,7 +1,7 @@
-# TODO — brash v0.6.2
+# TODO — brash v0.4.0
 
 @created: 2026-02-06
-@modified: 2026-02-07
+@modified: 2026-02-09
 
 ## Tasks
 
