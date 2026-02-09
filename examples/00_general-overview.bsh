@@ -17,6 +17,7 @@ let display_name = middle_name ?? "No middle name"
 let count_as_text = 5 as string
 
 // Functions
+
 fn greet(name: string, greeting: string = "Hello"): string
     return greeting + ", " + name
 end
@@ -27,6 +28,7 @@ fn increment(mut count: int): int
 end
 
 // Tuple returns + tuple destructuring with per-element mutability
+
 fn pair(): (string, string)
     return ("left", "right")
 end
@@ -40,7 +42,7 @@ if x > 0
     println!("positive")
 end
 
-for i in 0..10 step 2
+for i in 0 .. 10 step 2
     println!(i as string)
 end
 
@@ -50,6 +52,7 @@ while counter < 3
 end
 
 // Structs, enums, impl
+
 enum AccountType
     Checking,
     Savings
