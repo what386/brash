@@ -1,4 +1,4 @@
-# TODO — brash v0.4.0
+# TODO — brash v0.7.0
 
 @created: 2026-02-06
 @modified: 2026-02-09
