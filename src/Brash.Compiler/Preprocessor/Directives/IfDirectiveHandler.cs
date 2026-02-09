@@ -17,7 +17,7 @@ internal sealed class IfDirectiveHandler : IPreprocessorDirectiveHandler
             return;
         }
 
-        var expanded = context.MacroExpander.Expand(expression, context.State.Macros);
+        var expanded = context.MacroExpander.Expand(expression, context.State.Macros, context.State.BlockMacros);
         var condition = false;
         try
         {
@@ -33,4 +33,3 @@ internal sealed class IfDirectiveHandler : IPreprocessorDirectiveHandler
         context.State.Frames.Push(new ConditionalFrame(context.LineNumber, context.CurrentActive, condition));
     }
 }
-

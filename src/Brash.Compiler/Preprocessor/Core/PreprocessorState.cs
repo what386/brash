@@ -1,4 +1,4 @@
-namespace Brash.Compiler.Preprocessor;
+namespace Brash.Compiler.Preprocessor.Core;
 
 using Brash.Compiler.Diagnostics;
 
@@ -11,6 +11,7 @@ internal sealed class PreprocessorState
 
     public DiagnosticBag Diagnostics { get; }
     public Dictionary<string, string> Macros { get; } = new(StringComparer.Ordinal);
+    public Dictionary<string, MacroDefinition> BlockMacros { get; } = new(StringComparer.Ordinal);
     public Stack<ConditionalFrame> Frames { get; } = new();
 
     public bool IsCurrentBranchActive => Frames.All(f => f.CurrentBranchActive);
@@ -33,4 +34,3 @@ internal sealed class PreprocessorState
         return true;
     }
 }
-

@@ -1,4 +1,4 @@
-namespace Brash.Compiler.Preprocessor;
+namespace Brash.Compiler.Preprocessor.Core;
 
 internal sealed class ConditionalFrame
 {
